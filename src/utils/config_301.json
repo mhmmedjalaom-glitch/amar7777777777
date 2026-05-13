@@ -1,0 +1,6 @@
+{
+  "id": 301,
+  "enabled": true,
+  "service": "service_301",
+  "environment": "production"
+}

@@ -1,0 +1,6 @@
+{
+  "id": 200,
+  "enabled": true,
+  "service": "service_200",
+  "environment": "production"
+}

@@ -1,0 +1,6 @@
+{
+  "id": 360,
+  "enabled": true,
+  "service": "service_360",
+  "environment": "production"
+}
