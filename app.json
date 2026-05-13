@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Ammar Jaloom Wallet",
+    "slug": "ammar-jaloom-wallet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "android": {
+      "package": "com.mycompany.ammarjalloumwallet",
+      "googleServicesFile": "./google-services.json"
+    }
+  }
+}
