@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>إدارة الحسابات - نظام محمد سالم</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+  <div class="sub-header">
+    <div class="sub-header-top">
+      <div class="back-btn">➡️</div>
+      <span class="sub-header-title">إدارة الحسابات</span>
+      <div class="header-icon-btn" onclick="navigate('transfer.html')">➕</div>
+    </div>
+    <div class="sub-header-subtitle">كافة الحسابات المسجلة في النظام</div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="بحث عن حساب..." id="searchInput" oninput="filterAccounts(this.value)" />
+    </div>
+
+    <!-- Filter Chips -->
+    <div class="filter-chips">
+      <div class="chip active" onclick="filterByStatus('all', this)">الكل</div>
+      <div class="chip" onclick="filterByStatus('active', this)">نشط</div>
+      <div class="chip" onclick="filterByStatus('late', this)">متأخر</div>
+      <div class="chip" onclick="filterByStatus('vip', this)">VIP</div>
+    </div>
+
+    <!-- Stats Row -->
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <div class="stat-card" style="flex:1;padding:12px">
+        <div class="stat-value" style="font-size:20px">34</div>
+        <div class="stat-label">إجمالي الحسابات</div>
+      </div>
+      <div class="stat-card" style="flex:1;padding:12px">
+        <div class="stat-value" style="font-size:20px;color:#2e7d32">28</div>
+        <div class="stat-label">حساب نشط</div>
+      </div>
+      <div class="stat-card" style="flex:1;padding:12px">
+        <div class="stat-value" style="font-size:20px;color:#c62828">5</div>
+        <div class="stat-label">متأخر</div>
+      </div>
+    </div>
+
+    <!-- Accounts List -->
+    <div class="op-list" id="accountsList">
+
+      <a href="abdulrahman.html" class="op-item" style="text-decoration:none" data-status="active">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#D4AF37,#c9a227)">عب</div>
+        <div class="op-info">
+          <div class="op-name">عبد الرحمن سالم</div>
+          <div class="op-date">حساب نشط · <span class="badge badge-gold">VIP</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">2,450,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </a>
+
+      <div class="op-item" data-status="late">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#c62828,#b71c1c)">أح</div>
+        <div class="op-info">
+          <div class="op-name">أحمد محمد الزبيدي</div>
+          <div class="op-date">متأخر 7 أيام · <span class="badge badge-red">متأخر</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">680,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" data-status="active">
+        <div class="op-avatar">سا</div>
+        <div class="op-info">
+          <div class="op-name">سالم عبدالله القحطاني</div>
+          <div class="op-date">آخر معاملة: اليوم · <span class="badge badge-green">نشط</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">1,200,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" data-status="active">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#1565c0,#0d47a1)">مح</div>
+        <div class="op-info">
+          <div class="op-name">محمد علي الشمري</div>
+          <div class="op-date">آخر معاملة: أمس · <span class="badge badge-green">نشط</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">450,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" data-status="late">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#c62828,#b71c1c)">عل</div>
+        <div class="op-info">
+          <div class="op-name">علي حسن المطري</div>
+          <div class="op-date">متأخر 12 يوم · <span class="badge badge-red">متأخر</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">320,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" data-status="vip">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#D4AF37,#c9a227)">خا</div>
+        <div class="op-info">
+          <div class="op-name">خالد إبراهيم النقيب</div>
+          <div class="op-date">مزامنة فورية · <span class="badge badge-gold">VIP</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">5,800,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" data-status="active">
+        <div class="op-avatar">يو</div>
+        <div class="op-info">
+          <div class="op-name">يوسف أحمد البهكلي</div>
+          <div class="op-date">آخر معاملة: أمس · <span class="badge badge-green">نشط</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">180,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" data-status="late">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#c62828,#b71c1c)">عم</div>
+        <div class="op-info">
+          <div class="op-name">عمر فيصل الحربي</div>
+          <div class="op-date">متأخر 6 أيام · <span class="badge badge-red">متأخر</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">550,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="height:16px"></div>
+    <button class="btn btn-primary" onclick="navigate('transfer.html')">
+      ➕ إنشاء حساب جديد
+    </button>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-href="../index.html">
+      <span class="nav-icon">🏠</span><span>الرئيسية</span>
+    </div>
+    <div class="nav-item" data-href="transfer.html">
+      <span class="nav-icon">💸</span><span>تحويل</span>
+    </div>
+    <div class="nav-item" data-href="vip.html">
+      <span class="nav-icon">👑</span><span>المميزين</span>
+    </div>
+    <div class="nav-item" data-href="reports.html">
+      <span class="nav-icon">📊</span><span>تقارير</span>
+    </div>
+  </nav>
+
+  <script src="../script.js"></script>
+  <script>
+    function filterAccounts(query) {
+      const items = document.querySelectorAll('#accountsList .op-item, #accountsList a.op-item');
+      items.forEach(item => {
+        const name = item.querySelector('.op-name').textContent;
+        item.style.display = name.includes(query) ? '' : 'none';
+      });
+    }
+    function filterByStatus(status, el) {
+      document.querySelectorAll('.filter-chips .chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      const items = document.querySelectorAll('#accountsList [data-status]');
+      items.forEach(item => {
+        item.style.display = (status === 'all' || item.dataset.status === status) ? '' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>

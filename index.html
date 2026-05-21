@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>نظام محمد سالم للحوالات</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title">
+        <h1>𓆩 نظام محمد سالم 𓆪</h1>
+        <p>للحوالات المالية الذكية</p>
+      </div>
+      <div class="header-icon-btn" onclick="navigate('pages/settings.html')">⚙️</div>
+    </div>
+    <div class="balance-card">
+      <div class="balance-label">إجمالي الرصيد المتوفر</div>
+      <div class="balance-amount">
+        <span class="amount" id="totalBalance">24,580,000</span>
+        <span class="currency">YER</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- تنبيه المتأخرين -->
+    <div class="alert-card">
+      <div class="alert-icon">⚠️</div>
+      <div>
+        <div class="alert-title">تنبيه المتأخرين بالسداد</div>
+        <div class="alert-text">يوجد 5 عملاء تجاوزوا فترة الـ 5 أيام.</div>
+      </div>
+    </div>
+
+    <!-- الوصول السريع -->
+    <div class="section-header">
+      <span class="section-title">⚡ الوصول السريع</span>
+    </div>
+    <div class="quick-access">
+      <a class="quick-btn" href="pages/transfer.html">
+        <span class="quick-icon">💸</span>
+        <span class="quick-label">حوالة جديدة</span>
+      </a>
+      <a class="quick-btn" href="pages/accounts.html">
+        <span class="quick-icon">👥</span>
+        <span class="quick-label">إدارة الحسابات</span>
+      </a>
+      <a class="quick-btn" href="pages/vip.html">
+        <span class="quick-icon">👑</span>
+        <span class="quick-label">عملاء VIP</span>
+      </a>
+      <a class="quick-btn" href="pages/whatsapp.html">
+        <span class="quick-icon">💬</span>
+        <span class="quick-label">واتساب</span>
+      </a>
+    </div>
+
+    <!-- الإحصاءات -->
+    <div class="section-header">
+      <span class="section-title">📊 إحصاءات اليوم</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value" data-target="47">0</div>
+        <div class="stat-label">حوالة مكتملة</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">🔄</div>
+        <div class="stat-value" data-target="12">0</div>
+        <div class="stat-label">قيد التنفيذ</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value">450,000</div>
+        <div class="stat-label">أرباح اليوم ر.ي</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-icon">⏰</div>
+        <div class="stat-value" data-target="5">0</div>
+        <div class="stat-label">تنبيهات متأخرة</div>
+      </div>
+    </div>
+
+    <!-- تحليل الأرباح الأسبوعي -->
+    <div class="section-header">
+      <span class="section-title">📈 تحليل الأرباح الأسبوعي</span>
+      <a class="section-link" href="pages/reports.html">عرض الكل</a>
+    </div>
+    <div class="chart-container">
+      <div class="chart-bars">
+        <div class="chart-bar" style="height:45px"></div>
+        <div class="chart-bar" style="height:60px"></div>
+        <div class="chart-bar" style="height:35px"></div>
+        <div class="chart-bar" style="height:75px"></div>
+        <div class="chart-bar" style="height:55px"></div>
+        <div class="chart-bar" style="height:70px"></div>
+        <div class="chart-bar" style="height:65px"></div>
+      </div>
+      <div class="chart-labels">
+        <div class="chart-label">الأحد</div>
+        <div class="chart-label">الإثنين</div>
+        <div class="chart-label">الثلاثاء</div>
+        <div class="chart-label">الأربعاء</div>
+        <div class="chart-label">الخميس</div>
+        <div class="chart-label">الجمعة</div>
+        <div class="chart-label">السبت</div>
+      </div>
+    </div>
+
+    <!-- آخر العمليات -->
+    <div class="section-header">
+      <span class="section-title">🕐 آخر العمليات</span>
+      <a class="section-link" href="pages/logs.html">عرض الكل</a>
+    </div>
+    <div class="op-list">
+      <div class="op-item">
+        <div class="op-avatar">أح</div>
+        <div class="op-info">
+          <div class="op-name">أحمد محمد</div>
+          <div class="op-date">منذ 10 دقائق · <span class="badge badge-green">مكتملة</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">150,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+      <div class="op-item">
+        <div class="op-avatar">سا</div>
+        <div class="op-info">
+          <div class="op-name">سالم عبدالله</div>
+          <div class="op-date">منذ 35 دقيقة · <span class="badge badge-orange">قيد التنفيذ</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">320,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+      <div class="op-item">
+        <div class="op-avatar">مح</div>
+        <div class="op-info">
+          <div class="op-name">محمد علي</div>
+          <div class="op-date">منذ ساعة · <span class="badge badge-red">متأخرة</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">85,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+      <div class="op-item">
+        <div class="op-avatar">خا</div>
+        <div class="op-info">
+          <div class="op-name">خالد إبراهيم</div>
+          <div class="op-date">منذ 2 ساعة · <span class="badge badge-green">مكتملة</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">200,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-href="index.html">
+      <span class="nav-icon">🏠</span>
+      <span>الرئيسية</span>
+    </div>
+    <div class="nav-item" data-href="pages/transfer.html">
+      <span class="nav-icon">💸</span>
+      <span>تحويل</span>
+    </div>
+    <div class="nav-item" data-href="pages/vip.html">
+      <span class="nav-icon">👑</span>
+      <span>المميزين</span>
+    </div>
+    <div class="nav-item" data-href="pages/reports.html">
+      <span class="nav-icon">📊</span>
+      <span>تقارير</span>
+    </div>
+  </nav>
+
+  <script src="script.js"></script>
+</body>
+</html>

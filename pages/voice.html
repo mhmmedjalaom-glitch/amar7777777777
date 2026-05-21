@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>المساعد الصوتي - نظام محمد سالم</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+  <div class="sub-header">
+    <div class="sub-header-top">
+      <div class="back-btn">➡️</div>
+      <span class="sub-header-title">🎤 المساعد الصوتي الذكي</span>
+      <div style="width:38px"></div>
+    </div>
+    <div class="sub-header-subtitle">تحكم بالنظام عبر الأوامر الصوتية باللغة العربية</div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Voice Button -->
+    <div style="text-align:center;padding:10px 0 20px">
+      <div class="voice-btn" id="voiceBtn">🎤</div>
+      <div style="font-size:14px;font-weight:600;color:#666;font-family:Tajawal,sans-serif" id="voiceStatus">ابدأ التحدث الآن</div>
+      <div style="font-size:12px;color:#999;font-family:Tajawal,sans-serif;margin-top:4px">اضغط للتحدث</div>
+    </div>
+
+    <!-- Quick Commands -->
+    <div class="section-header">
+      <span class="section-title">⚡ أوامر سريعة</span>
+    </div>
+    <div class="quick-access" style="grid-template-columns:1fr 1fr;gap:10px">
+      <div class="quick-btn" style="padding:16px;text-align:center" onclick="runVoiceCommand('إنشاء حوالة جديدة')">
+        <span class="quick-icon" style="font-size:28px">💸</span>
+        <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-top:6px">إنشاء حوالة جديدة</div>
+      </div>
+      <div class="quick-btn" style="padding:16px;text-align:center" onclick="runVoiceCommand('بحث عن حساب')">
+        <span class="quick-icon" style="font-size:28px">🔍</span>
+        <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-top:6px">بحث عن حساب</div>
+      </div>
+      <div class="quick-btn" style="padding:16px;text-align:center" onclick="runVoiceCommand('خصم رصيد')">
+        <span class="quick-icon" style="font-size:28px">➖</span>
+        <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-top:6px">خصم رصيد</div>
+      </div>
+      <div class="quick-btn" style="padding:16px;text-align:center" onclick="runVoiceCommand('كشف حساب VIP')">
+        <span class="quick-icon" style="font-size:28px">👑</span>
+        <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-top:6px">كشف حساب VIP</div>
+      </div>
+    </div>
+
+    <!-- Voice Log -->
+    <div class="section-header" style="margin-top:20px">
+      <span class="section-title">📋 آخر العمليات الصوتية</span>
+      <span class="section-link" style="cursor:pointer" id="clearLogBtn">مسح السجل</span>
+    </div>
+    <div class="op-list" id="voiceLogList">
+      <div class="op-item">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">🎤</div>
+        <div class="op-info">
+          <div class="op-name">"إنشاء حوالة جديدة"</div>
+          <div class="op-date">منذ 10 دقائق · <span class="badge badge-green">تم التنفيذ</span></div>
+        </div>
+      </div>
+      <div class="op-item">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">🎤</div>
+        <div class="op-info">
+          <div class="op-name">"كشف حساب عبد الرحمن"</div>
+          <div class="op-date">منذ 30 دقيقة · <span class="badge badge-green">تم التنفيذ</span></div>
+        </div>
+      </div>
+      <div class="op-item">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">🎤</div>
+        <div class="op-info">
+          <div class="op-name">"بحث عن حساب سالم"</div>
+          <div class="op-date">منذ ساعة · <span class="badge badge-green">تم التنفيذ</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="card" style="margin-top:16px;background:#f8f0f0;border-color:#f5d0d0">
+      <div class="card-title">💡 أمثلة على الأوامر</div>
+      <div style="font-family:Tajawal,sans-serif;font-size:13px;color:#666;line-height:2">
+        • "أنشئ حوالة لأحمد بمبلغ 100 ألف"<br/>
+        • "ابحث عن حساب خالد"<br/>
+        • "اعرض تقرير اليوم"<br/>
+        • "أرسل تنبيه للمتأخرين"<br/>
+        • "كشف حساب VIP"
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-href="../index.html">
+      <span class="nav-icon">🏠</span><span>الرئيسية</span>
+    </div>
+    <div class="nav-item" data-href="transfer.html">
+      <span class="nav-icon">💸</span><span>تحويل</span>
+    </div>
+    <div class="nav-item" data-href="vip.html">
+      <span class="nav-icon">👑</span><span>المميزين</span>
+    </div>
+    <div class="nav-item" data-href="reports.html">
+      <span class="nav-icon">📊</span><span>تقارير</span>
+    </div>
+  </nav>
+
+  <script src="../script.js"></script>
+  <script>
+    function runVoiceCommand(cmd) {
+      showNotification('🎤 تنفيذ: ' + cmd, 'info');
+      const logList = document.getElementById('voiceLogList');
+      const item = document.createElement('div');
+      item.className = 'op-item';
+      item.innerHTML = `
+        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">🎤</div>
+        <div class="op-info">
+          <div class="op-name">"${cmd}"</div>
+          <div class="op-date">الآن · <span class="badge badge-green">تم التنفيذ</span></div>
+        </div>
+      `;
+      logList.insertBefore(item, logList.firstChild);
+    }
+  </script>
+</body>
+</html>

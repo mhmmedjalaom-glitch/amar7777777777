@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>إنشاء حوالة ذكية - نظام محمد سالم</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+  <div class="sub-header">
+    <div class="sub-header-top">
+      <div class="back-btn">➡️</div>
+      <span class="sub-header-title">إنشاء حوالة ذكية</span>
+      <div style="width:38px"></div>
+    </div>
+    <div class="sub-header-subtitle">جميع العمليات مشفرة ومؤمنة بالكامل 🔒</div>
+  </div>
+
+  <div class="page-content">
+    <form id="transferForm">
+
+      <!-- بيانات العميل -->
+      <div class="card">
+        <div class="card-title">👤 بيانات العميل</div>
+
+        <div class="form-group">
+          <label class="form-label">اسم العميل</label>
+          <input type="text" class="form-input" placeholder="أدخل اسم العميل الكامل" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">رقم الهاتف</label>
+          <input type="tel" class="form-input" placeholder="+967 7xx xxx xxx" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">المستفيد</label>
+          <input type="text" class="form-input" placeholder="اسم المستفيد" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">رقم هاتف المستفيد</label>
+          <input type="tel" class="form-input" placeholder="+967 7xx xxx xxx" />
+        </div>
+      </div>
+
+      <!-- المبلغ والعمولة -->
+      <div class="card">
+        <div class="card-title">💰 المبلغ والعمولة</div>
+
+        <div class="form-group">
+          <label class="form-label">المبلغ (ر.ي)</label>
+          <input type="number" class="form-input" id="transferAmount" placeholder="0" min="0" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">العملة</label>
+          <select class="form-select">
+            <option value="YER">ريال يمني (YER)</option>
+            <option value="USD">دولار أمريكي (USD)</option>
+            <option value="SAR">ريال سعودي (SAR)</option>
+            <option value="AED">درهم إماراتي (AED)</option>
+          </select>
+        </div>
+
+        <!-- حساب العمولة -->
+        <div style="background:#fff8f8;border-radius:12px;padding:14px;border:1px solid #f5d0d0">
+          <div class="info-row" style="padding:8px 0">
+            <span class="info-label">المبلغ الأصلي</span>
+            <span class="info-value" id="originalAmount">0 ر.ي</span>
+          </div>
+          <div class="info-row" style="padding:8px 0">
+            <span class="info-label">العمولة (5%)</span>
+            <span class="info-value" style="color:#e65100" id="commissionAmount">0 ر.ي</span>
+          </div>
+          <div class="info-row" style="padding:8px 0;border-bottom:none">
+            <span class="info-label" style="font-weight:700;color:#1a1a1a">الإجمالي</span>
+            <span class="info-value" style="color:#8B0000;font-size:16px" id="totalAmount">0 ر.ي</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- حالة الحوالة -->
+      <div class="card">
+        <div class="card-title">📋 حالة الحوالة</div>
+
+        <div class="form-group">
+          <label class="form-label">نوع الحوالة</label>
+          <select class="form-select">
+            <option>داخلية</option>
+            <option>خارجية</option>
+            <option>عاجلة</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">الحالة</label>
+          <select class="form-select">
+            <option>قيد التنفيذ</option>
+            <option>مكتملة</option>
+            <option>معلقة</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ملاحظات</label>
+          <textarea class="form-input" rows="3" placeholder="أي ملاحظات إضافية..." style="resize:none"></textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="margin-bottom:10px">
+        ✅ تأكيد إنشاء الحوالة
+      </button>
+      <button type="button" class="btn btn-outline" onclick="history.back()">
+        ❌ إلغاء
+      </button>
+
+    </form>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-href="../index.html">
+      <span class="nav-icon">🏠</span><span>الرئيسية</span>
+    </div>
+    <div class="nav-item active" data-href="transfer.html">
+      <span class="nav-icon">💸</span><span>تحويل</span>
+    </div>
+    <div class="nav-item" data-href="vip.html">
+      <span class="nav-icon">👑</span><span>المميزين</span>
+    </div>
+    <div class="nav-item" data-href="reports.html">
+      <span class="nav-icon">📊</span><span>تقارير</span>
+    </div>
+  </nav>
+
+  <script src="../script.js"></script>
+  <script>
+    const amountInput = document.getElementById('transferAmount');
+    const originalDisplay = document.getElementById('originalAmount');
+    amountInput.addEventListener('input', function () {
+      const amount = parseFloat(this.value) || 0;
+      const commission = Math.round(amount * 0.05);
+      const total = amount + commission;
+      originalDisplay.textContent = amount.toLocaleString('ar-SA') + ' ر.ي';
+      document.getElementById('commissionAmount').textContent = commission.toLocaleString('ar-SA') + ' ر.ي';
+      document.getElementById('totalAmount').textContent = total.toLocaleString('ar-SA') + ' ر.ي';
+    });
+  </script>
+</body>
+</html>

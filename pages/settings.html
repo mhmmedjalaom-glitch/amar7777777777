@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>إعدادات النظام - نظام محمد سالم</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+  <div class="sub-header">
+    <div class="sub-header-top">
+      <div class="back-btn">➡️</div>
+      <span class="sub-header-title">⚙️ إعدادات النظام والأمان</span>
+      <div style="width:38px"></div>
+    </div>
+    <div class="sub-header-subtitle">الإصدار v2.4.0 · نظام محمد سالم</div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Profile Card -->
+    <div class="card" style="text-align:center;padding:20px">
+      <div style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#8B0000,#660000);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff">👤</div>
+      <div style="font-size:17px;font-weight:800;color:#1a1a1a">محمد سالم</div>
+      <div style="font-size:13px;color:#666;font-family:Tajawal,sans-serif;margin-top:4px">مسؤول النظام</div>
+      <span class="badge badge-gold" style="margin-top:8px;display:inline-block">👑 Admin</span>
+    </div>
+
+    <!-- Settings Card 1 -->
+    <div class="settings-card">
+      <div style="padding:12px 0 4px;font-size:12px;font-weight:700;color:#999;font-family:Tajawal,sans-serif;letter-spacing:0.5px">الحساب والأمان</div>
+      <div class="settings-item" onclick="showNotification('فتح إعدادات الملف الشخصي','info')">
+        <div class="settings-item-icon blue">👤</div>
+        <div class="settings-item-info">
+          <div class="settings-item-title">الملف الشخصي</div>
+          <div class="settings-item-desc">تعديل بيانات المستخدم</div>
+        </div>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="showNotification('فتح إعدادات كلمة المرور','info')">
+        <div class="settings-item-icon red">🔐</div>
+        <div class="settings-item-info">
+          <div class="settings-item-title">كلمة المرور</div>
+          <div class="settings-item-desc">تغيير كلمة المرور</div>
+        </div>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="showNotification('فتح إعدادات المصادقة الثنائية','info')">
+        <div class="settings-item-icon orange">🔒</div>
+        <div class="settings-item-info">
+          <div class="settings-item-title">المصادقة الثنائية</div>
+          <div class="settings-item-desc">تفعيل حماية إضافية</div>
+        </div>
+        <span class="settings-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- Settings Card 2 -->
+    <div class="settings-card">
+      <div style="padding:12px 0 4px;font-size:12px;font-weight:700;color:#999;font-family:Tajawal,sans-serif;letter-spacing:0.5px">الإشعارات والتكامل</div>
+      <div class="settings-item" onclick="navigate('whatsapp.html')">
+        <div class="settings-item-icon green">💬</div>
+        <div class="settings-item-info">
+          <div class="settings-item-title">إعدادات واتساب</div>
+          <div class="settings-item-desc">ربط وإدارة الإشعارات</div>
+        </div>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="showNotification('فتح إعدادات الإشعارات','info')">
+        <div class="settings-item-icon blue">🔔</div>
+        <div class="settings-item-info">
+          <div class="settings-item-title">الإشعارات</div>
+          <div class="settings-item-desc">تخصيص التنبيهات</div>
+        </div>
+        <span class="settings-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- Settings Card 3 -->
+    <div class="settings-card">
+      <div style="padding:12px 0 4px;font-size:12px;font-weight:700;color:#999;font-family:Tajawal,sans-serif;letter-spacing:0.5px">النظام والبيانات</div>
+      <div class="settings-item" onclick="showNotification('تم بدء النسخ الاحتياطي ✓','success')">
+        <div class="settings-item-icon green">💾</div>
+        <div class="settings-item-info">
+          <div class="settings-item-title">نسخ احتياطي</div>
+          <div class="settings-item-desc">آخر نسخة: اليوم 08:00</div>
+        </div>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="showNotification('فتح سجل النظام','info')">
+        <div class="settings-item-icon purple">📋</div>
+        <div class="settings-item-info">
+          <div class="settings-item-title">سجل النظام</div>
+          <div class="settings-item-desc">عرض جميع العمليات</div>
+        </div>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="showNotification('فتح إعدادات العمولة','info')">
+        <div class="settings-item-icon orange">💰</div>
+        <div class="settings-item-info">
+          <div class="settings-item-title">نسبة العمولة</div>
+          <div class="settings-item-desc">الحالية: 5%</div>
+        </div>
+        <span class="settings-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- Toggles -->
+    <div class="card">
+      <div class="card-title">🌙 تفضيلات العرض</div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">الوضع الليلي</div>
+          <div class="toggle-desc">تغيير مظهر التطبيق</div>
+        </div>
+        <label class="toggle"><input type="checkbox" /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">الأصوات والاهتزاز</div>
+          <div class="toggle-desc">صوت عند تنفيذ العمليات</div>
+        </div>
+        <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="danger-zone">
+      <div class="danger-title">⚠️ منطقة الخطورة</div>
+      <div style="font-size:12px;color:#c62828;font-family:Tajawal,sans-serif;margin-bottom:12px;line-height:1.5">
+        العمليات التالية لا يمكن التراجع عنها. تأكد قبل المتابعة.
+      </div>
+      <button class="btn btn-danger" id="deleteAccountBtn" style="margin-bottom:8px">
+        🗑️ حذف جميع البيانات
+      </button>
+      <button class="btn" style="background:#fff;color:#c62828;border:1.5px solid #c62828" onclick="showNotification('تم تسجيل الخروج','info')">
+        🚪 تسجيل الخروج
+      </button>
+    </div>
+
+    <!-- App Info -->
+    <div style="text-align:center;padding:10px 0 20px;font-family:Tajawal,sans-serif;font-size:12px;color:#aaa">
+      نظام محمد سالم للحوالات المالية<br/>
+      الإصدار v2.4.0 · جميع الحقوق محفوظة
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-href="../index.html">
+      <span class="nav-icon">🏠</span><span>الرئيسية</span>
+    </div>
+    <div class="nav-item" data-href="transfer.html">
+      <span class="nav-icon">💸</span><span>تحويل</span>
+    </div>
+    <div class="nav-item" data-href="vip.html">
+      <span class="nav-icon">👑</span><span>المميزين</span>
+    </div>
+    <div class="nav-item" data-href="reports.html">
+      <span class="nav-icon">📊</span><span>تقارير</span>
+    </div>
+  </nav>
+
+  <script src="../script.js"></script>
+</body>
+</html>

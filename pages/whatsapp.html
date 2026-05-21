@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>مركز واتساب - نظام محمد سالم</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+  <div class="sub-header">
+    <div class="sub-header-top">
+      <div class="back-btn">➡️</div>
+      <span class="sub-header-title">💬 مركز عمليات الواتساب</span>
+      <div style="width:38px"></div>
+    </div>
+    <div class="sub-header-subtitle">نظام الإشعارات التلقائية والربط البرمجي</div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Connection Status -->
+    <div class="card" style="background:linear-gradient(135deg,#f0fff4,#e8f5e9);border-color:#a5d6a7">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:14px;font-weight:700;color:#1a1a1a">حالة الاتصال</div>
+        <span class="badge badge-green">● متصل</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">رقم الربط الأساسي</span>
+        <span class="info-value" style="direction:ltr;text-align:left">+967 77x xxx xxx</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">آخر مزامنة</span>
+        <span class="info-value" style="color:#2e7d32">منذ دقيقتين ✓</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">الرسائل المرسلة اليوم</span>
+        <span class="info-value">34 رسالة</span>
+      </div>
+    </div>
+
+    <!-- Test Button -->
+    <button class="btn btn-whatsapp" id="waTestBtn" style="margin-bottom:16px">
+      🧪 اختبار الإرسال · إرسال رسالة تجريبية
+    </button>
+
+    <!-- إعدادات الإشعارات -->
+    <div class="card">
+      <div class="card-title">⚙️ إعدادات الإشعارات التلقائية</div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">إشعار الحوالة المكتملة</div>
+          <div class="toggle-desc">إرسال إشعار تلقائي عند اكتمال الحوالة</div>
+        </div>
+        <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">تنبيه المتأخرين</div>
+          <div class="toggle-desc">إرسال تذكير للعملاء المتأخرين بالسداد</div>
+        </div>
+        <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">كشف حساب أسبوعي</div>
+          <div class="toggle-desc">إرسال كشف حساب تلقائي كل أسبوع</div>
+        </div>
+        <label class="toggle"><input type="checkbox" /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">إشعار الحوالة الجديدة</div>
+          <div class="toggle-desc">إشعار فوري عند إنشاء حوالة جديدة</div>
+        </div>
+        <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <!-- Quick Messages -->
+    <div class="card">
+      <div class="card-title">📋 رسائل سريعة</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-whatsapp" style="font-size:13px;padding:10px" onclick="showNotification('تم إرسال تنبيه المتأخرين ✓','success')">
+          ⚠️ تنبيه جميع المتأخرين
+        </button>
+        <button class="btn btn-outline" style="font-size:13px;padding:10px;border-color:#25D366;color:#25D366" onclick="showNotification('تم إرسال الكشوفات بنجاح ✓','success')">
+          📄 إرسال كشوفات حسابات الكل
+        </button>
+        <button class="btn btn-outline" style="font-size:13px;padding:10px;border-color:#25D366;color:#25D366" onclick="showNotification('تم إرسال التقرير اليومي ✓','success')">
+          📊 إرسال التقرير اليومي لـ VIP
+        </button>
+      </div>
+    </div>
+
+    <!-- Recent Messages -->
+    <div class="section-header">
+      <span class="section-title">🕐 آخر الرسائل المرسلة</span>
+    </div>
+    <div class="op-list">
+      <div class="op-item">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#25D366,#128C7E)">💬</div>
+        <div class="op-info">
+          <div class="op-name">أحمد محمد</div>
+          <div class="op-date">تنبيه متأخر · منذ 5 دقائق</div>
+        </div>
+        <span class="badge badge-green">✓ تم</span>
+      </div>
+      <div class="op-item">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#25D366,#128C7E)">💬</div>
+        <div class="op-info">
+          <div class="op-name">سالم القحطاني</div>
+          <div class="op-date">كشف حساب · منذ 20 دقيقة</div>
+        </div>
+        <span class="badge badge-green">✓ تم</span>
+      </div>
+      <div class="op-item">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#25D366,#128C7E)">💬</div>
+        <div class="op-info">
+          <div class="op-name">خالد النقيب</div>
+          <div class="op-date">حوالة مكتملة · منذ ساعة</div>
+        </div>
+        <span class="badge badge-green">✓ تم</span>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-href="../index.html">
+      <span class="nav-icon">🏠</span><span>الرئيسية</span>
+    </div>
+    <div class="nav-item" data-href="transfer.html">
+      <span class="nav-icon">💸</span><span>تحويل</span>
+    </div>
+    <div class="nav-item" data-href="vip.html">
+      <span class="nav-icon">👑</span><span>المميزين</span>
+    </div>
+    <div class="nav-item" data-href="reports.html">
+      <span class="nav-icon">📊</span><span>تقارير</span>
+    </div>
+  </nav>
+
+  <script src="../script.js"></script>
+</body>
+</html>

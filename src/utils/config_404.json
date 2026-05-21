@@ -1,6 +1,0 @@
-{
-  "id": 404,
-  "enabled": true,
-  "service": "service_404",
-  "environment": "production"
-}

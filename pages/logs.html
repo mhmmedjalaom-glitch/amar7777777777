@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>سجل الحوالات - نظام محمد سالم</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+  <div class="sub-header">
+    <div class="sub-header-top">
+      <div class="back-btn">➡️</div>
+      <span class="sub-header-title">سجل الحوالات والفلترة</span>
+      <div style="width:38px"></div>
+    </div>
+    <div class="sub-header-subtitle">نظام محمد سالم للحوالات المالية</div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Alert Banner -->
+    <div style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:1px solid #ffb74d;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="font-size:20px">🔔</span>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#e65100">حوالات تتطلب إجراء</div>
+        <div style="font-size:12px;color:#bf360c;font-family:Tajawal,sans-serif">2 تنبيه · يحتاج إلى مراجعة فورية</div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="بحث في السجل..." />
+    </div>
+
+    <!-- Filter Chips -->
+    <div class="filter-chips">
+      <div class="chip active">فلترة الكل</div>
+      <div class="chip">مكتملة</div>
+      <div class="chip">قيد التنفيذ</div>
+      <div class="chip">متأخرة</div>
+      <div class="chip">معلقة</div>
+    </div>
+
+    <!-- Stats Row -->
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <div style="flex:1;background:#e8f5e9;border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:18px;font-weight:800;color:#2e7d32">47</div>
+        <div style="font-size:10px;color:#388e3c;font-family:Tajawal,sans-serif">مكتملة</div>
+      </div>
+      <div style="flex:1;background:#fff3e0;border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:18px;font-weight:800;color:#e65100">12</div>
+        <div style="font-size:10px;color:#bf360c;font-family:Tajawal,sans-serif">قيد التنفيذ</div>
+      </div>
+      <div style="flex:1;background:#ffebee;border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:18px;font-weight:800;color:#c62828">5</div>
+        <div style="font-size:10px;color:#b71c1c;font-family:Tajawal,sans-serif">متأخرة</div>
+      </div>
+      <div style="flex:1;background:#e3f2fd;border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:18px;font-weight:800;color:#1565c0">3</div>
+        <div style="font-size:10px;color:#0d47a1;font-family:Tajawal,sans-serif">معلقة</div>
+      </div>
+    </div>
+
+    <!-- Operations List -->
+    <div class="section-header">
+      <span class="section-title">🕐 العمليات الأخيرة</span>
+    </div>
+    <div class="op-list">
+
+      <div class="op-item" style="border-right:4px solid #c62828">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#c62828,#b71c1c)">أح</div>
+        <div class="op-info">
+          <div class="op-name">أحمد محمد · #TRN-1247</div>
+          <div class="op-date">اليوم 10:30 · <span class="badge badge-red">متأخرة لأكثر من 5 أيام</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">680,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" style="border-right:4px solid #c62828">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#c62828,#b71c1c)">عل</div>
+        <div class="op-info">
+          <div class="op-name">علي حسن · #TRN-1246</div>
+          <div class="op-date">اليوم 09:15 · <span class="badge badge-red">متأخرة</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">320,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" style="border-right:4px solid #2e7d32">
+        <div class="op-avatar">سا</div>
+        <div class="op-info">
+          <div class="op-name">سالم القحطاني · #TRN-1245</div>
+          <div class="op-date">اليوم 08:50 · <span class="badge badge-green">مكتملة</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">150,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" style="border-right:4px solid #e65100">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#e65100,#bf360c)">مح</div>
+        <div class="op-info">
+          <div class="op-name">محمد الشمري · #TRN-1244</div>
+          <div class="op-date">أمس 16:20 · <span class="badge badge-orange">قيد التنفيذ</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">450,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" style="border-right:4px solid #2e7d32">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#D4AF37,#c9a227)">خا</div>
+        <div class="op-info">
+          <div class="op-name">خالد النقيب · #TRN-1243</div>
+          <div class="op-date">أمس 14:05 · <span class="badge badge-green">مكتملة</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">1,200,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" style="border-right:4px solid #2e7d32">
+        <div class="op-avatar">يو</div>
+        <div class="op-info">
+          <div class="op-name">يوسف البهكلي · #TRN-1242</div>
+          <div class="op-date">أمس 11:30 · <span class="badge badge-green">مكتملة</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">90,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+      <div class="op-item" style="border-right:4px solid #1565c0">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#1565c0,#0d47a1)">عم</div>
+        <div class="op-info">
+          <div class="op-name">عمر الحربي · #TRN-1241</div>
+          <div class="op-date">منذ يومين · <span class="badge badge-blue">معلقة</span></div>
+        </div>
+        <div style="text-align:left">
+          <div class="op-amount">260,000</div>
+          <div class="op-currency">ر.ي</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-href="../index.html">
+      <span class="nav-icon">🏠</span><span>الرئيسية</span>
+    </div>
+    <div class="nav-item" data-href="transfer.html">
+      <span class="nav-icon">💸</span><span>تحويل</span>
+    </div>
+    <div class="nav-item" data-href="vip.html">
+      <span class="nav-icon">👑</span><span>المميزين</span>
+    </div>
+    <div class="nav-item" data-href="reports.html">
+      <span class="nav-icon">📊</span><span>تقارير</span>
+    </div>
+  </nav>
+
+  <script src="../script.js"></script>
+</body>
+</html>
