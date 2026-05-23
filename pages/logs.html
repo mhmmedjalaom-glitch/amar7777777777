@@ -173,5 +173,40 @@
   </nav>
 
   <script src="../script.js"></script>
+
+    <script type="module">
+      import { listenTransfers, updateTransferStatus, deleteTransfer } from "../firebase.js";
+
+      const statusColors = { pending: '#f57c00', completed: '#2e7d32', cancelled: '#c62828' };
+      const statusLabels = { pending: 'قيد التنفيذ', completed: 'مكتملة', cancelled: 'ملغية' };
+
+      function renderLogs(transfers) {
+        const list = document.getElementById('opList') || document.querySelector('.op-list');
+        if (!list) return;
+        if (transfers.length === 0) {
+          list.innerHTML = '<p style="text-align:center;color:#999;padding:30px;font-family:Tajawal,sans-serif">لا توجد عمليات</p>';
+          return;
+        }
+        list.innerHTML = transfers.map(t => {
+          const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString('ar-SA') : '';
+          const color = statusColors[t.status] || '#666';
+          const label = statusLabels[t.status] || t.status;
+          return `<div class="op-item">
+            <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:18px">💸</div>
+            <div class="op-info">
+              <div class="op-name">${t.senderName || ''} ← ${t.beneficiary || ''}</div>
+              <div class="op-date">${date} · <span style="color:${color}">${label}</span></div>
+            </div>
+            <div style="text-align:left">
+              <div class="op-amount">${Number(t.amount||0).toLocaleString('ar-SA')}</div>
+              <div class="op-currency">${t.currency || 'ر.ي'}</div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      listenTransfers(renderLogs);
+    </script>
+  
 </body>
 </html>
