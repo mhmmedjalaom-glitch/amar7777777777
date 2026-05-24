@@ -14,7 +14,7 @@
       <span class="sub-header-title">📊 التقارير المالية</span>
       <div style="width:38px"></div>
     </div>
-    <div class="sub-header-subtitle">تقرير الشهر · مايو 2026</div>
+    <div class="sub-header-subtitle" id="reportSubtitle">جاري التحميل...</div>
   </div>
 
   <div class="page-content">
@@ -24,132 +24,62 @@
       <div style="position:absolute;top:-30px;left:-30px;width:120px;height:120px;background:rgba(212,175,55,0.1);border-radius:50%"></div>
       <div style="font-size:13px;color:rgba(255,255,255,0.75);font-family:Tajawal,sans-serif;margin-bottom:6px">إجمالي الأرباح الصافية</div>
       <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
-        <span style="font-size:32px;font-weight:800;color:#D4AF37">450,000</span>
+        <span id="totalProfit" style="font-size:32px;font-weight:800;color:#D4AF37">—</span>
         <span style="font-size:14px;color:rgba(255,255,255,0.8);font-family:Tajawal,sans-serif">ر.ي</span>
       </div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.6);font-family:Tajawal,sans-serif">↑ 12.4% مقارنة بالشهر الماضي</div>
+      <div id="profitGrowth" style="font-size:12px;color:rgba(255,255,255,0.6);font-family:Tajawal,sans-serif">جاري الحساب...</div>
     </div>
 
     <!-- Quick Stats -->
     <div class="stats-grid" style="margin-top:0;margin-bottom:14px">
       <div class="stat-card green">
         <div class="stat-icon">💰</div>
-        <div class="stat-value">9,200,000</div>
+        <div class="stat-value" id="totalAmount">—</div>
         <div class="stat-label">إجمالي الحوالات</div>
       </div>
       <div class="stat-card orange">
         <div class="stat-icon">📈</div>
-        <div class="stat-value">5.0%</div>
+        <div class="stat-value">5%</div>
         <div class="stat-label">متوسط العمولة</div>
       </div>
       <div class="stat-card blue">
         <div class="stat-icon">🔢</div>
-        <div class="stat-value">183</div>
-        <div class="stat-label">إجمالي الحوالات</div>
+        <div class="stat-value" id="totalCount">—</div>
+        <div class="stat-label">عدد الحوالات</div>
       </div>
       <div class="stat-card red">
         <div class="stat-icon">⚡</div>
-        <div class="stat-value">2,450</div>
+        <div class="stat-value" id="avgPerTransfer">—</div>
         <div class="stat-label">متوسط/حوالة</div>
       </div>
     </div>
 
     <!-- Filter Tabs -->
     <div class="filter-chips">
-      <div class="chip active">آخر 7 أيام</div>
-      <div class="chip">هذا الشهر</div>
-      <div class="chip">3 أشهر</div>
-      <div class="chip">سنة</div>
+      <div class="chip active" data-days="7">آخر 7 أيام</div>
+      <div class="chip" data-days="30">هذا الشهر</div>
+      <div class="chip" data-days="90">3 أشهر</div>
+      <div class="chip" data-days="365">سنة</div>
     </div>
 
     <!-- Weekly Chart -->
     <div class="card">
-      <div class="card-title">📈 تحليل نمو العمولات · آخر 7 أيام</div>
-      <div class="chart-container" style="background:transparent;padding:0;border:none">
-        <div class="chart-bars" style="height:100px;align-items:flex-end;gap:6px">
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="font-size:9px;color:#8B0000;font-weight:700">45K</div>
-            <div style="width:100%;height:45px;background:linear-gradient(to top,#8B0000,#b30000);border-radius:6px 6px 0 0"></div>
-          </div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="font-size:9px;color:#8B0000;font-weight:700">62K</div>
-            <div style="width:100%;height:62px;background:linear-gradient(to top,#8B0000,#b30000);border-radius:6px 6px 0 0"></div>
-          </div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="font-size:9px;color:#8B0000;font-weight:700">38K</div>
-            <div style="width:100%;height:38px;background:linear-gradient(to top,#8B0000,#b30000);border-radius:6px 6px 0 0"></div>
-          </div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="font-size:9px;color:#D4AF37;font-weight:700">80K</div>
-            <div style="width:100%;height:80px;background:linear-gradient(to top,#D4AF37,#f0cc55);border-radius:6px 6px 0 0"></div>
-          </div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="font-size:9px;color:#8B0000;font-weight:700">55K</div>
-            <div style="width:100%;height:55px;background:linear-gradient(to top,#8B0000,#b30000);border-radius:6px 6px 0 0"></div>
-          </div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="font-size:9px;color:#8B0000;font-weight:700">72K</div>
-            <div style="width:100%;height:72px;background:linear-gradient(to top,#8B0000,#b30000);border-radius:6px 6px 0 0"></div>
-          </div>
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="font-size:9px;color:#8B0000;font-weight:700">68K</div>
-            <div style="width:100%;height:68px;background:linear-gradient(to top,#8B0000,#b30000);border-radius:6px 6px 0 0"></div>
-          </div>
-        </div>
-        <div style="display:flex;gap:6px;margin-top:6px">
-          <div style="flex:1;font-size:9px;color:#999;text-align:center;font-family:Tajawal,sans-serif">أحد</div>
-          <div style="flex:1;font-size:9px;color:#999;text-align:center;font-family:Tajawal,sans-serif">إثنين</div>
-          <div style="flex:1;font-size:9px;color:#999;text-align:center;font-family:Tajawal,sans-serif">ثلاثاء</div>
-          <div style="flex:1;font-size:9px;color:#999;text-align:center;font-family:Tajawal,sans-serif">أربعاء</div>
-          <div style="flex:1;font-size:9px;color:#999;text-align:center;font-family:Tajawal,sans-serif">خميس</div>
-          <div style="flex:1;font-size:9px;color:#999;text-align:center;font-family:Tajawal,sans-serif">جمعة</div>
-          <div style="flex:1;font-size:9px;color:#999;text-align:center;font-family:Tajawal,sans-serif">سبت</div>
-        </div>
+      <div class="card-title">📈 تحليل الأرباح اليومية</div>
+      <div id="chartArea" style="min-height:120px;display:flex;align-items:center;justify-content:center">
+        <p style="color:#999;font-family:Tajawal;font-size:13px">جاري التحميل...</p>
       </div>
     </div>
 
     <!-- سجل العمليات المالية -->
     <div class="section-header">
-      <span class="section-title">📋 سجل العمليات المالية</span>
+      <span class="section-title">📋 آخر العمليات المالية</span>
     </div>
-    <div class="op-list">
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#2e7d32,#1b5e20)">💰</div>
-        <div class="op-info">
-          <div class="op-name">عمولة حوالات اليوم</div>
-          <div class="op-date">22 مايو 2026</div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount" style="color:#2e7d32">+68,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#2e7d32,#1b5e20)">💰</div>
-        <div class="op-info">
-          <div class="op-name">عمولة حوالات أمس</div>
-          <div class="op-date">21 مايو 2026</div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount" style="color:#2e7d32">+72,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#2e7d32,#1b5e20)">💰</div>
-        <div class="op-info">
-          <div class="op-name">عمولة حوالات الأربعاء</div>
-          <div class="op-date">20 مايو 2026</div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount" style="color:#2e7d32">+80,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
+    <div class="op-list" id="profitList">
+      <p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">جاري التحميل...</p>
     </div>
 
     <div style="height:10px"></div>
-    <button class="btn btn-outline" onclick="showNotification('تم تصدير التقرير بنجاح ✓','success')">
+    <button class="btn btn-outline" onclick="exportReport()">
       📥 تصدير التقرير
     </button>
 
@@ -171,5 +101,171 @@
   </nav>
 
   <script src="../script.js"></script>
+
+  <script type="module">
+  import { getTransfers } from "../firebase.js";
+
+  let allTransfers = [];
+  let currentDays = 7;
+
+  function toDate(val) {
+    if (!val) return null;
+    if (typeof val.toDate === 'function') return val.toDate();
+    return new Date(val);
+  }
+
+  function fmt(n) { return Number(n || 0).toLocaleString('ar-SA'); }
+
+  function filterByDays(transfers, days) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    cutoff.setHours(0, 0, 0, 0);
+    return transfers.filter(t => {
+      const d = toDate(t.createdAt);
+      return d && d >= cutoff;
+    });
+  }
+
+  function getDayLabel(date) {
+    const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+    return days[date.getDay()];
+  }
+
+  function renderChart(transfers) {
+    const chartArea = document.getElementById('chartArea');
+    if (!transfers.length) {
+      chartArea.innerHTML = '<p style="color:#999;font-family:Tajawal;font-size:13px;text-align:center">لا توجد بيانات للفترة المختارة</p>';
+      return;
+    }
+
+    // تجميع الأرباح حسب اليوم
+    const dayMap = {};
+    transfers.forEach(t => {
+      const d = toDate(t.createdAt);
+      if (!d) return;
+      const key = d.toDateString();
+      dayMap[key] = (dayMap[key] || 0) + (Number(t.commission) || 0);
+    });
+
+    const entries = Object.entries(dayMap).slice(-7);
+    const maxVal = Math.max(...entries.map(e => e[1]), 1);
+
+    chartArea.innerHTML = `
+      <div style="width:100%">
+        <div style="display:flex;gap:6px;align-items:flex-end;height:90px;padding:0 4px">
+          ${entries.map(([dateStr, profit]) => {
+            const d = new Date(dateStr);
+            const h = Math.max(8, Math.round((profit / maxVal) * 80));
+            const isMax = profit === maxVal;
+            return `
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+                <div style="font-size:8px;color:${isMax ? '#D4AF37' : '#8B0000'};font-weight:700">${profit > 0 ? Math.round(profit/1000)+'K' : ''}</div>
+                <div style="width:100%;height:${h}px;background:${isMax ? 'linear-gradient(to top,#D4AF37,#f0cc55)' : 'linear-gradient(to top,#8B0000,#b30000)'};border-radius:5px 5px 0 0"></div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div style="display:flex;gap:6px;margin-top:5px;padding:0 4px">
+          ${entries.map(([dateStr]) => {
+            const d = new Date(dateStr);
+            return `<div style="flex:1;font-size:9px;color:#999;text-align:center;font-family:Tajawal">${getDayLabel(d)}</div>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStats(filtered) {
+    const profit = filtered.reduce((s, t) => s + (Number(t.commission) || 0), 0);
+    const amount = filtered.reduce((s, t) => s + (Number(t.amount) || 0), 0);
+    const count = filtered.length;
+    const avg = count > 0 ? Math.round(amount / count) : 0;
+
+    document.getElementById('totalProfit').textContent = fmt(profit);
+    document.getElementById('totalAmount').textContent = fmt(amount);
+    document.getElementById('totalCount').textContent = count;
+    document.getElementById('avgPerTransfer').textContent = fmt(avg);
+
+    const sub = document.getElementById('reportSubtitle');
+    if (sub) {
+      const now = new Date();
+      sub.textContent = `تقرير آخر ${currentDays} يوم · ${now.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long' })}`;
+    }
+
+    document.getElementById('profitGrowth').textContent =
+      count > 0 ? `إجمالي ${count} حوالة في الفترة المحددة` : 'لا توجد حوالات في الفترة المحددة';
+  }
+
+  function renderProfitList(filtered) {
+    const list = document.getElementById('profitList');
+    const recent = [...filtered]
+      .filter(t => t.status === 'completed')
+      .sort((a, b) => {
+        const da = toDate(a.createdAt), db = toDate(b.createdAt);
+        return (db || 0) - (da || 0);
+      })
+      .slice(0, 10);
+
+    if (!recent.length) {
+      list.innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد عمليات مكتملة في الفترة المحددة</p>';
+      return;
+    }
+
+    list.innerHTML = recent.map(t => {
+      const d = toDate(t.createdAt);
+      const dateStr = d ? d.toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+      return `
+        <div class="op-item">
+          <div class="op-avatar" style="background:linear-gradient(135deg,#2e7d32,#1b5e20)">💰</div>
+          <div class="op-info">
+            <div class="op-name">${t.beneficiary || '—'}</div>
+            <div class="op-date">${dateStr}</div>
+          </div>
+          <div style="text-align:left">
+            <div class="op-amount" style="color:#2e7d32">+${Number(t.commission || 0).toLocaleString('ar-SA')}</div>
+            <div class="op-currency">ر.ي عمولة</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function update() {
+    const filtered = filterByDays(allTransfers, currentDays);
+    renderStats(filtered);
+    renderChart(filtered);
+    renderProfitList(filtered);
+  }
+
+  async function init() {
+    allTransfers = await getTransfers(1000);
+    update();
+  }
+
+  init();
+
+  document.querySelectorAll('.chip[data-days]').forEach(c => {
+    c.addEventListener('click', function() {
+      document.querySelectorAll('.chip[data-days]').forEach(x => x.classList.remove('active'));
+      this.classList.add('active');
+      currentDays = parseInt(this.dataset.days);
+      update();
+    });
+  });
+
+  window.exportReport = function() {
+    const filtered = filterByDays(allTransfers, currentDays);
+    const profit = filtered.reduce((s, t) => s + (Number(t.commission) || 0), 0);
+    const amount = filtered.reduce((s, t) => s + (Number(t.amount) || 0), 0);
+    const msg = `📊 تقرير نظام محمد سالم\n━━━━━━━━━━━━━━\nالفترة: آخر ${currentDays} يوم\nإجمالي الحوالات: ${filtered.length}\nإجمالي المبالغ: ${amount.toLocaleString('ar-SA')} ر.ي\nإجمالي الأرباح: ${profit.toLocaleString('ar-SA')} ر.ي\n━━━━━━━━━━━━━━`;
+    const blob = new Blob([msg], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `تقرير-${new Date().toLocaleDateString('ar-SA')}.txt`;
+    a.click();
+    if (typeof showNotification === 'function') showNotification('تم تصدير التقرير ✓', 'success');
+  };
+  </script>
+
 </body>
 </html>
