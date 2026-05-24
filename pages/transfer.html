@@ -147,5 +147,38 @@
       document.getElementById('totalAmount').textContent = total.toLocaleString('ar-SA') + ' ر.ي';
     });
   </script>
+
+    <script type="module">
+      import { addTransfer } from "../firebase.js";
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('transferForm');
+        if (!form) return;
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const inputs = form.querySelectorAll('input');
+          const senderName = inputs[0]?.value?.trim() || '';
+          const senderPhone = inputs[1]?.value?.trim() || '';
+          const beneficiary = inputs[2]?.value?.trim() || '';
+          const beneficiaryPhone = inputs[3]?.value?.trim() || '';
+          const amount = parseFloat(document.getElementById('transferAmount')?.value || 0);
+          const currency = form.querySelector('select')?.value || 'YER';
+          const commission = Math.round(amount * 0.05);
+          const total = amount + commission;
+          if (!senderName || !beneficiary || !amount) return;
+          try {
+            const btn = form.querySelector('button[type="submit"]');
+            if (btn) { btn.disabled = true; btn.textContent = 'جاري الحفظ...'; }
+            await addTransfer({ senderName, senderPhone, beneficiary, beneficiaryPhone, amount, currency, commission, total });
+            if (typeof showNotification === 'function') showNotification('تم إنشاء الحوالة بنجاح! ✓', 'success');
+            setTimeout(() => { window.location.href = '../pages/logs.html'; }, 1500);
+          } catch(err) {
+            console.error('Error:', err);
+            if (typeof showNotification === 'function') showNotification('حدث خطأ أثناء الحفظ', 'error');
+            const btn = form.querySelector('button[type="submit"]');
+            if (btn) { btn.disabled = false; btn.textContent = 'إنشاء الحوالة'; }
+          }
+        }, true);
+      });
+    </script>
 </body>
 </html>
