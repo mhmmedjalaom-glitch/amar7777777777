@@ -148,37 +148,71 @@
     });
   </script>
 
-    <script type="module">
-      import { addTransfer } from "../firebase.js";
-      document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('transferForm');
-        if (!form) return;
-        form.addEventListener('submit', async function(e) {
-          e.preventDefault();
-          const inputs = form.querySelectorAll('input');
-          const senderName = inputs[0]?.value?.trim() || '';
-          const senderPhone = inputs[1]?.value?.trim() || '';
-          const beneficiary = inputs[2]?.value?.trim() || '';
-          const beneficiaryPhone = inputs[3]?.value?.trim() || '';
-          const amount = parseFloat(document.getElementById('transferAmount')?.value || 0);
-          const currency = form.querySelector('select')?.value || 'YER';
-          const commission = Math.round(amount * 0.05);
-          const total = amount + commission;
-          if (!senderName || !beneficiary || !amount) return;
-          try {
-            const btn = form.querySelector('button[type="submit"]');
-            if (btn) { btn.disabled = true; btn.textContent = 'جاري الحفظ...'; }
-            await addTransfer({ senderName, senderPhone, beneficiary, beneficiaryPhone, amount, currency, commission, total });
-            if (typeof showNotification === 'function') showNotification('تم إنشاء الحوالة بنجاح! ✓', 'success');
-            setTimeout(() => { window.location.href = '../pages/logs.html'; }, 1500);
-          } catch(err) {
-            console.error('Error:', err);
-            if (typeof showNotification === 'function') showNotification('حدث خطأ أثناء الحفظ', 'error');
-            const btn = form.querySelector('button[type="submit"]');
-            if (btn) { btn.disabled = false; btn.textContent = 'إنشاء الحوالة'; }
-          }
-        }, true);
-      });
-    </script>
-</body>
+    
+  <script type="module">
+  import { addTransfer, openWA, logWA } from "../firebase.js";
+
+  const WA_ADMIN = '967733231636';
+  const form = document.getElementById('transferForm') || document.querySelector('form');
+  const submitBtn = form ? form.querySelector('button[type=submit], button.btn-primary, .btn') : null;
+
+  if(form) {
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent='جاري الحفظ...'; }
+
+      const g = id => (document.getElementById(id)||document.querySelector('[name='+id+']'))?.value?.trim() || '';
+
+      const senderName     = g('senderName')     || g('sender_name')     || g('sender');
+      const senderPhone    = g('senderPhone')    || g('sender_phone')    || '';
+      const beneficiary    = g('beneficiary')    || g('receiver')        || g('beneficiary_name');
+      const beneficiaryPhone = g('beneficiaryPhone') || g('receiver_phone') || g('beneficiary_phone') || '';
+      const amount         = parseFloat(g('amount')  || g('transferAmount') || '0') || 0;
+      const currency       = g('currency') || 'ر.ي';
+      const commission     = parseFloat(g('commission') || '0') || 0;
+      const total          = amount + commission;
+      const note           = g('note') || g('notes') || '';
+
+      if(!senderName && !beneficiary && amount === 0) {
+        // fallback — جمع كل حقول النموذج
+        const allInputs = [...form.querySelectorAll('input,select,textarea')];
+        const data = {};
+        allInputs.forEach(i=>{ if(i.name||i.id) data[i.name||i.id]=i.value; });
+        try {
+          await addTransfer({ ...data, source:'form_fallback' });
+          if(typeof showNotification==='function') showNotification('تم حفظ الحوالة ✓','success');
+        } catch(err) { console.error(err); }
+        if(submitBtn){ submitBtn.disabled=false; submitBtn.textContent='تأكيد الحوالة'; }
+        return;
+      }
+
+      try {
+        await addTransfer({ senderName, senderPhone, beneficiary, beneficiaryPhone, amount, currency, commission, total, note });
+
+        // واتساب للمرسل
+        if(senderPhone) {
+          const msgSender = `نظام محمد سالم: تم استلام حوالتك بمبلغ ${amount.toLocaleString('ar-SA')} ${currency} للمستفيد ${beneficiary}. المجموع مع العمولة: ${total.toLocaleString('ar-SA')} ${currency}.`;
+          openWA(senderPhone, msgSender);
+          await logWA({ type:'transfer_sender', accountName:senderName, phone:senderPhone, message:msgSender });
+          await new Promise(r=>setTimeout(r,600));
+        }
+
+        // واتساب للمستفيد
+        if(beneficiaryPhone && beneficiaryPhone !== senderPhone) {
+          const msgBen = `نظام محمد سالم: سيصلك مبلغ ${amount.toLocaleString('ar-SA')} ${currency} من ${senderName}. تواصل معنا لأي استفسار.`;
+          openWA(beneficiaryPhone, msgBen);
+          await logWA({ type:'transfer_beneficiary', accountName:beneficiary, phone:beneficiaryPhone, message:msgBen });
+        }
+
+        if(typeof showNotification==='function') showNotification('تم حفظ الحوالة وإرسال إشعار واتساب ✓','success');
+        form.reset();
+      } catch(err) {
+        console.error(err);
+        if(typeof showNotification==='function') showNotification('خطأ في الحفظ: '+err.message,'error');
+      }
+      if(submitBtn){ submitBtn.disabled=false; submitBtn.textContent='تأكيد الحوالة'; }
+    });
+  }
+  </script>
+  </body>
 </html>
