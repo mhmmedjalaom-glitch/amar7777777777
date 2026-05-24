@@ -301,11 +301,21 @@
 
     try {
       await addAccount({ name, phone, balance, status });
-      document.getElementById('addAccountModal').style.display = 'none';
-      this.reset();
-      if (typeof showNotification === 'function')
-        showNotification('✅ تم حفظ الحساب في قاعدة البيانات', 'success');
-    } catch(err) {
+        document.getElementById('addAccountModal').style.display = 'none';
+        this.reset();
+
+        // واتساب ترحيب تلقائي فور الحفظ
+        if (phone) {
+          const clean = phone.replace(/[^0-9]/g,'');
+          const num = clean.startsWith('00') ? clean.slice(2) : clean.startsWith('0') ? '967'+clean.slice(1) : clean;
+          const welcomeMsg = `🏦 نظام محمد سالم للحوالات\n━━━━━━━━━━━━━━━━━━\n👋 مرحباً ${name}!\n\nتم تسجيلك في نظامنا بنجاح ✓\nرصيدك: ${Number(balance).toLocaleString('ar-SA')} ر.ي\n\nنحن في خدمتك دائماً 🙏`;
+          window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(welcomeMsg), '_blank');
+          await logWA({ type:'account_welcome', accountName:name, phone, message:welcomeMsg });
+        }
+
+        if (typeof showNotification === 'function')
+          showNotification(`✅ تم حفظ الحساب${phone ? ' وفُتح واتساب للعميل' : ''}`, 'success');
+      } catch(err) {
       console.error('addAccount error:', err);
       if (typeof showNotification === 'function')
         showNotification('❌ خطأ في الحفظ: ' + err.message, 'error');
