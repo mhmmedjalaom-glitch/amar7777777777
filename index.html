@@ -5,15 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>نظام محمد سالم للحوالات</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .logo-header {
+      display: flex; align-items: center; gap: 14px;
+    }
+    .logo-img {
+      width: 58px; height: 58px; border-radius: 50%;
+      border: 2px solid rgba(212,175,55,0.6);
+      flex-shrink: 0;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .logo-text h1 { font-size: 17px; font-weight: 800; color: #fff; margin: 0; }
+    .logo-text p  { font-size: 11px; color: rgba(255,255,255,0.75); font-family: Tajawal,sans-serif; margin: 2px 0 0; }
+  </style>
 </head>
 <body>
 
-  <!-- Header -->
   <div class="header">
     <div class="header-top">
-      <div class="header-title">
-        <h1>𓆩 نظام محمد سالم 𓆪</h1>
-        <p>للحوالات المالية الذكية</p>
+      <div class="logo-header">
+        <img src="logo.svg" alt="شعار محمد سالم" class="logo-img" />
+        <div class="logo-text">
+          <h1>𓆩 محمد سالم 𓆪</h1>
+          <p>للحوالات المالية الذكية</p>
+        </div>
       </div>
       <div class="header-icon-btn" onclick="navigate('pages/settings.html')">⚙️</div>
     </div>
@@ -28,7 +43,6 @@
 
   <div class="page-content">
 
-    <!-- تنبيه المتأخرين -->
     <div class="alert-card">
       <div class="alert-icon">⚠️</div>
       <div>
@@ -37,7 +51,6 @@
       </div>
     </div>
 
-    <!-- الوصول السريع -->
     <div class="section-header">
       <span class="section-title">⚡ الوصول السريع</span>
     </div>
@@ -60,7 +73,6 @@
       </a>
     </div>
 
-    <!-- الإحصاءات -->
     <div class="section-header">
       <span class="section-title">📊 إحصاءات اليوم</span>
     </div>
@@ -87,7 +99,6 @@
       </div>
     </div>
 
-    <!-- تحليل الأرباح الأسبوعي -->
     <div class="section-header">
       <span class="section-title">📈 تحليل الأرباح الأسبوعي</span>
       <a class="section-link" href="pages/reports.html">عرض الكل</a>
@@ -113,7 +124,6 @@
       </div>
     </div>
 
-    <!-- آخر العمليات -->
     <div class="section-header">
       <span class="section-title">🕐 آخر العمليات</span>
       <a class="section-link" href="pages/logs.html">عرض الكل</a>
@@ -124,23 +134,18 @@
 
   </div>
 
-  <!-- Bottom Navigation -->
   <nav class="bottom-nav">
     <div class="nav-item active" data-href="index.html">
-      <span class="nav-icon">🏠</span>
-      <span>الرئيسية</span>
+      <span class="nav-icon">🏠</span><span>الرئيسية</span>
     </div>
     <div class="nav-item" data-href="pages/transfer.html">
-      <span class="nav-icon">💸</span>
-      <span>تحويل</span>
+      <span class="nav-icon">💸</span><span>تحويل</span>
     </div>
     <div class="nav-item" data-href="pages/vip.html">
-      <span class="nav-icon">👑</span>
-      <span>المميزين</span>
+      <span class="nav-icon">👑</span><span>المميزين</span>
     </div>
     <div class="nav-item" data-href="pages/reports.html">
-      <span class="nav-icon">📊</span>
-      <span>تقارير</span>
+      <span class="nav-icon">📊</span><span>تقارير</span>
     </div>
   </nav>
 
@@ -151,85 +156,56 @@
 
     const fmt = n => Number(n || 0).toLocaleString('ar-SA');
 
-    // دالة لتحويل Firestore Timestamp أو Date إلى Date
     function toDate(val) {
       if (!val) return null;
       if (typeof val.toDate === 'function') return val.toDate();
-      if (val instanceof Date) return val;
       return new Date(val);
     }
 
-    // تحديث الإحصاءات
     async function refreshStats() {
       try {
         const s = await getStats();
-
-        // الرصيد الكلي
         document.getElementById('totalBalance').textContent = fmt(s.totalBalance);
-
-        // بطاقات الإحصاء
         document.getElementById('statCompleted').textContent = s.todayCompleted;
         document.getElementById('statPending').textContent   = s.todayPending;
         document.getElementById('statProfit').textContent    = fmt(s.todayProfit);
         document.getElementById('statLate').textContent      = s.lateAccounts;
-
-        // تنبيه المتأخرين
         const lateText = document.getElementById('lateAlertText');
-        if (lateText) {
-          lateText.textContent = s.lateAccounts > 0
-            ? `يوجد ${s.lateAccounts} عميل تجاوزوا فترة الـ 5 أيام.`
-            : 'لا يوجد عملاء متأخرون حالياً.';
-        }
-      } catch (e) {
-        console.error('stats error', e);
-      }
+        if (lateText) lateText.textContent = s.lateAccounts > 0
+          ? `يوجد ${s.lateAccounts} عميل تجاوزوا فترة الـ 5 أيام.`
+          : 'لا يوجد عملاء متأخرون حالياً. ✓';
+      } catch (e) { console.error('stats error', e); }
     }
 
-    // تحديث آخر العمليات في الوقت الفعلي
     listenTransfers(transfers => {
       refreshStats();
-
       const listEl = document.getElementById('opList');
       if (!listEl) return;
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const todayT = transfers
-        .filter(t => {
-          const d = toDate(t.createdAt);
-          return d && d >= today;
-        })
-        .slice(0, 5);
-
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const todayT = transfers.filter(t => { const d = toDate(t.createdAt); return d && d >= today; }).slice(0, 5);
       if (!todayT.length) {
         listEl.innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد حوالات اليوم</p>';
         return;
       }
-
-      const statusBg = { completed: '#2e7d32', pending: '#f57c00', cancelled: '#c62828' };
-      const statusTx = { completed: 'مكتملة ✅', pending: 'قيد التنفيذ ⏳', cancelled: 'ملغاة ❌' };
-
+      const statusBg = { completed:'#2e7d32', pending:'#f57c00', cancelled:'#c62828' };
+      const statusTx = { completed:'مكتملة ✅', pending:'قيد التنفيذ ⏳', cancelled:'ملغاة ❌' };
       listEl.innerHTML = todayT.map(t => {
         const d = toDate(t.createdAt);
-        const timeStr = d ? d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) : '—';
-        const initials = (t.beneficiary || '—').trim().slice(0, 2);
-        return `
-          <div class="op-item">
-            <div class="op-avatar">${initials}</div>
-            <div class="op-info">
-              <div class="op-name">${t.beneficiary || '—'}</div>
-              <div class="op-date">${timeStr} · <span class="badge" style="background:${statusBg[t.status] || '#666'};color:#fff;padding:2px 8px;border-radius:8px;font-size:10px">${statusTx[t.status] || t.status}</span></div>
-            </div>
-            <div style="text-align:left">
-              <div class="op-amount">${fmt(t.amount)}</div>
-              <div class="op-currency">${t.currency || 'ر.ي'}</div>
-            </div>
+        const timeStr = d ? d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'}) : '—';
+        const initials = (t.beneficiary||'—').trim().slice(0,2);
+        return `<div class="op-item">
+          <div class="op-avatar">${initials}</div>
+          <div class="op-info">
+            <div class="op-name">${t.beneficiary||'—'}</div>
+            <div class="op-date">${timeStr} · <span style="background:${statusBg[t.status]||'#666'};color:#fff;padding:2px 8px;border-radius:8px;font-size:10px">${statusTx[t.status]||t.status}</span></div>
           </div>
-        `;
+          <div style="text-align:left">
+            <div class="op-amount">${fmt(t.amount)}</div>
+            <div class="op-currency">${t.currency||'ر.ي'}</div>
+          </div>
+        </div>`;
       }).join('');
     });
   </script>
-
 </body>
 </html>
