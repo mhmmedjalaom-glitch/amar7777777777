@@ -243,12 +243,14 @@
 
   window.completeT = async function(id, phone, name, amount, currency) {
     await updateTransferStatus(id, 'completed');
+    const msg = `🏦 نظام محمد سالم للحوالات\n━━━━━━━━━━━━━━━━━━\n✅ تم إتمام حوالتك بنجاح!\n\n👤 المستلم: ${name}\n💰 المبلغ: ${Number(amount).toLocaleString('ar-SA')} ${currency}\n━━━━━━━━━━━━━━━━━━\nشكراً لثقتكم بنا 🙏`;
     if (phone) {
-      const msg = `🏦 نظام محمد سالم\n✅ تم إتمام حوالتك\n💰 ${Number(amount).toLocaleString('ar-SA')} ${currency}\nشكراً ${name} 🙏`;
-      openWA(phone, msg);
+      openWA(phone, msg); // يفتح تلقائياً
       await logWA({ type:'transfer_completed', accountName:name, phone, message:msg });
+      if (typeof showNotification==='function') showNotification('✅ تم التأكيد وفُتح واتساب للعميل','success');
+    } else {
+      if (typeof showNotification==='function') showNotification('✅ تم تحديث الحالة (لا يوجد رقم واتساب)','success');
     }
-    if (typeof showNotification==='function') showNotification('تم تحديث الحالة ✓','success');
   };
   window.delT = async function(id) {
     if (!confirm('هل تريد حذف هذه الحوالة؟')) return;
