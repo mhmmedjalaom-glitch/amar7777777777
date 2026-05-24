@@ -142,5 +142,96 @@
   </nav>
 
   <script src="../script.js"></script>
-</body>
+
+  <script type="module">
+  import { listenAccounts, listenWALogs, logWA, saveSettings, loadSettings } from "../firebase.js";
+
+  const ADMIN_WA = '967733231636';
+
+  function openWA(phone, text) {
+    const clean = String(phone).replace(/[^0-9]/g,'');
+    const num = clean.startsWith('00') ? clean.slice(2) : clean.startsWith('0') ? '967'+clean.slice(1) : clean || ADMIN_WA;
+    window.open('https://wa.me/'+num+'?text='+encodeURIComponent(text),'_blank');
+  }
+
+  // عرض رقم الربط
+  const numEl = document.querySelector('.info-value[style*="direction:ltr"]');
+  if(numEl) numEl.textContent = '+'+ADMIN_WA;
+
+  // زر الاختبار — يفتح واتساب حقيقي
+  const testBtn = document.getElementById('waTestBtn');
+  if(testBtn) {
+    testBtn.onclick = async function() {
+      const msg = 'مرحباً، هذه رسالة اختبارية من نظام محمد سالم للحوالات المالية ✓';
+      openWA(ADMIN_WA, msg);
+      await logWA({ type:'test', accountName:'اختبار', phone:ADMIN_WA, message:msg });
+      if(typeof showNotification==='function') showNotification('تم فتح واتساب للاختبار ✓','success');
+    };
+  }
+
+  // تحميل العملاء المتأخرين وربط الأزرار
+  let lateAccounts = [], allAccounts = [];
+  listenAccounts(accounts => {
+    allAccounts = accounts;
+    lateAccounts = accounts.filter(a => a.status === 'late');
+    const stat = document.querySelector('.info-value:not([style*="direction"])');
+    if(stat) stat.textContent = 'منذ دقيقتين ✓';
+    const sentEl = document.querySelectorAll('.info-value')[2];
+    if(sentEl) sentEl.textContent = accounts.length + ' حساب مرتبط';
+  });
+
+  // أزرار الرسائل السريعة
+  const btns = document.querySelectorAll('.btn-whatsapp, .btn-outline');
+  btns.forEach((btn, i) => {
+    if(btn.id === 'waTestBtn') return;
+    btn.onclick = async function() {
+      if(i === 1 || btn.textContent.includes('المتأخرين')) {
+        if(!lateAccounts.length) { if(typeof showNotification==='function') showNotification('لا يوجد عملاء متأخرون','info'); return; }
+        for(const acc of lateAccounts) {
+          if(!acc.phone) continue;
+          const msg = `السلام عليكم ${acc.name}، تذكير بالسداد — لديك رصيد متأخر ${Number(acc.balance||0).toLocaleString('ar-SA')} ر.ي. نظام محمد سالم للحوالات.`;
+          openWA(acc.phone, msg);
+          await logWA({ type:'late_alert', accountName:acc.name, phone:acc.phone, message:msg });
+          await new Promise(r=>setTimeout(r,800));
+        }
+        if(typeof showNotification==='function') showNotification('تم فتح واتساب لـ '+lateAccounts.length+' عميل متأخر','success');
+      } else if(btn.textContent.includes('كشوفات')) {
+        for(const acc of allAccounts) {
+          if(!acc.phone) continue;
+          const msg = `السلام عليكم ${acc.name}، كشف حسابك: الرصيد ${Number(acc.balance||0).toLocaleString('ar-SA')} ر.ي. نظام محمد سالم.`;
+          openWA(acc.phone, msg);
+          await logWA({ type:'statement', accountName:acc.name, phone:acc.phone, message:msg });
+          await new Promise(r=>setTimeout(r,800));
+        }
+        if(typeof showNotification==='function') showNotification('تم فتح واتساب لجميع العملاء','success');
+      } else if(btn.textContent.includes('تقرير')) {
+        const vip = allAccounts.filter(a=>a.status==='vip');
+        const msg = `تقرير اليوم — نظام محمد سالم: إجمالي الحسابات ${allAccounts.length}، عملاء VIP ${vip.length}.`;
+        openWA(ADMIN_WA, msg);
+        await logWA({ type:'daily_report', accountName:'تقرير يومي', phone:ADMIN_WA, message:msg });
+        if(typeof showNotification==='function') showNotification('تم إرسال التقرير ✓','success');
+      }
+    };
+  });
+
+  // سجل الرسائل من Firestore
+  const opList = document.querySelector('.op-list');
+  listenWALogs(logs => {
+    if(!opList) return;
+    if(!logs.length) { opList.innerHTML='<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد رسائل مرسلة بعد</p>'; return; }
+    opList.innerHTML = logs.map(l => {
+      const date = l.sentAt?.toDate ? l.sentAt.toDate().toLocaleString('ar-SA') : '';
+      const types = { transfer_new:'حوالة جديدة', late_alert:'تنبيه متأخر', statement:'كشف حساب', test:'رسالة اختبار', daily_report:'تقرير يومي', account_message:'رسالة حساب' };
+      return `<div class="op-item">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#25D366,#128C7E)">💬</div>
+        <div class="op-info">
+          <div class="op-name">${l.accountName||''}</div>
+          <div class="op-date">${types[l.type]||l.type} · ${date}</div>
+        </div>
+        <span class="badge badge-green">✓ تم</span>
+      </div>`;
+    }).join('');
+  });
+  </script>
+  </body>
 </html>
