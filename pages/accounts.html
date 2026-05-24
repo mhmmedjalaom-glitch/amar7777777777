@@ -12,7 +12,7 @@
     <div class="sub-header-top">
       <div class="back-btn">➡️</div>
       <span class="sub-header-title">إدارة الحسابات</span>
-      <div class="header-icon-btn" onclick="navigate('transfer.html')">➕</div>
+      <div class="header-icon-btn" style="cursor: pointer;">➕</div>
     </div>
     <div class="sub-header-subtitle">كافة الحسابات المسجلة في النظام</div>
   </div>
@@ -22,136 +22,40 @@
     <!-- Search Bar -->
     <div class="search-bar">
       <span class="search-icon">🔍</span>
-      <input type="text" placeholder="بحث عن حساب..." id="searchInput" oninput="filterAccounts(this.value)" />
+      <input type="text" placeholder="بحث عن حساب..." id="searchInput" />
     </div>
 
     <!-- Filter Chips -->
     <div class="filter-chips">
-      <div class="chip active" onclick="filterByStatus('all', this)">الكل</div>
-      <div class="chip" onclick="filterByStatus('active', this)">نشط</div>
-      <div class="chip" onclick="filterByStatus('late', this)">متأخر</div>
-      <div class="chip" onclick="filterByStatus('vip', this)">VIP</div>
+      <div class="chip active" data-filter="all">الكل</div>
+      <div class="chip" data-filter="active">نشط</div>
+      <div class="chip" data-filter="late">متأخر</div>
+      <div class="chip" data-filter="vip">VIP</div>
     </div>
 
     <!-- Stats Row -->
     <div style="display:flex;gap:10px;margin-bottom:16px">
       <div class="stat-card" style="flex:1;padding:12px">
-        <div class="stat-value" style="font-size:20px">34</div>
+        <div class="stat-value" style="font-size:20px">0</div>
         <div class="stat-label">إجمالي الحسابات</div>
       </div>
       <div class="stat-card" style="flex:1;padding:12px">
-        <div class="stat-value" style="font-size:20px;color:#2e7d32">28</div>
+        <div class="stat-value" style="font-size:20px;color:#2e7d32">0</div>
         <div class="stat-label">حساب نشط</div>
       </div>
       <div class="stat-card" style="flex:1;padding:12px">
-        <div class="stat-value" style="font-size:20px;color:#c62828">5</div>
+        <div class="stat-value" style="font-size:20px;color:#c62828">0</div>
         <div class="stat-label">متأخر</div>
       </div>
     </div>
 
     <!-- Accounts List -->
     <div class="op-list" id="accountsList">
-
-      <a href="abdulrahman.html" class="op-item" style="text-decoration:none" data-status="active">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#D4AF37,#c9a227)">عب</div>
-        <div class="op-info">
-          <div class="op-name">عبد الرحمن سالم</div>
-          <div class="op-date">حساب نشط · <span class="badge badge-gold">VIP</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">2,450,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </a>
-
-      <div class="op-item" data-status="late">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#c62828,#b71c1c)">أح</div>
-        <div class="op-info">
-          <div class="op-name">أحمد محمد الزبيدي</div>
-          <div class="op-date">متأخر 7 أيام · <span class="badge badge-red">متأخر</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">680,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" data-status="active">
-        <div class="op-avatar">سا</div>
-        <div class="op-info">
-          <div class="op-name">سالم عبدالله القحطاني</div>
-          <div class="op-date">آخر معاملة: اليوم · <span class="badge badge-green">نشط</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">1,200,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" data-status="active">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#1565c0,#0d47a1)">مح</div>
-        <div class="op-info">
-          <div class="op-name">محمد علي الشمري</div>
-          <div class="op-date">آخر معاملة: أمس · <span class="badge badge-green">نشط</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">450,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" data-status="late">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#c62828,#b71c1c)">عل</div>
-        <div class="op-info">
-          <div class="op-name">علي حسن المطري</div>
-          <div class="op-date">متأخر 12 يوم · <span class="badge badge-red">متأخر</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">320,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" data-status="vip">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#D4AF37,#c9a227)">خا</div>
-        <div class="op-info">
-          <div class="op-name">خالد إبراهيم النقيب</div>
-          <div class="op-date">مزامنة فورية · <span class="badge badge-gold">VIP</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">5,800,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" data-status="active">
-        <div class="op-avatar">يو</div>
-        <div class="op-info">
-          <div class="op-name">يوسف أحمد البهكلي</div>
-          <div class="op-date">آخر معاملة: أمس · <span class="badge badge-green">نشط</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">180,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" data-status="late">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#c62828,#b71c1c)">عم</div>
-        <div class="op-info">
-          <div class="op-name">عمر فيصل الحربي</div>
-          <div class="op-date">متأخر 6 أيام · <span class="badge badge-red">متأخر</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">550,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
+      <p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">جاري تحميل الحسابات...</p>
     </div>
 
     <div style="height:16px"></div>
-    <button class="btn btn-primary" onclick="navigate('transfer.html')">
+    <button class="btn btn-primary" id="addNewAccountBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">
       ➕ إنشاء حساب جديد
     </button>
 
@@ -173,61 +77,10 @@
   </nav>
 
   <script src="../script.js"></script>
-  <script>
-    function filterAccounts(query) {
-      const items = document.querySelectorAll('#accountsList .op-item, #accountsList a.op-item');
-      items.forEach(item => {
-        const name = item.querySelector('.op-name').textContent;
-        item.style.display = name.includes(query) ? '' : 'none';
-      });
-    }
-    function filterByStatus(status, el) {
-      document.querySelectorAll('.filter-chips .chip').forEach(c => c.classList.remove('active'));
-      el.classList.add('active');
-      const items = document.querySelectorAll('#accountsList [data-status]');
-      items.forEach(item => {
-        item.style.display = (status === 'all' || item.dataset.status === status) ? '' : 'none';
-      });
-    }
-  </script>
 
-    
-  <!-- Modal إضافة حساب -->
+  <!-- Modal إضافة حساب جديد -->
   <div id="addAccountModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:flex-end;justify-content:center">
-    <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:430px;direction:rtl;font-family:Cairo,sans-serif">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-        <h3 style="font-size:16px;font-weight:800;margin:0;color:#1a1a1a">➕ إضافة حساب جديد</h3>
-        <span id="closeModal" style="font-size:22px;cursor:pointer;color:#999">×</span>
-      </div>
-      <form id="addAccountForm">
-        <div style="margin-bottom:12px">
-          <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:6px">اسم العميل *</label>
-          <input id="accName" type="text" required placeholder="أدخل الاسم الكامل" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box"/>
-        </div>
-        <div style="margin-bottom:12px">
-          <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:6px">رقم الهاتف (للواتساب)</label>
-          <input id="accPhone" type="tel" placeholder="+967 7xx xxx xxx" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;direction:ltr"/>
-        </div>
-        <div style="margin-bottom:12px">
-          <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:6px">الرصيد الابتدائي (ر.ي)</label>
-          <input id="accBalance" type="number" placeholder="0" min="0" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box"/>
-        </div>
-        <div style="margin-bottom:20px">
-          <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:6px">نوع الحساب</label>
-          <select id="accStatus" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;background:#fff">
-            <option value="active">نشط ✅</option>
-            <option value="vip">VIP 👑</option>
-            <option value="late">متأخر ⚠️</option>
-          </select>
-        </div>
-        <button type="submit" id="saveAccBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif">حفظ الحساب في قاعدة البيانات</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- ======== Modal إضافة حساب جديد ======== -->
-  <div id="addAccountModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:flex-end;justify-content:center">
-    <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;direction:rtl;font-family:Cairo,sans-serif">
+    <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;direction:rtl;font-family:Cairo,sans-serif;max-height:85vh;overflow-y:auto">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
         <h3 style="font-size:16px;font-weight:800;margin:0;color:#1a1a1a">➕ إضافة حساب جديد</h3>
         <span id="closeModal" style="font-size:26px;cursor:pointer;color:#999;line-height:1">×</span>
@@ -258,7 +111,7 @@
           </select>
         </div>
         <button type="submit" id="saveAccBtn"
-          style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif">
+          style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;transition:all 0.3s">
           💾 حفظ الحساب في قاعدة البيانات
         </button>
       </form>
@@ -268,163 +121,252 @@
   <script type="module">
   import { addAccount, listenAccounts, logWA } from "../firebase.js";
 
-  // ===== إصلاح زر + في الهيدر =====
-  const addBtn = document.querySelector('.header-icon-btn');
-  if (addBtn) {
-    addBtn.removeAttribute('onclick');
-    addBtn.textContent = '➕';
-    addBtn.style.cursor = 'pointer';
-    addBtn.addEventListener('click', () => {
-      document.getElementById('addAccountModal').style.display = 'flex';
-    });
+  let allAccounts = [];
+  let currentFilter = 'all';
+  let currentSearch = '';
+
+  // دالة آمنة لتنسيق رقم الهاتف
+  function formatPhoneNumber(phone) {
+    if (!phone || typeof phone !== 'string') return null;
+    const clean = phone.replace(/[^0-9]/g, '');
+    if (clean.length === 0) return null;
+    if (clean.startsWith('00')) return clean.slice(2);
+    if (clean.startsWith('0')) return '967' + clean.slice(1);
+    return clean;
   }
 
-  // ===== Modal controls =====
-  document.getElementById('closeModal').addEventListener('click', () => {
-    document.getElementById('addAccountModal').style.display = 'none';
-  });
-  document.getElementById('addAccountModal').addEventListener('click', function(e) {
-    if (e.target === this) this.style.display = 'none';
-  });
-
-  // ===== حفظ حساب جديد =====
-  document.getElementById('addAccountForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const btn = document.getElementById('saveAccBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ جاري الحفظ...';
-
-    const name    = document.getElementById('accName').value.trim();
-    const phone   = document.getElementById('accPhone').value.trim();
-    const balance = parseFloat(document.getElementById('accBalance').value) || 0;
-    const status  = document.getElementById('accStatus').value;
-
-    try {
-      await addAccount({ name, phone, balance, status });
-        document.getElementById('addAccountModal').style.display = 'none';
-        this.reset();
-
-        // واتساب ترحيب تلقائي فور الحفظ
-        if (phone) {
-          const clean = phone.replace(/[^0-9]/g,'');
-          const num = clean.startsWith('00') ? clean.slice(2) : clean.startsWith('0') ? '967'+clean.slice(1) : clean;
-          const welcomeMsg = `🏦 نظام محمد سالم للحوالات\n━━━━━━━━━━━━━━━━━━\n👋 مرحباً ${name}!\n\nتم تسجيلك في نظامنا بنجاح ✓\nرصيدك: ${Number(balance).toLocaleString('ar-SA')} ر.ي\n\nنحن في خدمتك دائماً 🙏`;
-          window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(welcomeMsg), '_blank');
-          await logWA({ type:'account_welcome', accountName:name, phone, message:welcomeMsg });
-        }
-
-        if (typeof showNotification === 'function')
-          showNotification(`✅ تم حفظ الحساب${phone ? ' وفُتح واتساب للعميل' : ''}`, 'success');
-      } catch(err) {
-      console.error('addAccount error:', err);
-      if (typeof showNotification === 'function')
-        showNotification('❌ خطأ في الحفظ: ' + err.message, 'error');
-    }
-    btn.disabled = false;
-    btn.textContent = '💾 حفظ الحساب في قاعدة البيانات';
-  });
-
-  // ===== عرض الحسابات من Firestore =====
-  function statusLabel(s) {
-    if (s === 'late') return '<span style="background:#c62828;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">⚠️ متأخر</span>';
-    if (s === 'vip')  return '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">👑 VIP</span>';
-    return '<span style="background:#2e7d32;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">✅ نشط</span>';
-  }
-
-  let allAccounts = [], currentFilter = 'all', currentSearch = '';
-
-  function render() {
-    const list = document.getElementById('accountsList') || document.querySelector('.op-list');
-    if (!list) return;
-
-    // إحصاءات
+  // تحديث الإحصاءات
+  function updateStats() {
     const stats = document.querySelectorAll('.stat-card .stat-value');
     if (stats[0]) stats[0].textContent = allAccounts.length;
     if (stats[1]) stats[1].textContent = allAccounts.filter(a => a.status !== 'late').length;
     if (stats[2]) stats[2].textContent = allAccounts.filter(a => a.status === 'late').length;
+  }
+
+  // تسمية الحالة
+  function statusLabel(status) {
+    const labels = {
+      'late': '<span style="background:#c62828;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">⚠️ متأخر</span>',
+      'vip': '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">👑 VIP</span>',
+      'active': '<span style="background:#2e7d32;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">✅ نشط</span>'
+    };
+    return labels[status] || labels['active'];
+  }
+
+  // عرض الحسابات
+  function render() {
+    const list = document.getElementById('accountsList');
+    if (!list) return;
 
     let filtered = allAccounts;
-    if (currentFilter !== 'all') filtered = filtered.filter(a => a.status === currentFilter);
-    if (currentSearch) filtered = filtered.filter(a =>
-      (a.name||'').includes(currentSearch) || (a.phone||'').includes(currentSearch)
-    );
+    if (currentFilter !== 'all') {
+      filtered = filtered.filter(a => a.status === currentFilter);
+    }
+    if (currentSearch) {
+      filtered = filtered.filter(a =>
+        (a.name || '').toLowerCase().includes(currentSearch.toLowerCase()) || 
+        (a.phone || '').includes(currentSearch)
+      );
+    }
 
     if (!filtered.length) {
       list.innerHTML = '<p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">لا توجد حسابات — اضغط ➕ لإضافة حساب جديد</p>';
+      updateStats();
       return;
     }
 
-    list.innerHTML = filtered.map(a => `
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:14px;cursor:pointer"
-          onclick="sendWAAccount('${(a.phone||'').replace(/'/g,'')}',' ${(a.name||'').replace(/'/g,'')}',' ${a.balance||0}')"
-          title="إرسال واتساب">
-          ${(a.name||'ع').substring(0,2)}
+    list.innerHTML = filtered.map(account => {
+      const displayName = (account.name || 'ع').substring(0, 2);
+      const formattedBalance = Number(account.balance || 0).toLocaleString('ar-SA');
+      const safePhone = (account.phone || '').replace(/'/g, '');
+      const safeName = (account.name || '').replace(/'/g, '');
+
+      return `
+        <div class="op-item">
+          <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:14px;cursor:pointer"
+            onclick="viewAccountDetails('${account.id}','${safeName}','${safePhone}','${account.balance || 0}')"
+            title="تفاصيل الحساب">
+            ${displayName}
+          </div>
+          <div class="op-info" style="flex:1">
+            <div class="op-name">${account.name || '—'}</div>
+            <div class="op-date">${account.phone || 'لا يوجد رقم'} · ${statusLabel(account.status)}</div>
+          </div>
+          <div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+            <div style="font-size:15px;font-weight:800;color:#8B0000">${formattedBalance}</div>
+            <div style="font-size:11px;color:#999">ر.ي</div>
+            <button onclick="sendWAAccount('${safePhone}','${safeName}','${account.balance || 0}')"
+              style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:Cairo">
+              💬 واتساب
+            </button>
+            <button onclick="goToTransfer('${account.id}','${safeName}','${safePhone}')"
+              style="background:#8B0000;color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:Cairo;margin-top:3px">
+              💸 حوالة
+            </button>
+          </div>
         </div>
-        <div class="op-info" style="flex:1">
-          <div class="op-name">${a.name||'—'}</div>
-          <div class="op-date">${a.phone||'لا يوجد رقم'} · ${statusLabel(a.status)}</div>
-        </div>
-        <div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-          <div style="font-size:15px;font-weight:800;color:#8B0000">${Number(a.balance||0).toLocaleString('ar-SA')}</div>
-          <div style="font-size:11px;color:#999">ر.ي</div>
-          <button onclick="sendWAAccount('${(a.phone||'').replace(/'/g,'')}','${(a.name||'').replace(/'/g,'')}','${a.balance||0}')"
-            style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:Cairo">
-            💬 واتساب
-          </button>
-          <button onclick="newTransfer('${a.id}','${(a.name||'').replace(/'/g,'')}','${(a.phone||'').replace(/'/g,'')}')"
-            style="background:#8B0000;color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:Cairo;margin-top:3px">
-            💸 حوالة
-          </button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
+
+    updateStats();
   }
 
-  listenAccounts(accounts => { allAccounts = accounts; render(); });
+  // الذهاب للحوالة
+  window.goToTransfer = function(accountId, name, phone) {
+    if (!accountId) {
+      showNotification('خطأ: معرف الحساب غير صحيح', 'error');
+      return;
+    }
+    const params = new URLSearchParams({ id: accountId, name, phone });
+    window.location.href = 'transfer.html?' + params.toString();
+  };
 
-  // فلترة بالشرائح
-  document.querySelectorAll('.chip').forEach(c => {
-    c.addEventListener('click', function() {
-      const map = { 'الكل':'all', 'نشط':'active', 'متأخر':'late', 'VIP':'vip' };
-      currentFilter = map[this.textContent.trim()] || 'all';
+  // عرض تفاصيل الحساب
+  window.viewAccountDetails = function(id, name, phone, balance) {
+    const msg = `📊 تفاصيل الحساب:\n━━━━━━━━━━━━━━━\n👤 الاسم: ${name}\n📞 الهاتف: ${phone}\n💰 الرصيد: ${Number(balance).toLocaleString('ar-SA')} ر.ي`;
+    if (typeof showNotification === 'function') showNotification(msg, 'info');
+  };
+
+  // إرسال واتساب آمن
+  window.sendWAAccount = async function(phone, name, balance) {
+    try {
+      if (!phone || phone.trim() === '') {
+        if (typeof showNotification === 'function') showNotification('لا يوجد رقم واتساب لهذا العميل', 'error');
+        return;
+      }
+
+      const formattedPhone = formatPhoneNumber(phone);
+      if (!formattedPhone) {
+        if (typeof showNotification === 'function') showNotification('رقم الهاتف غير صحيح', 'error');
+        return;
+      }
+
+      const msg = `🏦 نظام محمد سالم للحوالات
+━━━━━━━━━━━━━━━
+السلام عليكم ${name.trim()}
+
+كشف حسابك:
+💰 الرصيد الحالي: ${Number(balance).toLocaleString('ar-SA')} ر.ي
+
+للاستفسار تواصل معنا 📞`;
+
+      window.open('https://wa.me/' + formattedPhone + '?text=' + encodeURIComponent(msg), '_blank');
+      await logWA({ type: 'account_statement', accountName: name.trim(), phone: formattedPhone, message: msg });
+      if (typeof showNotification === 'function') showNotification('تم فتح واتساب ✓', 'success');
+    } catch (error) {
+      console.error('Error sending WhatsApp:', error);
+      if (typeof showNotification === 'function') showNotification('خطأ في إرسال الواتساب', 'error');
+    }
+  };
+
+  // التحكم بـ Modal
+  const addNewAccountBtn = document.getElementById('addNewAccountBtn');
+  const closeModalBtn = document.getElementById('closeModal');
+  const addAccountModal = document.getElementById('addAccountModal');
+  const addAccountForm = document.getElementById('addAccountForm');
+
+  if (addNewAccountBtn) {
+    addNewAccountBtn.addEventListener('click', () => {
+      addAccountModal.style.display = 'flex';
+    });
+  }
+
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+      addAccountModal.style.display = 'none';
+    });
+  }
+
+  if (addAccountModal) {
+    addAccountModal.addEventListener('click', function(e) {
+      if (e.target === this) this.style.display = 'none';
+    });
+  }
+
+  // معالج النموذج
+  if (addAccountForm) {
+    addAccountForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const btn = document.getElementById('saveAccBtn');
+      const name = document.getElementById('accName').value.trim();
+      const phone = document.getElementById('accPhone').value.trim();
+      const balance = parseFloat(document.getElementById('accBalance').value) || 0;
+      const status = document.getElementById('accStatus').value;
+
+      if (!name) {
+        if (typeof showNotification === 'function') showNotification('الرجاء إدخال اسم العميل', 'error');
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+      if (btn) btn.textContent = '⏳ جاري الحفظ...';
+
+      try {
+        const formattedPhone = phone ? formatPhoneNumber(phone) : null;
+        const docRef = await addAccount({ name, phone: formattedPhone || '', balance, status });
+
+        if (!docRef || !docRef.id) throw new Error('فشل حفظ الحساب');
+
+        addAccountModal.style.display = 'none';
+        this.reset();
+
+        if (formattedPhone) {
+          const welcomeMsg = `🏦 نظام محمد سالم للحوالات
+━━━━━━━━━━━━━━━━━━
+👋 مرحباً ${name}!
+
+تم تسجيلك بنجاح في النظام
+معرف حسابك: ${docRef.id}
+الرصيد الابتدائي: ${Number(balance).toLocaleString('ar-SA')} ر.ي
+
+🔒 نتمنى لك خدمة ممتازة`;
+
+          try {
+            window.open('https://wa.me/' + formattedPhone + '?text=' + encodeURIComponent(welcomeMsg), '_blank');
+            await logWA({ type: 'account_welcome', accountName: name, phone: formattedPhone, message: welcomeMsg });
+          } catch (waError) {
+            console.warn('WhatsApp warning:', waError);
+          }
+        }
+
+        if (typeof showNotification === 'function') showNotification(`✅ تم إنشاء الحساب بنجاح`, 'success');
+
+      } catch (error) {
+        console.error('Error adding account:', error);
+        if (typeof showNotification === 'function') showNotification(`❌ خطأ: ${error.message || 'حدث خطأ أثناء حفظ الحساب'}`, 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+        if (btn) btn.textContent = '💾 حفظ الحساب في قاعدة البيانات';
+      }
+    });
+  }
+
+  // البحث والفلترة
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      currentSearch = this.value;
+      render();
+    });
+  }
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter || 'all';
       render();
     });
   });
 
-  // بحث
-  const searchInput = document.getElementById('searchInput') || document.querySelector('input[placeholder*="بحث"]');
-  if (searchInput) {
-    searchInput.addEventListener('input', function() { currentSearch = this.value; render(); });
-  }
+  // الاستماع للحسابات من Firebase
+  listenAccounts(accounts => {
+    allAccounts = accounts || [];
+    render();
+  });
 
-  // ===== واتساب للحسابات =====
-  window.newTransfer = function(id, name, phone) {
-    const params = new URLSearchParams({ id, name, phone });
-    window.location.href = 'transfer.html?' + params.toString();
-  };
-
-  window.sendWAAccount = async function(phone, name, balance) {
-    if (!phone || phone.trim() === '') {
-      if (typeof showNotification === 'function') showNotification('لا يوجد رقم واتساب لهذا العميل', 'error');
-      return;
-    }
-    const clean = phone.replace(/[^0-9]/g,'');
-    const num = clean.startsWith('00') ? clean.slice(2) : clean.startsWith('0') ? '967'+clean.slice(1) : clean;
-    const msg = `🏦 نظام محمد سالم للحوالات
-  ━━━━━━━━━━━━━━━
-  السلام عليكم ${name.trim()}
-
-  كشف حسابك:
-  💰 الرصيد الحالي: ${Number(balance).toLocaleString('ar-SA')} ر.ي
-
-  للاستفسار تواصل معنا 📞`;
-
-    window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(msg), '_blank');
-    await logWA({ type:'account_statement', accountName:name.trim(), phone, message:msg });
-    if (typeof showNotification === 'function') showNotification('تم فتح واتساب ✓', 'success');
-  };
   </script>
 
   </body>
-  </html>
+</html>
