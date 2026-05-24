@@ -11,15 +11,14 @@
   <div class="sub-header">
     <div class="sub-header-top">
       <div class="back-btn">➡️</div>
-      <span class="sub-header-title">سجل الحوالات والفلترة</span>
+      <span class="sub-header-title">سجل الحوالات</span>
       <div style="width:38px"></div>
     </div>
-    <div class="sub-header-subtitle">نظام محمد سالم للحوالات المالية</div>
+    <div class="sub-header-subtitle">إشعار واتساب تلقائي عند كل تحديث</div>
   </div>
 
   <div class="page-content">
 
-    <!-- Alert Banner -->
     <div id="alertBanner" style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:1px solid #ffb74d;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px">
       <span style="font-size:20px">🔔</span>
       <div>
@@ -28,21 +27,18 @@
       </div>
     </div>
 
-    <!-- Search -->
     <div class="search-bar">
       <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="بحث في السجل..." />
     </div>
 
-    <!-- Filter Chips -->
     <div class="filter-chips">
-      <div class="chip active" data-filter="all">فلترة الكل</div>
+      <div class="chip active" data-filter="all">الكل</div>
       <div class="chip" data-filter="completed">مكتملة</div>
       <div class="chip" data-filter="pending">قيد التنفيذ</div>
       <div class="chip" data-filter="cancelled">ملغاة</div>
     </div>
 
-    <!-- Stats Row -->
     <div style="display:flex;gap:8px;margin-bottom:14px">
       <div style="flex:1;background:#e8f5e9;border-radius:10px;padding:10px;text-align:center">
         <div id="cntCompleted" style="font-size:18px;font-weight:800;color:#2e7d32">—</div>
@@ -62,35 +58,26 @@
       </div>
     </div>
 
-    <!-- Operations List -->
     <div class="section-header">
-      <span class="section-title">🕐 العمليات الأخيرة</span>
+      <span class="section-title">🕐 العمليات</span>
     </div>
     <div class="op-list" id="transferList">
-      <p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">جاري تحميل الحوالات...</p>
+      <p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">جاري التحميل...</p>
     </div>
 
   </div>
 
   <nav class="bottom-nav">
-    <div class="nav-item" data-href="../index.html">
-      <span class="nav-icon">🏠</span><span>الرئيسية</span>
-    </div>
-    <div class="nav-item" data-href="transfer.html">
-      <span class="nav-icon">💸</span><span>تحويل</span>
-    </div>
-    <div class="nav-item" data-href="vip.html">
-      <span class="nav-icon">👑</span><span>المميزين</span>
-    </div>
-    <div class="nav-item" data-href="reports.html">
-      <span class="nav-icon">📊</span><span>تقارير</span>
-    </div>
+    <div class="nav-item" data-href="../index.html"><span class="nav-icon">🏠</span><span>الرئيسية</span></div>
+    <div class="nav-item" data-href="transfer.html"><span class="nav-icon">💸</span><span>تحويل</span></div>
+    <div class="nav-item" data-href="vip.html"><span class="nav-icon">👑</span><span>المميزين</span></div>
+    <div class="nav-item" data-href="reports.html"><span class="nav-icon">📊</span><span>تقارير</span></div>
   </nav>
 
   <script src="../script.js"></script>
 
   <script type="module">
-  import { listenTransfers, updateTransferStatus, deleteTransfer, logWA, openWA } from "../firebase.js";
+  import { listenTransfers, updateTransferStatus, deleteTransfer, notifyClient } from "../firebase.js";
 
   let allTransfers = [], currentFilter = 'all', currentSearch = '';
 
@@ -115,62 +102,50 @@
     return m[s] || `<span style="background:#888;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">${s}</span>`;
   }
 
-  function borderColor(s) {
-    return s === 'completed' ? '#2e7d32' : s === 'cancelled' ? '#c62828' : '#f57c00';
-  }
-
-  function updateStats(list) {
-    document.getElementById('cntCompleted').textContent = list.filter(t => t.status === 'completed').length;
-    document.getElementById('cntPending').textContent   = list.filter(t => t.status === 'pending').length;
-    document.getElementById('cntCancelled').textContent = list.filter(t => t.status === 'cancelled').length;
-    document.getElementById('cntTotal').textContent     = list.length;
-
-    const pending = list.filter(t => t.status === 'pending').length;
-    const alertText = document.getElementById('alertText');
-    if (alertText) {
-      alertText.textContent = pending > 0
-        ? `${pending} حوالة قيد التنفيذ تحتاج مراجعة`
-        : 'لا توجد حوالات تحتاج إجراء';
-    }
-  }
-
   function render() {
     const list = document.getElementById('transferList');
     if (!list) return;
+
+    const pending = allTransfers.filter(t => t.status === 'pending').length;
+    document.getElementById('cntCompleted').textContent = allTransfers.filter(t => t.status === 'completed').length;
+    document.getElementById('cntPending').textContent   = pending;
+    document.getElementById('cntCancelled').textContent = allTransfers.filter(t => t.status === 'cancelled').length;
+    document.getElementById('cntTotal').textContent     = allTransfers.length;
+
+    const alertText = document.getElementById('alertText');
+    if (alertText) alertText.textContent = pending > 0 ? `${pending} حوالة قيد التنفيذ تحتاج مراجعة` : 'لا توجد حوالات معلقة ✓';
 
     let filtered = allTransfers;
     if (currentFilter !== 'all') filtered = filtered.filter(t => t.status === currentFilter);
     if (currentSearch) {
       const q = currentSearch.toLowerCase();
-      filtered = filtered.filter(t =>
-        (t.beneficiary || '').toLowerCase().includes(q) ||
-        (t.transferType || '').includes(q) ||
-        (t.notes || '').includes(q)
-      );
+      filtered = filtered.filter(t => (t.beneficiary||'').toLowerCase().includes(q) || (t.transferType||'').includes(q));
     }
 
-    updateStats(allTransfers);
-
     if (!filtered.length) {
-      list.innerHTML = '<p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">لا توجد حوالات — أضف من صفحة التحويل</p>';
+      list.innerHTML = '<p style="text-align:center;color:#999;padding:32px;font-family:Tajawal">لا توجد حوالات — أضف من صفحة التحويل</p>';
       return;
     }
 
+    const borderColor = s => s === 'completed' ? '#2e7d32' : s === 'cancelled' ? '#c62828' : '#f57c00';
+
     list.innerHTML = filtered.map(t => {
-      const phone = (t.beneficiaryPhone || '').replace(/'/g, '');
-      const name  = (t.beneficiary || '—').replace(/'/g, '');
+      const phone = (t.beneficiaryPhone || '').replace(/'/g,'');
+      const name  = (t.beneficiary || '—').replace(/'/g,'');
+      const isPending = t.status === 'pending';
       return `
         <div class="op-item" style="border-right:4px solid ${borderColor(t.status)}">
           <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:18px">💸</div>
           <div class="op-info" style="flex:1;min-width:0">
-            <div class="op-name">${t.beneficiary || '—'}</div>
+            <div class="op-name">${t.beneficiary||'—'}</div>
             <div class="op-date">${fmtDate(t.createdAt)}</div>
-            <div style="margin-top:4px">${statusBadge(t.status)} <span style="font-size:11px;color:#888;margin-right:6px">${t.transferType || ''}</span></div>
+            <div style="margin-top:4px">${statusBadge(t.status)} <span style="font-size:11px;color:#888;margin-right:6px">${t.transferType||''}</span></div>
             ${t.notes ? `<div style="font-size:11px;color:#888;margin-top:3px;font-family:Tajawal">📝 ${t.notes}</div>` : ''}
             <div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">
-              ${t.status !== 'completed' ? `<button onclick="doComplete('${t.id}','${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#2e7d32;color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:Cairo">✓ مكتملة</button>` : ''}
-              ${phone ? `<button onclick="doWA('${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#25D366;color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:Cairo">💬 واتساب</button>` : ''}
-              <button onclick="doDelete('${t.id}')" style="background:#c62828;color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:Cairo">🗑 حذف</button>
+              ${isPending ? `<button onclick="doComplete('${t.id}','${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#2e7d32;color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:Cairo;font-weight:700">✓ مكتملة + واتساب</button>` : ''}
+              ${isPending ? `<button onclick="doCancel('${t.id}','${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#e65100;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:Cairo">✗ إلغاء</button>` : ''}
+              ${phone ? `<button onclick="doRemind('${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#25D366;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:Cairo">💬 تذكير</button>` : ''}
+              <button onclick="doDelete('${t.id}')" style="background:#c62828;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:Cairo">🗑 حذف</button>
             </div>
           </div>
           <div style="text-align:left;min-width:72px">
@@ -178,18 +153,13 @@
             <div style="font-size:11px;color:#999">${t.currency||'ر.ي'}</div>
             <div style="font-size:11px;color:#e65100;margin-top:2px">عمولة: ${Number(t.commission||0).toLocaleString('ar-SA')}</div>
           </div>
-        </div>
-      `;
+        </div>`;
     }).join('');
   }
 
   listenTransfers(ts => { allTransfers = ts; render(); });
 
-  document.getElementById('searchInput').addEventListener('input', function() {
-    currentSearch = this.value;
-    render();
-  });
-
+  document.getElementById('searchInput').addEventListener('input', function() { currentSearch = this.value; render(); });
   document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', function() {
     document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
     this.classList.add('active');
@@ -197,28 +167,36 @@
     render();
   }));
 
+  // ✅ إتمام الحوالة + إشعار واتساب تلقائي للعميل
   window.doComplete = async function(id, phone, name, amount, currency) {
     await updateTransferStatus(id, 'completed');
-    const msg = `🏦 نظام محمد سالم للحوالات\n━━━━━━━━━━━━━━━━━━\n✅ تم إتمام حوالتك بنجاح!\n\n👤 المستلم: ${name}\n💰 المبلغ: ${Number(amount).toLocaleString('ar-SA')} ${currency}\n━━━━━━━━━━━━━━━━━━\nشكراً لثقتكم بنا 🙏`;
-    if (phone) {
-      openWA(phone, msg);
-      await logWA({ type: 'transfer_completed', accountName: name, phone, message: msg });
-    }
-    if (typeof showNotification === 'function') showNotification('✅ تم التحديث' + (phone ? ' وفُتح واتساب' : ''), 'success');
+    await notifyClient(phone, 'transfer_completed', { name, amount, currency });
+    if (typeof showNotification === 'function')
+      showNotification('✅ تم الإتمام' + (phone ? ' وفُتح واتساب للعميل' : ''), 'success');
   };
 
+  // ❌ إلغاء الحوالة + إشعار واتساب للعميل
+  window.doCancel = async function(id, phone, name, amount, currency) {
+    if (!confirm('هل تريد إلغاء هذه الحوالة؟')) return;
+    await updateTransferStatus(id, 'cancelled');
+    await notifyClient(phone, 'transfer_cancelled', { name, amount, currency });
+    if (typeof showNotification === 'function')
+      showNotification('تم الإلغاء' + (phone ? ' وفُتح واتساب للعميل' : ''), 'info');
+  };
+
+  // 🗑 حذف
   window.doDelete = async function(id) {
     if (!confirm('هل تريد حذف هذه الحوالة نهائياً؟')) return;
-    await deleteTransfer(id);
+    const { deleteTransfer: del } = await import('../firebase.js');
+    await del(id);
     if (typeof showNotification === 'function') showNotification('تم الحذف', 'info');
   };
 
-  window.doWA = async function(phone, name, amount, currency) {
-    const msg = `🏦 نظام محمد سالم\n📬 تذكير حوالة ${name}\n💰 ${Number(amount).toLocaleString('ar-SA')} ${currency}`;
-    openWA(phone, msg);
-    await logWA({ type: 'transfer_reminder', accountName: name, phone, message: msg });
+  // 💬 تذكير واتساب
+  window.doRemind = async function(phone, name, amount, currency) {
+    await notifyClient(phone, 'transfer_reminder', { name, amount, currency });
+    if (typeof showNotification === 'function') showNotification('تم فتح واتساب للتذكير', 'success');
   };
   </script>
-
 </body>
 </html>
