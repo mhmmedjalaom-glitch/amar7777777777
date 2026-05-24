@@ -5,6 +5,83 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>المساعد الصوتي - نظام محمد سالم</title>
   <link rel="stylesheet" href="../style.css" />
+  <style>
+    .voice-circle {
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8B0000, #660000);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px; margin: 0 auto;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(139,0,0,0.3);
+      transition: all 0.3s ease;
+      border: 4px solid transparent;
+      user-select: none;
+    }
+    .voice-circle.listening {
+      animation: pulse 1s infinite;
+      border-color: #D4AF37;
+      box-shadow: 0 0 0 0 rgba(212,175,55,0.4);
+    }
+    .voice-circle.processing {
+      background: linear-gradient(135deg, #1565c0, #0d47a1);
+      animation: spin 1s linear infinite;
+    }
+    .voice-circle.success {
+      background: linear-gradient(135deg, #2e7d32, #1b5e20);
+    }
+    .voice-circle.error {
+      background: linear-gradient(135deg, #c62828, #b71c1c);
+    }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(212,175,55,0.6); }
+      70%  { box-shadow: 0 0 0 20px rgba(212,175,55,0); }
+      100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .wave-bars {
+      display: flex; gap: 4px; align-items: center; justify-content: center;
+      height: 30px; margin: 8px auto;
+    }
+    .wave-bar {
+      width: 4px; background: #8B0000; border-radius: 2px;
+      animation: wave 0.8s ease-in-out infinite;
+      height: 10px;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+    @keyframes wave {
+      0%, 100% { height: 6px; }
+      50%       { height: 26px; }
+    }
+    .wave-bars.active .wave-bar { background: #D4AF37; }
+    .cmd-chip {
+      display: inline-block; background: #f5f5f5; border: 1.5px solid #ddd;
+      border-radius: 20px; padding: 6px 14px; font-size: 12px;
+      font-family: Tajawal,sans-serif; cursor: pointer; margin: 4px;
+      transition: all 0.2s;
+    }
+    .cmd-chip:hover { background: #8B0000; color: #fff; border-color: #8B0000; }
+    .result-card {
+      background: linear-gradient(135deg, #f8f0f0, #fff5f5);
+      border: 1.5px solid #f5c6c6; border-radius: 14px;
+      padding: 14px; margin-bottom: 12px; display: none;
+    }
+    .log-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid #f5f5f5;
+    }
+    .log-icon { font-size: 20px; min-width: 28px; }
+    .log-text { font-size: 13px; font-family: Tajawal,sans-serif; color: #333; flex: 1; }
+    .log-time { font-size: 11px; color: #999; }
+    .log-status-ok  { color: #2e7d32; font-weight: 700; }
+    .log-status-err { color: #c62828; font-weight: 700; }
+  </style>
 </head>
 <body>
 
@@ -14,115 +91,459 @@
       <span class="sub-header-title">🎤 المساعد الصوتي الذكي</span>
       <div style="width:38px"></div>
     </div>
-    <div class="sub-header-subtitle">تحكم بالنظام عبر الأوامر الصوتية باللغة العربية</div>
+    <div class="sub-header-subtitle">تحكم بالنظام صوتياً باللغة العربية</div>
   </div>
 
   <div class="page-content">
 
-    <!-- Voice Button -->
-    <div style="text-align:center;padding:10px 0 20px">
-      <div class="voice-btn" id="voiceBtn">🎤</div>
-      <div style="font-size:14px;font-weight:600;color:#666;font-family:Tajawal,sans-serif" id="voiceStatus">ابدأ التحدث الآن</div>
-      <div style="font-size:12px;color:#999;font-family:Tajawal,sans-serif;margin-top:4px">اضغط للتحدث</div>
+    <!-- زر الميكروفون -->
+    <div style="text-align:center;padding:20px 0 10px">
+      <div class="voice-circle" id="voiceBtn">🎤</div>
+      <div class="wave-bars" id="waveBars">
+        <div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+      <div id="voiceStatus" style="font-size:15px;font-weight:700;color:#333;font-family:Cairo,sans-serif">اضغط للتحدث</div>
+      <div id="transcript" style="font-size:13px;color:#8B0000;font-family:Tajawal,sans-serif;margin-top:6px;min-height:20px;font-weight:600"></div>
     </div>
 
-    <!-- Quick Commands -->
+    <!-- نتيجة الأمر -->
+    <div class="result-card" id="resultCard">
+      <div id="resultIcon" style="font-size:24px;margin-bottom:6px">✅</div>
+      <div id="resultText" style="font-size:14px;font-weight:700;color:#333;font-family:Cairo,sans-serif"></div>
+      <div id="resultDetails" style="font-size:12px;color:#666;font-family:Tajawal,sans-serif;margin-top:4px"></div>
+    </div>
+
+    <!-- الأوامر المتاحة -->
     <div class="section-header">
-      <span class="section-title">⚡ أوامر سريعة</span>
+      <span class="section-title">⚡ أوامر سريعة — اضغط أو تحدث</span>
     </div>
-    <div class="quick-access" style="grid-template-columns:1fr 1fr;gap:10px">
-      <div class="quick-btn" style="padding:16px;text-align:center" onclick="runVoiceCommand('إنشاء حوالة جديدة')">
-        <span class="quick-icon" style="font-size:28px">💸</span>
-        <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-top:6px">إنشاء حوالة جديدة</div>
-      </div>
-      <div class="quick-btn" style="padding:16px;text-align:center" onclick="runVoiceCommand('بحث عن حساب')">
-        <span class="quick-icon" style="font-size:28px">🔍</span>
-        <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-top:6px">بحث عن حساب</div>
-      </div>
-      <div class="quick-btn" style="padding:16px;text-align:center" onclick="runVoiceCommand('خصم رصيد')">
-        <span class="quick-icon" style="font-size:28px">➖</span>
-        <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-top:6px">خصم رصيد</div>
-      </div>
-      <div class="quick-btn" style="padding:16px;text-align:center" onclick="runVoiceCommand('كشف حساب VIP')">
-        <span class="quick-icon" style="font-size:28px">👑</span>
-        <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-top:6px">كشف حساب VIP</div>
+    <div style="margin-bottom:16px">
+      <div class="cmd-chip" onclick="runCommand('افتح الحسابات')">👥 افتح الحسابات</div>
+      <div class="cmd-chip" onclick="runCommand('حوالة جديدة')">💸 حوالة جديدة</div>
+      <div class="cmd-chip" onclick="runCommand('تقرير اليوم')">📊 تقرير اليوم</div>
+      <div class="cmd-chip" onclick="runCommand('تنبيه المتأخرين')">⚠️ تنبيه المتأخرين</div>
+      <div class="cmd-chip" onclick="runCommand('عملاء VIP')">👑 عملاء VIP</div>
+      <div class="cmd-chip" onclick="runCommand('سجل الحوالات')">📋 السجل</div>
+      <div class="cmd-chip" onclick="runCommand('الإعدادات')">⚙️ الإعدادات</div>
+      <div class="cmd-chip" onclick="runCommand('اجمالي الرصيد')">💰 إجمالي الرصيد</div>
+    </div>
+
+    <!-- أمثلة أوامر صوتية -->
+    <div class="card" style="background:#fff8e1;border-color:#ffe082;margin-bottom:14px">
+      <div class="card-title" style="color:#f57f17">💡 قل هذه الأوامر</div>
+      <div style="font-family:Tajawal,sans-serif;font-size:13px;color:#555;line-height:2.2">
+        🎤 <b>"حوالة لأحمد مبلغ مئة ألف"</b><br/>
+        🎤 <b>"رصيد خالد"</b><br/>
+        🎤 <b>"كشف حساب سالم"</b><br/>
+        🎤 <b>"تنبيه المتأخرين"</b><br/>
+        🎤 <b>"تقرير اليوم"</b><br/>
+        🎤 <b>"افتح الحسابات"</b>
       </div>
     </div>
 
-    <!-- Voice Log -->
-    <div class="section-header" style="margin-top:20px">
-      <span class="section-title">📋 آخر العمليات الصوتية</span>
-      <span class="section-link" style="cursor:pointer" id="clearLogBtn">مسح السجل</span>
+    <!-- سجل الأوامر -->
+    <div class="section-header">
+      <span class="section-title">📋 سجل الأوامر</span>
+      <span class="section-link" id="clearLogBtn" style="cursor:pointer">مسح</span>
     </div>
-    <div class="op-list" id="voiceLogList">
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">🎤</div>
-        <div class="op-info">
-          <div class="op-name">"إنشاء حوالة جديدة"</div>
-          <div class="op-date">منذ 10 دقائق · <span class="badge badge-green">تم التنفيذ</span></div>
-        </div>
-      </div>
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">🎤</div>
-        <div class="op-info">
-          <div class="op-name">"كشف حساب عبد الرحمن"</div>
-          <div class="op-date">منذ 30 دقيقة · <span class="badge badge-green">تم التنفيذ</span></div>
-        </div>
-      </div>
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">🎤</div>
-        <div class="op-info">
-          <div class="op-name">"بحث عن حساب سالم"</div>
-          <div class="op-date">منذ ساعة · <span class="badge badge-green">تم التنفيذ</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tips -->
-    <div class="card" style="margin-top:16px;background:#f8f0f0;border-color:#f5d0d0">
-      <div class="card-title">💡 أمثلة على الأوامر</div>
-      <div style="font-family:Tajawal,sans-serif;font-size:13px;color:#666;line-height:2">
-        • "أنشئ حوالة لأحمد بمبلغ 100 ألف"<br/>
-        • "ابحث عن حساب خالد"<br/>
-        • "اعرض تقرير اليوم"<br/>
-        • "أرسل تنبيه للمتأخرين"<br/>
-        • "كشف حساب VIP"
-      </div>
+    <div id="voiceLogList" style="min-height:40px">
+      <p style="text-align:center;color:#ccc;font-family:Tajawal;font-size:13px;padding:16px">لا توجد أوامر بعد</p>
     </div>
 
   </div>
 
   <nav class="bottom-nav">
-    <div class="nav-item" data-href="../index.html">
-      <span class="nav-icon">🏠</span><span>الرئيسية</span>
-    </div>
-    <div class="nav-item" data-href="transfer.html">
-      <span class="nav-icon">💸</span><span>تحويل</span>
-    </div>
-    <div class="nav-item" data-href="vip.html">
-      <span class="nav-icon">👑</span><span>المميزين</span>
-    </div>
-    <div class="nav-item" data-href="reports.html">
-      <span class="nav-icon">📊</span><span>تقارير</span>
-    </div>
+    <div class="nav-item" data-href="../index.html"><span class="nav-icon">🏠</span><span>الرئيسية</span></div>
+    <div class="nav-item" data-href="transfer.html"><span class="nav-icon">💸</span><span>تحويل</span></div>
+    <div class="nav-item" data-href="vip.html"><span class="nav-icon">👑</span><span>المميزين</span></div>
+    <div class="nav-item" data-href="reports.html"><span class="nav-icon">📊</span><span>تقارير</span></div>
   </nav>
 
   <script src="../script.js"></script>
-  <script>
-    function runVoiceCommand(cmd) {
-      showNotification('🎤 تنفيذ: ' + cmd, 'info');
-      const logList = document.getElementById('voiceLogList');
-      const item = document.createElement('div');
-      item.className = 'op-item';
-      item.innerHTML = `
-        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">🎤</div>
-        <div class="op-info">
-          <div class="op-name">"${cmd}"</div>
-          <div class="op-date">الآن · <span class="badge badge-green">تم التنفيذ</span></div>
-        </div>
-      `;
-      logList.insertBefore(item, logList.firstChild);
+
+  <script type="module">
+  import { getAccounts, getTransfers, getStats, updateTransferStatus, notifyClient, logWA, openWA, getAdminWA, buildMsg } from "../firebase.js";
+
+  // ===== تحويل الأرقام العربية للنصية إلى أرقام =====
+  function parseAmount(text) {
+    text = text.trim();
+    let mul = 1;
+    if (text.includes('مليون')) mul = 1_000_000;
+    else if (text.includes('ألف') || text.includes('الف')) mul = 1_000;
+    else if (text.includes('مئة') || text.includes('مية') || text.includes('مائة')) mul = 100;
+
+    const numWords = {
+      'واحد':1,'اثنين':2,'اثنان':2,'ثلاثة':3,'ثلاث':3,'اربعة':4,'اربع':4,
+      'خمسة':5,'خمس':5,'ستة':6,'ست':6,'سبعة':7,'سبع':7,'ثمانية':8,'ثمان':8,
+      'تسعة':9,'تسع':9,'عشرة':10,'عشر':10,'عشرين':20,'ثلاثين':30,'اربعين':40,
+      'خمسين':50,'ستين':60,'سبعين':70,'ثمانين':80,'تسعين':90,'مئة':100,'مائة':100,
+      'مية':100,'مئتين':200,'الف':1000,'ألف':1000,'الفين':2000,'مليون':1_000_000
+    };
+
+    // حاول استخراج رقم عادي أولاً
+    const digitMatch = text.match(/\d[\d,.]*/);
+    if (digitMatch) {
+      const base = parseFloat(digitMatch[0].replace(',', ''));
+      return base * (mul === 1 ? 1 : mul);
     }
+
+    // ابحث عن كلمات الأرقام
+    let total = 0;
+    for (const [word, val] of Object.entries(numWords)) {
+      if (text.includes(word)) total += val;
+    }
+    return total > 0 ? total * (total < 100 ? mul : 1) : 0;
+  }
+
+  // ===== استخراج الاسم من النص =====
+  function extractName(text, keywords) {
+    for (const kw of keywords) {
+      const idx = text.indexOf(kw);
+      if (idx !== -1) {
+        const after = text.slice(idx + kw.length).trim();
+        const parts = after.split(' ');
+        const name = parts.slice(0, 2).join(' ').trim();
+        if (name) return name;
+      }
+    }
+    return null;
+  }
+
+  // ===== ردود صوتية =====
+  function speak(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ar-SA';
+    u.rate = 1.1;
+    window.speechSynthesis.speak(u);
+  }
+
+  // ===== عرض النتيجة =====
+  function showResult(icon, text, details = '', type = 'ok') {
+    const card = document.getElementById('resultCard');
+    document.getElementById('resultIcon').textContent = icon;
+    document.getElementById('resultText').textContent = text;
+    document.getElementById('resultDetails').textContent = details;
+    card.style.display = 'block';
+    card.style.borderColor = type === 'ok' ? '#a5d6a7' : type === 'err' ? '#f5c6c6' : '#ffe082';
+    card.style.background = type === 'ok' ? 'linear-gradient(135deg,#f0fff4,#e8f5e9)' : type === 'err' ? 'linear-gradient(135deg,#fff5f5,#ffebee)' : 'linear-gradient(135deg,#fff8e1,#fff3cd)';
+    setTimeout(() => { card.style.display = 'none'; }, 6000);
+  }
+
+  // ===== سجل الأوامر =====
+  const logs = [];
+  function addLog(cmd, result, ok) {
+    logs.unshift({ cmd, result, ok, time: new Date() });
+    renderLogs();
+  }
+
+  function renderLogs() {
+    const el = document.getElementById('voiceLogList');
+    if (!logs.length) { el.innerHTML = '<p style="text-align:center;color:#ccc;font-family:Tajawal;font-size:13px;padding:16px">لا توجد أوامر بعد</p>'; return; }
+    el.innerHTML = logs.slice(0, 20).map(l => `
+      <div class="log-item">
+        <div class="log-icon">${l.ok ? '✅' : '❌'}</div>
+        <div style="flex:1">
+          <div class="log-text"><b>"${l.cmd}"</b></div>
+          <div class="log-text" style="color:#666;margin-top:2px">${l.result}</div>
+        </div>
+        <div class="log-time">${l.time.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>`).join('');
+  }
+
+  // ===== تنفيذ الأمر الصوتي =====
+  window.runCommand = async function(text) {
+    const t = text.trim().toLowerCase();
+    setStatus('processing', '⚙️ جاري التنفيذ...');
+
+    try {
+      // ===== التنقل =====
+      if (t.includes('الحسابات') || t.includes('حسابات')) {
+        speak('فتح صفحة الحسابات');
+        showResult('👥', 'فتح إدارة الحسابات', '', 'ok');
+        addLog(text, 'انتقال إلى الحسابات', true);
+        setTimeout(() => window.location.href = 'accounts.html', 800);
+        return;
+      }
+      if (t.includes('حوالة جديدة') || t.includes('انشئ حوالة') || t.includes('أنشئ حوالة') || t.includes('تحويل جديد')) {
+        speak('فتح صفحة الحوالات');
+        showResult('💸', 'فتح إنشاء حوالة جديدة', '', 'ok');
+        addLog(text, 'انتقال إلى الحوالات', true);
+        setTimeout(() => window.location.href = 'transfer.html', 800);
+        return;
+      }
+      if (t.includes('vip') || t.includes('المميزين') || t.includes('الكبار')) {
+        speak('فتح صفحة VIP');
+        showResult('👑', 'فتح عملاء VIP', '', 'ok');
+        addLog(text, 'انتقال إلى VIP', true);
+        setTimeout(() => window.location.href = 'vip.html', 800);
+        return;
+      }
+      if (t.includes('سجل') || t.includes('العمليات') || t.includes('الحوالات')) {
+        speak('فتح سجل الحوالات');
+        showResult('📋', 'فتح سجل الحوالات', '', 'ok');
+        addLog(text, 'انتقال إلى السجل', true);
+        setTimeout(() => window.location.href = 'logs.html', 800);
+        return;
+      }
+      if (t.includes('التقارير') || t.includes('تقارير')) {
+        speak('فتح التقارير');
+        showResult('📊', 'فتح التقارير المالية', '', 'ok');
+        addLog(text, 'انتقال إلى التقارير', true);
+        setTimeout(() => window.location.href = 'reports.html', 800);
+        return;
+      }
+      if (t.includes('الإعدادات') || t.includes('اعدادات') || t.includes('الاعدادات')) {
+        speak('فتح الإعدادات');
+        showResult('⚙️', 'فتح الإعدادات', '', 'ok');
+        addLog(text, 'انتقال إلى الإعدادات', true);
+        setTimeout(() => window.location.href = 'settings.html', 800);
+        return;
+      }
+      if (t.includes('الرئيسية') || t.includes('الرئيسيه') || t.includes('الصفحة الرئيسية')) {
+        speak('فتح الصفحة الرئيسية');
+        addLog(text, 'انتقال للرئيسية', true);
+        setTimeout(() => window.location.href = '../index.html', 800);
+        return;
+      }
+
+      // ===== إحصاءات اليوم =====
+      if (t.includes('تقرير') || t.includes('إحصائيات') || t.includes('احصاءات') || t.includes('اجمالي')) {
+        const stats = await getStats();
+        const fmt = n => Number(n).toLocaleString('ar-SA');
+        const msg = `الرصيد ${fmt(stats.totalBalance)} ريال. اليوم: ${stats.todayCompleted} مكتملة، ${stats.todayPending} قيد التنفيذ. الأرباح ${fmt(stats.todayProfit)} ريال.`;
+        speak(msg);
+        showResult('📊', 'إحصاءات اليوم', `رصيد: ${fmt(stats.totalBalance)} ر.ي | مكتملة: ${stats.todayCompleted} | أرباح: ${fmt(stats.todayProfit)} ر.ي`, 'ok');
+        addLog(text, `رصيد: ${fmt(stats.totalBalance)} — أرباح اليوم: ${fmt(stats.todayProfit)}`, true);
+        return;
+      }
+
+      // ===== رصيد عميل معين =====
+      if (t.includes('رصيد') || t.includes('حساب')) {
+        const name = extractName(t, ['رصيد ', 'حساب ', 'كشف ']);
+        if (name) {
+          const accounts = await getAccounts();
+          const found = accounts.find(a => (a.name || '').includes(name) || name.includes((a.name || '').split(' ')[0]));
+          if (found) {
+            const bal = Number(found.balance || 0).toLocaleString('ar-SA');
+            speak(`رصيد ${found.name} هو ${bal} ريال`);
+            showResult('💰', `رصيد: ${found.name}`, `${bal} ر.ي — الحالة: ${found.status}`, 'ok');
+
+            // إرسال كشف حساب واتساب
+            if (found.phone && (t.includes('كشف') || t.includes('ارسل') || t.includes('أرسل'))) {
+              await notifyClient(found.phone, 'account_statement', { name: found.name, balance: found.balance });
+              speak(`تم إرسال كشف حساب ${found.name} على الواتساب`);
+            }
+            addLog(text, `${found.name}: ${bal} ر.ي`, true);
+          } else {
+            speak(`لم أجد حساباً باسم ${name}`);
+            showResult('🔍', `لم يُعثر على "${name}"`, 'تحقق من الاسم وحاول مرة أخرى', 'warn');
+            addLog(text, `لم يُعثر على: ${name}`, false);
+          }
+          return;
+        }
+      }
+
+      // ===== حوالة لعميل =====
+      if (t.includes('حوالة ل') || t.includes('حول ل') || t.includes('ارسل ل') || t.includes('أرسل ل')) {
+        const name = extractName(t, ['حوالة ل', 'حول ل', 'ارسل ل', 'أرسل ل', 'حوالة لـ']);
+        const amount = parseAmount(t);
+
+        if (name && amount > 0) {
+          const { addTransfer } = await import('../firebase.js');
+          const accounts = await getAccounts();
+          const acc = accounts.find(a => (a.name || '').includes(name) || name.includes((a.name || '').split(' ')[0]));
+
+          const commission = Math.round(amount * 0.05);
+          await addTransfer({
+            beneficiary: acc ? acc.name : name,
+            beneficiaryPhone: acc?.phone || '',
+            amount, currency: 'ر.ي', commission,
+            total: amount + commission,
+            transferType: 'تحويل عادي', status: 'pending', notes: 'بأمر صوتي'
+          });
+
+          const clientName = acc ? acc.name : name;
+          const clientPhone = acc?.phone || '';
+          await notifyClient(clientPhone, 'transfer_new', { name: clientName, amount, currency: 'ر.ي', commission, transferType: 'تحويل عادي' });
+
+          speak(`تم إنشاء حوالة لـ ${clientName} بمبلغ ${amount.toLocaleString('ar-SA')} ريال${clientPhone ? ' وتم إرسال إشعار واتساب' : ''}`);
+          showResult('💸', `حوالة جديدة لـ ${clientName}`, `${amount.toLocaleString('ar-SA')} ر.ي + عمولة ${commission.toLocaleString('ar-SA')} ر.ي${clientPhone ? ' — واتساب أُرسل ✓' : ''}`, 'ok');
+          addLog(text, `حوالة ${clientName}: ${amount.toLocaleString('ar-SA')} ر.ي`, true);
+          return;
+        } else {
+          speak('يرجى ذكر الاسم والمبلغ. مثال: حوالة لأحمد مبلغ مئة ألف');
+          showResult('❓', 'لم أفهم الاسم أو المبلغ', 'مثال: "حوالة لأحمد مبلغ مئة ألف"', 'warn');
+          addLog(text, 'فشل تحليل الاسم أو المبلغ', false);
+          return;
+        }
+      }
+
+      // ===== تنبيه المتأخرين =====
+      if (t.includes('تنبيه') || t.includes('المتأخرين') || t.includes('متأخرين')) {
+        const accounts = await getAccounts();
+        const late = accounts.filter(a => a.status === 'late');
+        if (!late.length) {
+          speak('لا يوجد عملاء متأخرون حالياً');
+          showResult('✅', 'لا يوجد عملاء متأخرون', '', 'ok');
+          addLog(text, 'لا يوجد متأخرون', true);
+          return;
+        }
+        for (const acc of late) {
+          if (acc.phone) {
+            await notifyClient(acc.phone, 'late_alert', { name: acc.name, balance: acc.balance });
+            await new Promise(r => setTimeout(r, 900));
+          }
+        }
+        speak(`تم إرسال تنبيه لـ ${late.length} عميل متأخر`);
+        showResult('⚠️', `تنبيه ${late.length} عميل متأخر`, 'تم فتح واتساب لكل عميل لديه رقم', 'ok');
+        addLog(text, `تنبيه ${late.length} متأخر`, true);
+        return;
+      }
+
+      // ===== إتمام آخر حوالة =====
+      if (t.includes('اكتمل') || t.includes('اكملت') || t.includes('أكمل') || t.includes('تم الحوالة')) {
+        const name = extractName(t, ['اكتمل ', 'اكملت ', 'أكمل ', 'تمت حوالة ', 'تم حوالة ']);
+        const transfers = await getTransfers(50);
+        const pending = transfers.filter(t => t.status === 'pending');
+        const target = name
+          ? pending.find(t => (t.beneficiary || '').includes(name))
+          : pending[0];
+
+        if (target) {
+          await updateTransferStatus(target.id, 'completed');
+          await notifyClient(target.beneficiaryPhone, 'transfer_completed', { name: target.beneficiary, amount: target.amount, currency: target.currency || 'ر.ي' });
+          speak(`تم إتمام حوالة ${target.beneficiary}${target.beneficiaryPhone ? ' وأُرسل إشعار واتساب' : ''}`);
+          showResult('✅', `تم إتمام حوالة ${target.beneficiary}`, `${Number(target.amount).toLocaleString('ar-SA')} ر.ي — واتساب أُرسل`, 'ok');
+          addLog(text, `إتمام حوالة ${target.beneficiary}`, true);
+        } else {
+          speak('لا توجد حوالات قيد التنفيذ');
+          showResult('🔍', 'لا توجد حوالات معلقة', '', 'warn');
+          addLog(text, 'لا توجد حوالات معلقة', false);
+        }
+        return;
+      }
+
+      // ===== أمر غير معروف =====
+      speak('لم أفهم الأمر. حاول مرة أخرى أو اختر من الأوامر السريعة');
+      showResult('❓', `لم أفهم: "${text}"`, 'جرب: "رصيد أحمد" أو "حوالة لسالم مبلغ خمسين ألف"', 'warn');
+      addLog(text, 'أمر غير معروف', false);
+
+    } catch (err) {
+      speak('حدث خطأ، حاول مرة أخرى');
+      showResult('❌', 'حدث خطأ', err.message || '', 'err');
+      addLog(text, 'خطأ: ' + (err.message || ''), false);
+    } finally {
+      setStatus('idle', 'اضغط للتحدث');
+    }
+  };
+
+  // ===== حالة الزر =====
+  function setStatus(state, label) {
+    const btn = document.getElementById('voiceBtn');
+    const status = document.getElementById('voiceStatus');
+    const wave = document.getElementById('waveBars');
+    btn.className = 'voice-circle ' + state;
+    status.textContent = label;
+    if (state === 'listening') {
+      btn.textContent = '🎙️';
+      wave.classList.add('active');
+    } else if (state === 'processing') {
+      btn.textContent = '⚙️';
+      wave.classList.remove('active');
+    } else if (state === 'success') {
+      btn.textContent = '✅';
+      wave.classList.remove('active');
+      setTimeout(() => setStatus('idle', 'اضغط للتحدث'), 2000);
+    } else if (state === 'error') {
+      btn.textContent = '❌';
+      wave.classList.remove('active');
+      setTimeout(() => setStatus('idle', 'اضغط للتحدث'), 2000);
+    } else {
+      btn.textContent = '🎤';
+      wave.classList.remove('active');
+    }
+  }
+
+  // ===== التعرف على الصوت =====
+  let recognition = null;
+  let isListening = false;
+
+  function initRecognition() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      document.getElementById('voiceStatus').textContent = '⚠️ المتصفح لا يدعم الصوت — استخدم Chrome';
+      document.getElementById('voiceBtn').style.opacity = '0.5';
+      return false;
+    }
+    recognition = new SR();
+    recognition.lang = 'ar-SA';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 3;
+
+    recognition.onstart = () => {
+      isListening = true;
+      setStatus('listening', '🎙️ جاري الاستماع...');
+      document.getElementById('transcript').textContent = '';
+    };
+
+    recognition.onresult = (event) => {
+      let interim = '', final = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) final += t;
+        else interim += t;
+      }
+      document.getElementById('transcript').textContent = final || interim;
+      if (final) {
+        setStatus('processing', '⚙️ جاري التحليل...');
+        runCommand(final.trim());
+      }
+    };
+
+    recognition.onerror = (e) => {
+      isListening = false;
+      const errMsgs = { 'no-speech':'لم يتم اكتشاف صوت', 'not-allowed':'يرجى السماح بالميكروفون', 'network':'خطأ في الشبكة' };
+      setStatus('error', errMsgs[e.error] || 'حدث خطأ');
+    };
+
+    recognition.onend = () => {
+      isListening = false;
+      if (document.getElementById('voiceBtn').classList.contains('listening')) {
+        setStatus('idle', 'اضغط للتحدث');
+      }
+    };
+    return true;
+  }
+
+  document.getElementById('voiceBtn').addEventListener('click', () => {
+    if (isListening) {
+      recognition?.stop();
+      setStatus('idle', 'اضغط للتحدث');
+      return;
+    }
+    if (!recognition && !initRecognition()) return;
+    try {
+      recognition.start();
+    } catch(e) {
+      recognition = null;
+      initRecognition();
+      recognition?.start();
+    }
+  });
+
+  document.getElementById('clearLogBtn').addEventListener('click', () => {
+    logs.length = 0;
+    renderLogs();
+  });
+
+  // تهيئة أولية
+  initRecognition();
   </script>
+
 </body>
 </html>
