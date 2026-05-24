@@ -188,5 +188,23 @@
   </nav>
 
   <script src="script.js"></script>
-</body>
+
+    <script type="module">
+      import { getStats } from "./firebase.js";
+      async function loadDashboard() {
+        try {
+          const s = await getStats();
+          const bal = document.getElementById('totalBalance');
+          if (bal) bal.textContent = Number(s.totalBalance).toLocaleString('ar-SA');
+          const vals = document.querySelectorAll('.stat-value[data-target]');
+          [s.todayCompleted, s.todayPending, s.todayProfit, s.lateAccounts].forEach((v,i) => {
+            if (vals[i]) { vals[i].removeAttribute('data-target'); vals[i].textContent = Number(v).toLocaleString('ar-SA'); }
+          });
+          const at = document.querySelector('.alert-text');
+          if (at) at.textContent = s.lateAccounts + ' عملاء تجاوزوا فترة الـ 5 أيام.';
+        } catch(e) { console.error('Firebase:', e); }
+      }
+      loadDashboard();
+    </script>
+  </body>
 </html>
