@@ -190,5 +190,33 @@
       });
     }
   </script>
-</body>
+
+    <script type="module">
+      import { listenAccounts } from "../firebase.js";
+      function sl(s){if(s==='late')return'<span style="background:#c62828;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px">متأخر</span>';if(s==='vip')return'<span class="badge badge-gold">VIP</span>';return'<span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px">نشط</span>';}
+      let all=[], flt='all', srch='';
+      function render(){
+        const list=document.getElementById('accountsList');if(!list)return;
+        let filtered=all;
+        if(flt!=='all')filtered=filtered.filter(a=>a.status===flt);
+        if(srch)filtered=filtered.filter(a=>(a.name||'').includes(srch)||(a.phone||'').includes(srch));
+        const sv=document.querySelectorAll('.stat-card .stat-value');
+        if(sv[0])sv[0].textContent=all.length;
+        if(sv[1])sv[1].textContent=all.filter(a=>a.status!=='late').length;
+        if(sv[2])sv[2].textContent=all.filter(a=>a.status==='late').length;
+        if(!filtered.length){list.innerHTML='<p style="text-align:center;color:#999;padding:30px;font-family:Tajawal">لا توجد حسابات</p>';return;}
+        list.innerHTML=filtered.map(a=>`<div class="op-item" data-status="${a.status}">
+          <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">${(a.name||'ع').substring(0,2)}</div>
+          <div class="op-info"><div class="op-name">${a.name||''}</div><div class="op-date">${a.phone||''} · ${sl(a.status)}</div></div>
+          <div style="text-align:left"><div class="op-amount">${Number(a.balance||0).toLocaleString('ar-SA')}</div><div class="op-currency">ر.ي</div></div>
+        </div>`).join('');
+      }
+      listenAccounts(accounts=>{all=accounts;render();});
+      document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',function(){
+        const m={'الكل':'all','نشط':'active','متأخر':'late','VIP':'vip'};flt=m[this.textContent.trim()]||'all';render();
+      }));
+      const si=document.getElementById('searchInput');
+      if(si)si.addEventListener('input',function(){srch=this.value;render();});
+    </script>
+  </body>
 </html>
