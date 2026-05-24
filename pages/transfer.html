@@ -11,21 +11,42 @@
     .acc-avatar { width:40px;height:40px;background:linear-gradient(135deg,#8B0000,#660000);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700; }
     .acc-name { font-weight:700;color:#333; }
     .acc-phone { font-size:12px;color:#999; }
+    .payment-methods { display:flex;gap:8px;margin-bottom:4px; }
+    .pm-btn { flex:1;padding:10px 6px;border:1.5px solid #ddd;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;background:#fff;font-family:Cairo,sans-serif;text-align:center;transition:all .2s; }
+    .pm-btn.active { border-color:#8B0000;background:linear-gradient(135deg,#8B0000,#660000);color:#fff; }
+    .code-box { background:#f0f8f0;border:1.5px dashed #2e7d32;border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
+    .code-val { font-size:15px;font-weight:800;color:#2e7d32;letter-spacing:1px; }
+    .copy-btn { background:#2e7d32;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:Cairo; }
+    .action-btns { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px; }
+    .action-btns .btn-save { background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo; }
+    .action-btns .btn-wa { background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo; }
+    .btn-save-wa { width:100%;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo;margin-top:8px; }
   </style>
 </head>
 <body>
 
   <div class="sub-header">
-    <div class="sub-header-top"><img src="../logo.svg" alt="شعار" style="width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.7);flex-shrink:0;margin-left:4px" />
+    <div class="sub-header-top">
+      <img src="../logo.svg" alt="شعار" style="width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.7);flex-shrink:0;margin-left:4px" />
       <div class="back-btn">➡️</div>
       <span class="sub-header-title">💸 إنشاء حوالة جديدة</span>
       <div style="width:38px"></div>
     </div>
-    <div class="sub-header-subtitle">حوالة آمنة وسريعة — إشعار واتساب تلقائي للعميل</div>
+    <div class="sub-header-subtitle">حوالة آمنة وسريعة — كود تتبع تلقائي لكل عملية</div>
   </div>
 
   <div class="page-content">
     <form id="transferForm" style="margin-bottom:20px">
+
+      <!-- كود الحوالة التلقائي -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">🔖 كود الحوالة (تلقائي)</label>
+        <div class="code-box">
+          <span class="code-val" id="displayCode">جاري التوليد...</span>
+          <button type="button" class="copy-btn" id="copyCodeBtn">📋 نسخ</button>
+        </div>
+        <input id="transferCodeInput" type="hidden" />
+      </div>
 
       <!-- اختيار المستقبل -->
       <div style="margin-bottom:16px">
@@ -46,12 +67,13 @@
             <div id="selName" style="font-weight:700;color:#333">—</div>
             <div id="selPhone" style="font-size:12px;color:#999">—</div>
             <div id="selStatus" style="font-size:11px;margin-top:4px"></div>
+            <div id="selBalance" style="font-size:12px;color:#8B0000;font-weight:700;margin-top:2px"></div>
           </div>
-          <div id="waIndicator" style="display:none;background:#25D366;color:#fff;padding:4px 10px;border-radius:10px;font-size:11px;font-family:Cairo">💬 سيُرسل واتساب</div>
         </div>
         <input id="beneficiary" type="hidden" required />
         <input id="beneficiaryPhone" type="hidden" />
         <input id="beneficiaryId" type="hidden" />
+        <input id="beneficiaryBalance" type="hidden" value="0" />
       </div>
 
       <!-- المبلغ -->
@@ -66,10 +88,22 @@
         <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">💵 العملة</label>
         <select id="currency" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;background:#fff;outline:none">
           <option value="ر.ي">ر.ي - ريال يمني</option>
+          <option value="ر.س">ر.س - ريال سعودي</option>
           <option value="$">$ - دولار أمريكي</option>
-          <option value="€">€ - يورو</option>
           <option value="AED">AED - درهم إماراتي</option>
         </select>
+      </div>
+
+      <!-- طريقة دفع الحوالة -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">💳 طريقة دفع الحوالة *</label>
+        <div class="payment-methods">
+          <button type="button" class="pm-btn active" data-pm="cash">💵 نقدي</button>
+          <button type="button" class="pm-btn" data-pm="balance">🏦 من الرصيد</button>
+          <button type="button" class="pm-btn" data-pm="debt">📋 دين</button>
+        </div>
+        <input id="paymentMethod" type="hidden" value="cash" />
+        <div id="pmNote" style="font-size:11px;color:#666;font-family:Tajawal;margin-top:4px;padding:6px 10px;background:#f9f9f9;border-radius:8px">💵 السداد نقداً عند إرسال الحوالة</div>
       </div>
 
       <!-- نوع الحوالة -->
@@ -85,10 +119,11 @@
 
       <!-- الحالة -->
       <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">📊 الحالة</label>
+        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">📊 حالة الحوالة</label>
         <select id="transferStatus" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;background:#fff;outline:none">
-          <option value="pending">⏳ قيد التنفيذ</option>
-          <option value="completed">✅ مكتملة</option>
+          <option value="pending">⏳ معلقة - قيد التنفيذ</option>
+          <option value="sent">📤 مرسلة</option>
+          <option value="completed">✅ مستلمة - مكتملة</option>
           <option value="cancelled">❌ ملغاة</option>
         </select>
       </div>
@@ -115,15 +150,12 @@
         </div>
       </div>
 
-      <!-- تنبيه واتساب -->
-      <div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:12px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
-        <span style="font-size:20px">💬</span>
-        <div style="font-size:12px;color:#2e7d32;font-family:Tajawal,sans-serif">سيتم إرسال إشعار واتساب تلقائي للعميل ونسخة لرقمك بعد تأكيد الحوالة</div>
+      <!-- أزرار الإجراءات -->
+      <div class="action-btns">
+        <button type="button" id="btnSaveOnly" class="btn-save">💾 حفظ فقط</button>
+        <button type="button" id="btnWAOnly" class="btn-wa">💬 إرسال واتساب</button>
       </div>
-
-      <button type="submit" id="submitBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif">
-        ✅ تأكيد وإرسال إشعار واتساب
-      </button>
+      <button type="button" id="btnSaveAndWA" class="btn-save-wa">✅ حفظ وإرسال واتساب معاً</button>
 
     </form>
   </div>
@@ -138,10 +170,25 @@
   <script src="../script.js"></script>
 
   <script type="module">
-    import { getAccounts, addTransfer, notifyClient, buildMsg } from "../firebase.js";
+    import { getAccounts, addTransfer, notifyClient, buildMsg, generateTransferCode } from "../firebase.js";
 
     let accounts = [];
+    let currentCode = generateTransferCode();
 
+    // عرض الكود
+    document.getElementById('displayCode').textContent = currentCode;
+    document.getElementById('transferCodeInput').value = currentCode;
+
+    // نسخ الكود
+    document.getElementById('copyCodeBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(currentCode).then(() => {
+        showNotification('تم نسخ كود الحوالة ✓', 'success');
+      }).catch(() => {
+        showNotification(currentCode, 'info');
+      });
+    });
+
+    // تحميل الحسابات
     async function loadAccounts() {
       try {
         accounts = await getAccounts();
@@ -150,8 +197,8 @@
         const pname = params.get('name');
         const pphone = params.get('phone');
         if (pname) {
-          const found = accounts.find(a => a.id === pid) || { id: pid || '', name: pname, phone: pphone || '', status: 'active' };
-          selectAccount({ id: found.id, name: found.name, phone: found.phone || '', status: found.status || 'active' });
+          const found = accounts.find(a => a.id === pid) || { id: pid||'', name: pname, phone: pphone||'', status:'active', balance:0 };
+          selectAccount({ id: found.id, name: found.name, phone: found.phone||'', status: found.status||'active', balance: found.balance||0 });
         }
       } catch(e) {
         if (typeof showNotification === 'function') showNotification('خطأ في تحميل الحسابات', 'error');
@@ -159,6 +206,23 @@
     }
     loadAccounts();
 
+    // طريقة الدفع
+    const pmBtns = document.querySelectorAll('.pm-btn');
+    const pmNotes = {
+      cash: '💵 السداد نقداً عند إرسال الحوالة',
+      balance: '🏦 سيُخصم المبلغ من رصيد العميل تلقائياً',
+      debt: '📋 سيُسجل المبلغ كدين على العميل في كشف حسابه'
+    };
+    pmBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        pmBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('paymentMethod').value = btn.dataset.pm;
+        document.getElementById('pmNote').textContent = pmNotes[btn.dataset.pm] || '';
+      });
+    });
+
+    // حالة العميل
     function statusLabel(s) {
       if (s === 'vip') return '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:1px 8px;border-radius:7px;font-size:11px">👑 VIP</span>';
       if (s === 'late') return '<span style="background:#c62828;color:#fff;padding:1px 8px;border-radius:7px;font-size:11px">⚠️ متأخر</span>';
@@ -177,9 +241,12 @@
         return;
       }
       dropdown.innerHTML = filtered.map(a => `
-        <div class="account-option" data-id="${a.id||''}" data-name="${(a.name||'').replace(/"/g,'')}" data-phone="${(a.phone||'').replace(/"/g,'')}" data-status="${a.status||'active'}">
+        <div class="account-option" data-id="${a.id||''}" data-name="${(a.name||'').replace(/"/g,'')}" data-phone="${(a.phone||'').replace(/"/g,'')}" data-status="${a.status||'active'}" data-balance="${a.balance||0}">
           <div class="acc-avatar">${(a.name||'ع').substring(0,2)}</div>
-          <div style="flex:1"><div class="acc-name">${a.name||'—'}</div><div class="acc-phone">${a.phone||'لا يوجد رقم'}</div></div>
+          <div style="flex:1">
+            <div class="acc-name">${a.name||'—'}</div>
+            <div class="acc-phone">${a.phone||'لا يوجد رقم'} · الرصيد: ${Number(a.balance||0).toLocaleString('ar-SA')} ر.ي</div>
+          </div>
           <div>${statusLabel(a.status)}</div>
         </div>`).join('');
       dropdown.style.display = 'block';
@@ -190,11 +257,12 @@
       document.getElementById('beneficiary').value = data.name;
       document.getElementById('beneficiaryPhone').value = data.phone || '';
       document.getElementById('beneficiaryId').value = data.id || '';
+      document.getElementById('beneficiaryBalance').value = data.balance || 0;
       document.getElementById('selAvatar').textContent = (data.name||'').substring(0,2);
       document.getElementById('selName').textContent = data.name;
       document.getElementById('selPhone').textContent = data.phone || 'لا يوجد رقم';
       document.getElementById('selStatus').innerHTML = statusLabel(data.status);
-      document.getElementById('waIndicator').style.display = data.phone ? 'block' : 'none';
+      document.getElementById('selBalance').textContent = `الرصيد: ${Number(data.balance||0).toLocaleString('ar-SA')} ر.ي`;
       searchInput.value = '';
       dropdown.style.display = 'none';
       document.getElementById('selectedAccount').style.display = 'block';
@@ -207,13 +275,10 @@
     });
     document.getElementById('clearSel').addEventListener('click', e => {
       e.preventDefault();
-      document.getElementById('beneficiary').value = '';
-      document.getElementById('beneficiaryPhone').value = '';
-      document.getElementById('beneficiaryId').value = '';
-      document.getElementById('waIndicator').style.display = 'none';
+      ['beneficiary','beneficiaryPhone','beneficiaryId'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('beneficiaryBalance').value = 0;
       document.getElementById('selectedAccount').style.display = 'none';
-      searchInput.value = '';
-      searchInput.focus();
+      searchInput.value = ''; searchInput.focus();
     });
 
     document.getElementById('transferAmount').addEventListener('input', function() {
@@ -226,52 +291,82 @@
       document.getElementById('totalAmount').textContent = total.toLocaleString('ar-SA') + ' ' + cur;
     });
 
-    document.getElementById('transferForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
+    function getFormData() {
       const beneficiary = document.getElementById('beneficiary').value.trim();
       const beneficiaryPhone = document.getElementById('beneficiaryPhone').value.trim();
-
-      if (!beneficiary) {
-        if (typeof showNotification === 'function') showNotification('يرجى اختيار المستقبل من القائمة', 'error');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = '⏳ جاري الحفظ وإرسال الإشعار...';
-
+      const beneficiaryId = document.getElementById('beneficiaryId').value.trim();
       const amount = parseFloat(document.getElementById('transferAmount').value) || 0;
       const currency = document.getElementById('currency').value;
       const transferType = document.getElementById('transferType').value;
       const status = document.getElementById('transferStatus').value;
       const notes = document.getElementById('notes').value.trim();
+      const paymentMethod = document.getElementById('paymentMethod').value;
+      const transferCode = document.getElementById('transferCodeInput').value;
       const commission = Math.round(amount * 0.05);
       const total = amount + commission;
+      return { beneficiary, beneficiaryPhone, beneficiaryId, amount, currency, transferType, status, notes, paymentMethod, transferCode, commission, total };
+    }
 
+    function resetForm() {
+      document.getElementById('transferForm').reset();
+      ['beneficiary','beneficiaryPhone','beneficiaryId'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('beneficiaryBalance').value = 0;
+      document.getElementById('selectedAccount').style.display = 'none';
+      ['originalAmount','commissionAmount','totalAmount'].forEach(id => document.getElementById(id).textContent = '0 ر.ي');
+      // توليد كود جديد
+      currentCode = generateTransferCode();
+      document.getElementById('displayCode').textContent = currentCode;
+      document.getElementById('transferCodeInput').value = currentCode;
+      pmBtns.forEach(b => b.classList.remove('active'));
+      pmBtns[0].classList.add('active');
+      document.getElementById('paymentMethod').value = 'cash';
+      document.getElementById('pmNote').textContent = pmNotes.cash;
+    }
+
+    // حفظ فقط
+    document.getElementById('btnSaveOnly').addEventListener('click', async () => {
+      const d = getFormData();
+      if (!d.beneficiary) { showNotification('يرجى اختيار المستقبل', 'error'); return; }
+      if (!d.amount) { showNotification('يرجى إدخال المبلغ', 'error'); return; }
+      const btn = document.getElementById('btnSaveOnly');
+      btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...';
       try {
-        // حفظ الحوالة
-        await addTransfer({ beneficiary, beneficiaryPhone, amount, currency, commission, total, transferType, status, notes });
-
-        // ✅ إشعار واتساب تلقائي للعميل (ونسخة للأدمن)
-        const msgType = status === 'completed' ? 'transfer_completed' : 'transfer_new';
-        await notifyClient(beneficiaryPhone, msgType, { name: beneficiary, amount, currency, commission, transferType });
-
-        if (typeof showNotification === 'function')
-          showNotification(`✅ تم حفظ الحوالة${beneficiaryPhone ? ' وفُتح واتساب للعميل' : ' (لا يوجد رقم للعميل)'}`, 'success');
-
-        setTimeout(() => {
-          this.reset();
-          ['beneficiary','beneficiaryPhone','beneficiaryId'].forEach(id => document.getElementById(id).value = '');
-          document.getElementById('selectedAccount').style.display = 'none';
-          document.getElementById('waIndicator').style.display = 'none';
-          ['originalAmount','commissionAmount','totalAmount'].forEach(id => document.getElementById(id).textContent = '0 ر.ي');
-        }, 500);
-
+        await addTransfer(d);
+        showNotification(`✅ تم حفظ الحوالة — الكود: ${d.transferCode}`, 'success');
+        setTimeout(resetForm, 800);
       } catch(err) {
-        if (typeof showNotification === 'function') showNotification('❌ خطأ: ' + (err.message || 'فشل إنشاء الحوالة'), 'error');
+        showNotification('❌ خطأ في الحفظ: ' + (err.message||''), 'error');
       } finally {
-        btn.disabled = false;
-        btn.textContent = '✅ تأكيد وإرسال إشعار واتساب';
+        btn.disabled = false; btn.textContent = '💾 حفظ فقط';
+      }
+    });
+
+    // إرسال واتساب فقط
+    document.getElementById('btnWAOnly').addEventListener('click', async () => {
+      const d = getFormData();
+      if (!d.beneficiary) { showNotification('يرجى اختيار المستقبل أولاً', 'error'); return; }
+      const msgType = d.status === 'completed' ? 'transfer_completed' : 'transfer_new';
+      await notifyClient(d.beneficiaryPhone, msgType, { name: d.beneficiary, amount: d.amount, currency: d.currency, commission: d.commission, transferType: d.transferType, transferCode: d.transferCode, paymentMethod: d.paymentMethod });
+      showNotification('✅ تم فتح واتساب', 'success');
+    });
+
+    // حفظ وإرسال معاً
+    document.getElementById('btnSaveAndWA').addEventListener('click', async () => {
+      const d = getFormData();
+      if (!d.beneficiary) { showNotification('يرجى اختيار المستقبل', 'error'); return; }
+      if (!d.amount) { showNotification('يرجى إدخال المبلغ', 'error'); return; }
+      const btn = document.getElementById('btnSaveAndWA');
+      btn.disabled = true; btn.textContent = '⏳ جاري الحفظ والإرسال...';
+      try {
+        await addTransfer(d);
+        const msgType = d.status === 'completed' ? 'transfer_completed' : 'transfer_new';
+        await notifyClient(d.beneficiaryPhone, msgType, { name: d.beneficiary, amount: d.amount, currency: d.currency, commission: d.commission, transferType: d.transferType, transferCode: d.transferCode, paymentMethod: d.paymentMethod });
+        showNotification(`✅ تم الحفظ والإرسال — الكود: ${d.transferCode}`, 'success');
+        setTimeout(resetForm, 800);
+      } catch(err) {
+        showNotification('❌ خطأ: ' + (err.message||''), 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = '✅ حفظ وإرسال واتساب معاً';
       }
     });
   </script>
