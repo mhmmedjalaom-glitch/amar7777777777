@@ -225,97 +225,187 @@
     </div>
   </div>
 
-  <script type="module">
-  import { addAccount, listenAccounts, deleteAccount, logWA, openWA } from "../firebase.js";
+  <!-- ======== Modal إضافة حساب جديد ======== -->
+  <div id="addAccountModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:flex-end;justify-content:center">
+    <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;direction:rtl;font-family:Cairo,sans-serif">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <h3 style="font-size:16px;font-weight:800;margin:0;color:#1a1a1a">➕ إضافة حساب جديد</h3>
+        <span id="closeModal" style="font-size:26px;cursor:pointer;color:#999;line-height:1">×</span>
+      </div>
+      <form id="addAccountForm" autocomplete="off">
+        <div style="margin-bottom:12px">
+          <label style="font-size:13px;font-weight:700;color:#444;display:block;margin-bottom:6px">اسم العميل *</label>
+          <input id="accName" type="text" required placeholder="أدخل الاسم الكامل"
+            style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none"/>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:13px;font-weight:700;color:#444;display:block;margin-bottom:6px">رقم الهاتف (للواتساب)</label>
+          <input id="accPhone" type="tel" placeholder="967XXXXXXXXX"
+            style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;direction:ltr;outline:none"/>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:13px;font-weight:700;color:#444;display:block;margin-bottom:6px">الرصيد الابتدائي (ر.ي)</label>
+          <input id="accBalance" type="number" placeholder="0" min="0"
+            style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none"/>
+        </div>
+        <div style="margin-bottom:20px">
+          <label style="font-size:13px;font-weight:700;color:#444;display:block;margin-bottom:6px">نوع الحساب</label>
+          <select id="accStatus"
+            style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;background:#fff;outline:none">
+            <option value="active">✅ نشط</option>
+            <option value="vip">👑 VIP</option>
+            <option value="late">⚠️ متأخر</option>
+          </select>
+        </div>
+        <button type="submit" id="saveAccBtn"
+          style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif">
+          💾 حفظ الحساب في قاعدة البيانات
+        </button>
+      </form>
+    </div>
+  </div>
 
-  function sl(s){
-    if(s==='late') return '<span style="background:#c62828;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px">متأخر</span>';
-    if(s==='vip') return '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:2px 8px;border-radius:8px;font-size:11px">👑 VIP</span>';
-    return '<span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px">نشط</span>';
+  <script type="module">
+  import { addAccount, listenAccounts, logWA } from "../firebase.js";
+
+  // ===== إصلاح زر + في الهيدر =====
+  const addBtn = document.querySelector('.header-icon-btn');
+  if (addBtn) {
+    addBtn.removeAttribute('onclick');
+    addBtn.textContent = '➕';
+    addBtn.style.cursor = 'pointer';
+    addBtn.addEventListener('click', () => {
+      document.getElementById('addAccountModal').style.display = 'flex';
+    });
   }
 
-  let allAccounts=[], currentFilter='all', currentSearch='';
+  // ===== Modal controls =====
+  document.getElementById('closeModal').addEventListener('click', () => {
+    document.getElementById('addAccountModal').style.display = 'none';
+  });
+  document.getElementById('addAccountModal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
 
-  function render(){
-    const list=document.getElementById('accountsList'); if(!list) return;
-    let filtered=allAccounts;
-    if(currentFilter!=='all') filtered=filtered.filter(a=>a.status===currentFilter);
-    if(currentSearch) filtered=filtered.filter(a=>(a.name||'').includes(currentSearch)||(a.phone||'').includes(currentSearch));
-    const sv=document.querySelectorAll('.stat-card .stat-value');
-    if(sv[0]) sv[0].textContent=allAccounts.length;
-    if(sv[1]) sv[1].textContent=allAccounts.filter(a=>a.status!=='late').length;
-    if(sv[2]) sv[2].textContent=allAccounts.filter(a=>a.status==='late').length;
-    if(!filtered.length){
-      list.innerHTML='<p style="text-align:center;color:#999;padding:30px;font-family:Tajawal">لا توجد حسابات — اضغط + لإضافة حساب</p>';
+  // ===== حفظ حساب جديد =====
+  document.getElementById('addAccountForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveAccBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ جاري الحفظ...';
+
+    const name    = document.getElementById('accName').value.trim();
+    const phone   = document.getElementById('accPhone').value.trim();
+    const balance = parseFloat(document.getElementById('accBalance').value) || 0;
+    const status  = document.getElementById('accStatus').value;
+
+    try {
+      await addAccount({ name, phone, balance, status });
+      document.getElementById('addAccountModal').style.display = 'none';
+      this.reset();
+      if (typeof showNotification === 'function')
+        showNotification('✅ تم حفظ الحساب في قاعدة البيانات', 'success');
+    } catch(err) {
+      console.error('addAccount error:', err);
+      if (typeof showNotification === 'function')
+        showNotification('❌ خطأ في الحفظ: ' + err.message, 'error');
+    }
+    btn.disabled = false;
+    btn.textContent = '💾 حفظ الحساب في قاعدة البيانات';
+  });
+
+  // ===== عرض الحسابات من Firestore =====
+  function statusLabel(s) {
+    if (s === 'late') return '<span style="background:#c62828;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">⚠️ متأخر</span>';
+    if (s === 'vip')  return '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">👑 VIP</span>';
+    return '<span style="background:#2e7d32;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">✅ نشط</span>';
+  }
+
+  let allAccounts = [], currentFilter = 'all', currentSearch = '';
+
+  function render() {
+    const list = document.getElementById('accountsList') || document.querySelector('.op-list');
+    if (!list) return;
+
+    // إحصاءات
+    const stats = document.querySelectorAll('.stat-card .stat-value');
+    if (stats[0]) stats[0].textContent = allAccounts.length;
+    if (stats[1]) stats[1].textContent = allAccounts.filter(a => a.status !== 'late').length;
+    if (stats[2]) stats[2].textContent = allAccounts.filter(a => a.status === 'late').length;
+
+    let filtered = allAccounts;
+    if (currentFilter !== 'all') filtered = filtered.filter(a => a.status === currentFilter);
+    if (currentSearch) filtered = filtered.filter(a =>
+      (a.name||'').includes(currentSearch) || (a.phone||'').includes(currentSearch)
+    );
+
+    if (!filtered.length) {
+      list.innerHTML = '<p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">لا توجد حسابات — اضغط ➕ لإضافة حساب جديد</p>';
       return;
     }
-    list.innerHTML=filtered.map(a=>`
-      <div class="op-item" data-id="${a.id}" data-status="${a.status}" style="position:relative">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);cursor:pointer" onclick="openWAFor('${a.phone||''}','${a.name||''}')">
+
+    list.innerHTML = filtered.map(a => `
+      <div class="op-item">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:14px;cursor:pointer"
+          onclick="sendWAAccount('${(a.phone||'').replace(/'/g,'')}',' ${(a.name||'').replace(/'/g,'')}',' ${a.balance||0}')"
+          title="إرسال واتساب">
           ${(a.name||'ع').substring(0,2)}
         </div>
-        <div class="op-info">
-          <div class="op-name">${a.name||''}</div>
-          <div class="op-date">${a.phone||'لا يوجد رقم'} · ${sl(a.status)}</div>
+        <div class="op-info" style="flex:1">
+          <div class="op-name">${a.name||'—'}</div>
+          <div class="op-date">${a.phone||'لا يوجد رقم'} · ${statusLabel(a.status)}</div>
         </div>
-        <div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <div class="op-amount">${Number(a.balance||0).toLocaleString('ar-SA')}</div>
-          <div class="op-currency">ر.ي</div>
-          <button onclick="sendWAMsg('${a.id}','${a.phone||''}','${a.name||''}')" style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:Cairo">واتساب</button>
+        <div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+          <div style="font-size:15px;font-weight:800;color:#8B0000">${Number(a.balance||0).toLocaleString('ar-SA')}</div>
+          <div style="font-size:11px;color:#999">ر.ي</div>
+          <button onclick="sendWAAccount('${(a.phone||'').replace(/'/g,'')}','${(a.name||'').replace(/'/g,'')}','${a.balance||0}')"
+            style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:Cairo">
+            💬 واتساب
+          </button>
         </div>
       </div>
     `).join('');
   }
 
-  listenAccounts(accounts=>{ allAccounts=accounts; render(); });
+  listenAccounts(accounts => { allAccounts = accounts; render(); });
 
-  // فلترة
-  document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',function(){
-    const m={'الكل':'all','نشط':'active','متأخر':'late','VIP':'vip'};
-    currentFilter=m[this.textContent.trim()]||'all'; render();
-  }));
-  const si=document.getElementById('searchInput');
-  if(si) si.addEventListener('input',function(){ currentSearch=this.value; render(); });
-
-  // Header + button
-  const addBtn=document.querySelector('.header-icon-btn');
-  if(addBtn){ addBtn.textContent='➕'; addBtn.onclick=()=>{ document.getElementById('addAccountModal').style.display='flex'; }; }
-
-  // Modal
-  document.getElementById('closeModal').onclick=()=>{ document.getElementById('addAccountModal').style.display='none'; };
-  document.getElementById('addAccountModal').onclick=function(e){ if(e.target===this) this.style.display='none'; };
-
-  // Form submit
-  document.getElementById('addAccountForm').addEventListener('submit', async function(e){
-    e.preventDefault();
-    const btn=document.getElementById('saveAccBtn');
-    btn.disabled=true; btn.textContent='جاري الحفظ...';
-    const name=document.getElementById('accName').value.trim();
-    const phone=document.getElementById('accPhone').value.trim();
-    const balance=parseFloat(document.getElementById('accBalance').value)||0;
-    const status=document.getElementById('accStatus').value;
-    try{
-      await addAccount({ name, phone, balance, status });
-      document.getElementById('addAccountModal').style.display='none';
-      this.reset();
-      if(typeof showNotification==='function') showNotification('تم حفظ الحساب في قاعدة البيانات ✓','success');
-    } catch(err){
-      console.error(err);
-      if(typeof showNotification==='function') showNotification('حدث خطأ أثناء الحفظ','error');
-    }
-    btn.disabled=false; btn.textContent='حفظ الحساب في قاعدة البيانات';
+  // فلترة بالشرائح
+  document.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', function() {
+      const map = { 'الكل':'all', 'نشط':'active', 'متأخر':'late', 'VIP':'vip' };
+      currentFilter = map[this.textContent.trim()] || 'all';
+      render();
+    });
   });
 
-  // WhatsApp functions
-  window.sendWAMsg = async function(id, phone, name){
-    if(!phone){ alert('لا يوجد رقم واتساب لهذا العميل'); return; }
-    const msg=`السلام عليكم ${name}، نظام محمد سالم للحوالات — للاستفسار عن حسابك تواصل معنا.`;
-    const clean=phone.replace(/[^0-9]/g,'');
-    const num=clean.startsWith('00')?clean.slice(2):clean.startsWith('0')?'967'+clean.slice(1):clean;
-    window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');
-    await logWA({ type:'account_message', accountName:name, phone, message:msg });
+  // بحث
+  const searchInput = document.getElementById('searchInput') || document.querySelector('input[placeholder*="بحث"]');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() { currentSearch = this.value; render(); });
+  }
+
+  // ===== واتساب للحسابات =====
+  window.sendWAAccount = async function(phone, name, balance) {
+    if (!phone || phone.trim() === '') {
+      if (typeof showNotification === 'function') showNotification('لا يوجد رقم واتساب لهذا العميل', 'error');
+      return;
+    }
+    const clean = phone.replace(/[^0-9]/g,'');
+    const num = clean.startsWith('00') ? clean.slice(2) : clean.startsWith('0') ? '967'+clean.slice(1) : clean;
+    const msg = `🏦 نظام محمد سالم للحوالات
+  ━━━━━━━━━━━━━━━
+  السلام عليكم ${name.trim()}
+
+  كشف حسابك:
+  💰 الرصيد الحالي: ${Number(balance).toLocaleString('ar-SA')} ر.ي
+
+  للاستفسار تواصل معنا 📞`;
+
+    window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(msg), '_blank');
+    await logWA({ type:'account_statement', accountName:name.trim(), phone, message:msg });
+    if (typeof showNotification === 'function') showNotification('تم فتح واتساب ✓', 'success');
   };
-  window.openWAFor=window.sendWAMsg;
   </script>
+
   </body>
-</html>
+  </html>
