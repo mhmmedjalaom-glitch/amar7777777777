@@ -20,7 +20,7 @@
     <div class="balance-card">
       <div class="balance-label">إجمالي الرصيد المتوفر</div>
       <div class="balance-amount">
-        <span class="amount" id="totalBalance">24,580,000</span>
+        <span class="amount" id="totalBalance">—</span>
         <span class="currency">YER</span>
       </div>
     </div>
@@ -33,7 +33,7 @@
       <div class="alert-icon">⚠️</div>
       <div>
         <div class="alert-title">تنبيه المتأخرين بالسداد</div>
-        <div class="alert-text">يوجد 5 عملاء تجاوزوا فترة الـ 5 أيام.</div>
+        <div class="alert-text" id="lateAlertText">جاري التحميل...</div>
       </div>
     </div>
 
@@ -67,22 +67,22 @@
     <div class="stats-grid">
       <div class="stat-card green">
         <div class="stat-icon">✅</div>
-        <div class="stat-value" data-target="47">0</div>
+        <div class="stat-value" id="statCompleted">—</div>
         <div class="stat-label">حوالة مكتملة</div>
       </div>
       <div class="stat-card blue">
         <div class="stat-icon">🔄</div>
-        <div class="stat-value" data-target="12">0</div>
+        <div class="stat-value" id="statPending">—</div>
         <div class="stat-label">قيد التنفيذ</div>
       </div>
       <div class="stat-card orange">
         <div class="stat-icon">💰</div>
-        <div class="stat-value">450,000</div>
+        <div class="stat-value" id="statProfit">—</div>
         <div class="stat-label">أرباح اليوم ر.ي</div>
       </div>
       <div class="stat-card red">
         <div class="stat-icon">⏰</div>
-        <div class="stat-value" data-target="5">0</div>
+        <div class="stat-value" id="statLate">—</div>
         <div class="stat-label">تنبيهات متأخرة</div>
       </div>
     </div>
@@ -118,51 +118,8 @@
       <span class="section-title">🕐 آخر العمليات</span>
       <a class="section-link" href="pages/logs.html">عرض الكل</a>
     </div>
-    <div class="op-list">
-      <div class="op-item">
-        <div class="op-avatar">أح</div>
-        <div class="op-info">
-          <div class="op-name">أحمد محمد</div>
-          <div class="op-date">منذ 10 دقائق · <span class="badge badge-green">مكتملة</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">150,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-      <div class="op-item">
-        <div class="op-avatar">سا</div>
-        <div class="op-info">
-          <div class="op-name">سالم عبدالله</div>
-          <div class="op-date">منذ 35 دقيقة · <span class="badge badge-orange">قيد التنفيذ</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">320,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-      <div class="op-item">
-        <div class="op-avatar">مح</div>
-        <div class="op-info">
-          <div class="op-name">محمد علي</div>
-          <div class="op-date">منذ ساعة · <span class="badge badge-red">متأخرة</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">85,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-      <div class="op-item">
-        <div class="op-avatar">خا</div>
-        <div class="op-info">
-          <div class="op-name">خالد إبراهيم</div>
-          <div class="op-date">منذ 2 ساعة · <span class="badge badge-green">مكتملة</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">200,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
+    <div class="op-list" id="opList">
+      <p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">جاري التحميل...</p>
     </div>
 
   </div>
@@ -189,55 +146,90 @@
 
   <script src="script.js"></script>
 
-    
-  
   <script type="module">
-  import { getStats, listenTransfers } from "./firebase.js";
+    import { getStats, listenTransfers } from "./firebase.js";
 
-  async function refreshStats() {
-    try {
-      const s = await getStats();
-      const fmt = n => Number(n||0).toLocaleString('ar-SA');
+    const fmt = n => Number(n || 0).toLocaleString('ar-SA');
 
-      // الرصيد الكلي
-      const bigNums = document.querySelectorAll('[style*="font-size:28px"],[style*="font-size:30px"],[style*="font-size:32px"]');
-      if (bigNums[0]) bigNums[0].textContent = fmt(s.totalBalance);
+    // دالة لتحويل Firestore Timestamp أو Date إلى Date
+    function toDate(val) {
+      if (!val) return null;
+      if (typeof val.toDate === 'function') return val.toDate();
+      if (val instanceof Date) return val;
+      return new Date(val);
+    }
 
-      // stat cards
-      const sv = document.querySelectorAll('.stat-card .stat-value');
-      if (sv[0]) sv[0].textContent = s.activeAccounts;
-      if (sv[1]) sv[1].textContent = s.lateAccounts;
-      if (sv[2]) sv[2].textContent = s.todayCompleted + s.todayPending;
-      if (sv[3]) sv[3].textContent = fmt(s.todayProfit);
-    } catch(e) { console.error('stats error', e); }
-  }
+    // تحديث الإحصاءات
+    async function refreshStats() {
+      try {
+        const s = await getStats();
 
-  refreshStats();
+        // الرصيد الكلي
+        document.getElementById('totalBalance').textContent = fmt(s.totalBalance);
 
-  // آخر الحوالات اليوم
-  listenTransfers(transfers => {
-    refreshStats();
-    const listEl = document.querySelector('.op-list');
-    if (!listEl) return;
-    const today = new Date(); today.setHours(0,0,0,0);
-    const todayT = transfers.filter(t => new Date(t.createdAt) >= today).slice(0,5);
-    if (!todayT.length) { listEl.innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد حوالات اليوم</p>'; return; }
-    const statusBg = { completed:'#2e7d32', pending:'#f57c00', cancelled:'#c62828' };
-    const statusTx = { completed:'مكتملة ✅', pending:'قيد التنفيذ ⏳', cancelled:'ملغاة ❌' };
-    listEl.innerHTML = todayT.map(t => `
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">💸</div>
-        <div class="op-info">
-          <div class="op-name">${t.beneficiary||'—'}</div>
-          <div class="op-date">${new Date(t.createdAt).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}</div>
-        </div>
-        <div style="text-align:left">
-          <div style="font-size:14px;font-weight:800;color:#8B0000">${Number(t.amount||0).toLocaleString('ar-SA')}</div>
-          <span style="background:${statusBg[t.status]||'#666'};color:#fff;padding:1px 7px;border-radius:7px;font-size:10px">${statusTx[t.status]||t.status}</span>
-        </div>
-      </div>
-    `).join('');
-  });
+        // بطاقات الإحصاء
+        document.getElementById('statCompleted').textContent = s.todayCompleted;
+        document.getElementById('statPending').textContent   = s.todayPending;
+        document.getElementById('statProfit').textContent    = fmt(s.todayProfit);
+        document.getElementById('statLate').textContent      = s.lateAccounts;
+
+        // تنبيه المتأخرين
+        const lateText = document.getElementById('lateAlertText');
+        if (lateText) {
+          lateText.textContent = s.lateAccounts > 0
+            ? `يوجد ${s.lateAccounts} عميل تجاوزوا فترة الـ 5 أيام.`
+            : 'لا يوجد عملاء متأخرون حالياً.';
+        }
+      } catch (e) {
+        console.error('stats error', e);
+      }
+    }
+
+    // تحديث آخر العمليات في الوقت الفعلي
+    listenTransfers(transfers => {
+      refreshStats();
+
+      const listEl = document.getElementById('opList');
+      if (!listEl) return;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const todayT = transfers
+        .filter(t => {
+          const d = toDate(t.createdAt);
+          return d && d >= today;
+        })
+        .slice(0, 5);
+
+      if (!todayT.length) {
+        listEl.innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد حوالات اليوم</p>';
+        return;
+      }
+
+      const statusBg = { completed: '#2e7d32', pending: '#f57c00', cancelled: '#c62828' };
+      const statusTx = { completed: 'مكتملة ✅', pending: 'قيد التنفيذ ⏳', cancelled: 'ملغاة ❌' };
+
+      listEl.innerHTML = todayT.map(t => {
+        const d = toDate(t.createdAt);
+        const timeStr = d ? d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) : '—';
+        const initials = (t.beneficiary || '—').trim().slice(0, 2);
+        return `
+          <div class="op-item">
+            <div class="op-avatar">${initials}</div>
+            <div class="op-info">
+              <div class="op-name">${t.beneficiary || '—'}</div>
+              <div class="op-date">${timeStr} · <span class="badge" style="background:${statusBg[t.status] || '#666'};color:#fff;padding:2px 8px;border-radius:8px;font-size:10px">${statusTx[t.status] || t.status}</span></div>
+            </div>
+            <div style="text-align:left">
+              <div class="op-amount">${fmt(t.amount)}</div>
+              <div class="op-currency">${t.currency || 'ر.ي'}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    });
   </script>
-  </body>
+
+</body>
 </html>
