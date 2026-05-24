@@ -1,218 +1,276 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>إنشاء حوالة ذكية - نظام محمد سالم</title>
-  <link rel="stylesheet" href="../style.css" />
-</head>
-<body>
+  <html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>إنشاء حوالة ذكية - نظام محمد سالم</title>
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
 
-  <div class="sub-header">
-    <div class="sub-header-top">
-      <div class="back-btn">➡️</div>
-      <span class="sub-header-title">إنشاء حوالة ذكية</span>
-      <div style="width:38px"></div>
-    </div>
-    <div class="sub-header-subtitle">جميع العمليات مشفرة ومؤمنة بالكامل 🔒</div>
-  </div>
-
-  <div class="page-content">
-    <form id="transferForm">
-
-      <!-- بيانات العميل -->
-      <div class="card">
-        <div class="card-title">👤 بيانات العميل</div>
-
-        <div class="form-group">
-          <label class="form-label">اسم العميل</label>
-          <input type="text" class="form-input" placeholder="أدخل اسم العميل الكامل" required />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">رقم الهاتف</label>
-          <input type="tel" class="form-input" placeholder="+967 7xx xxx xxx" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">المستفيد</label>
-          <input type="text" class="form-input" placeholder="اسم المستفيد" required />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">رقم هاتف المستفيد</label>
-          <input type="tel" class="form-input" placeholder="+967 7xx xxx xxx" />
-        </div>
+    <div class="sub-header">
+      <div class="sub-header-top">
+        <div class="back-btn">➡️</div>
+        <span class="sub-header-title">إنشاء حوالة ذكية</span>
+        <div style="width:38px"></div>
       </div>
+      <div class="sub-header-subtitle">جميع العمليات مشفرة ومؤمنة بالكامل 🔒</div>
+    </div>
 
-      <!-- المبلغ والعمولة -->
-      <div class="card">
-        <div class="card-title">💰 المبلغ والعمولة</div>
+    <div class="page-content">
+      <form id="transferForm">
 
-        <div class="form-group">
-          <label class="form-label">المبلغ (ر.ي)</label>
-          <input type="number" class="form-input" id="transferAmount" placeholder="0" min="0" />
-        </div>
+        <!-- بيانات العميل -->
+        <div class="card">
+          <div class="card-title">👤 بيانات العميل</div>
 
-        <div class="form-group">
-          <label class="form-label">العملة</label>
-          <select class="form-select">
-            <option value="YER">ريال يمني (YER)</option>
-            <option value="USD">دولار أمريكي (USD)</option>
-            <option value="SAR">ريال سعودي (SAR)</option>
-            <option value="AED">درهم إماراتي (AED)</option>
-          </select>
-        </div>
-
-        <!-- حساب العمولة -->
-        <div style="background:#fff8f8;border-radius:12px;padding:14px;border:1px solid #f5d0d0">
-          <div class="info-row" style="padding:8px 0">
-            <span class="info-label">المبلغ الأصلي</span>
-            <span class="info-value" id="originalAmount">0 ر.ي</span>
+          <div class="form-group">
+            <label class="form-label">اسم العميل</label>
+            <input type="text" id="senderName" class="form-input" placeholder="أدخل اسم العميل الكامل" required />
           </div>
-          <div class="info-row" style="padding:8px 0">
-            <span class="info-label">العمولة (5%)</span>
-            <span class="info-value" style="color:#e65100" id="commissionAmount">0 ر.ي</span>
+
+          <div class="form-group">
+            <label class="form-label">رقم الهاتف</label>
+            <input type="tel" id="senderPhone" class="form-input" placeholder="+967 7xx xxx xxx" />
           </div>
-          <div class="info-row" style="padding:8px 0;border-bottom:none">
-            <span class="info-label" style="font-weight:700;color:#1a1a1a">الإجمالي</span>
-            <span class="info-value" style="color:#8B0000;font-size:16px" id="totalAmount">0 ر.ي</span>
+
+          <div class="form-group">
+            <label class="form-label">المستفيد</label>
+            <input type="text" id="beneficiary" class="form-input" placeholder="اسم المستفيد" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">رقم هاتف المستفيد</label>
+            <input type="tel" id="beneficiaryPhone" class="form-input" placeholder="+967 7xx xxx xxx" />
           </div>
         </div>
+
+        <!-- المبلغ والعمولة -->
+        <div class="card">
+          <div class="card-title">💰 المبلغ والعمولة</div>
+
+          <div class="form-group">
+            <label class="form-label">المبلغ (ر.ي)</label>
+            <input type="number" class="form-input" id="transferAmount" placeholder="0" min="0" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">العملة</label>
+            <select class="form-select" id="currency">
+              <option value="ر.ي">ريال يمني (YER)</option>
+              <option value="USD">دولار أمريكي (USD)</option>
+              <option value="SAR">ريال سعودي (SAR)</option>
+              <option value="AED">درهم إماراتي (AED)</option>
+            </select>
+          </div>
+
+          <!-- حساب العمولة -->
+          <div style="background:#fff8f8;border-radius:12px;padding:14px;border:1px solid #f5d0d0">
+            <div class="info-row" style="padding:8px 0">
+              <span class="info-label">المبلغ الأصلي</span>
+              <span class="info-value" id="originalAmount">0 ر.ي</span>
+            </div>
+            <div class="info-row" style="padding:8px 0">
+              <span class="info-label">العمولة (5%)</span>
+              <span class="info-value" style="color:#e65100" id="commissionAmount">0 ر.ي</span>
+            </div>
+            <div class="info-row" style="padding:8px 0;border-bottom:none">
+              <span class="info-label" style="font-weight:700;color:#1a1a1a">الإجمالي</span>
+              <span class="info-value" style="color:#8B0000;font-size:16px" id="totalAmount">0 ر.ي</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- حالة الحوالة -->
+        <div class="card">
+          <div class="card-title">📋 حالة الحوالة</div>
+
+          <div class="form-group">
+            <label class="form-label">نوع الحوالة</label>
+            <select class="form-select" id="transferType">
+              <option value="داخلية">داخلية</option>
+              <option value="خارجية">خارجية</option>
+              <option value="عاجلة">عاجلة</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">الحالة</label>
+            <select class="form-select" id="transferStatus">
+              <option value="pending">قيد التنفيذ</option>
+              <option value="completed">مكتملة</option>
+              <option value="cancelled">معلقة</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ملاحظات</label>
+            <textarea class="form-input" id="notes" rows="3" placeholder="أي ملاحظات إضافية..." style="resize:none"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary" style="margin-bottom:10px">
+          ✅ تأكيد إنشاء الحوالة
+        </button>
+        <button type="button" class="btn btn-outline" onclick="history.back()">
+          ❌ إلغاء
+        </button>
+
+      </form>
+    </div>
+
+    <!-- مودال الواتساب بعد الحفظ -->
+    <div id="waModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center">
+      <div style="background:#fff;border-radius:20px;padding:24px;width:88%;max-width:360px;direction:rtl;font-family:Cairo,sans-serif;text-align:center">
+        <div style="font-size:40px;margin-bottom:12px">✅</div>
+        <h3 style="margin:0 0 8px;font-size:17px;font-weight:800;color:#1a1a1a">تم حفظ الحوالة بنجاح!</h3>
+        <p style="font-size:13px;color:#666;margin:0 0 20px" id="waModalMsg"></p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button id="waClientBtn" style="padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif">
+            💬 إرسال واتساب للعميل
+          </button>
+          <button id="waBenBtn" style="padding:13px;background:#128C7E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif">
+            💬 إرسال واتساب للمستفيد
+          </button>
+          <button onclick="document.getElementById('waModal').style.display='none';document.getElementById('transferForm').reset();document.getElementById('originalAmount').textContent='0 ر.ي';document.getElementById('commissionAmount').textContent='0 ر.ي';document.getElementById('totalAmount').textContent='0 ر.ي';" style="padding:13px;background:#f5f5f5;color:#333;border:none;border-radius:12px;font-size:14px;cursor:pointer;font-family:Cairo,sans-serif">
+            ↩️ حوالة جديدة
+          </button>
+        </div>
       </div>
+    </div>
 
-      <!-- حالة الحوالة -->
-      <div class="card">
-        <div class="card-title">📋 حالة الحوالة</div>
-
-        <div class="form-group">
-          <label class="form-label">نوع الحوالة</label>
-          <select class="form-select">
-            <option>داخلية</option>
-            <option>خارجية</option>
-            <option>عاجلة</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">الحالة</label>
-          <select class="form-select">
-            <option>قيد التنفيذ</option>
-            <option>مكتملة</option>
-            <option>معلقة</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">ملاحظات</label>
-          <textarea class="form-input" rows="3" placeholder="أي ملاحظات إضافية..." style="resize:none"></textarea>
-        </div>
+    <nav class="bottom-nav">
+      <div class="nav-item" data-href="../index.html">
+        <span class="nav-icon">🏠</span><span>الرئيسية</span>
       </div>
+      <div class="nav-item active" data-href="transfer.html">
+        <span class="nav-icon">💸</span><span>تحويل</span>
+      </div>
+      <div class="nav-item" data-href="vip.html">
+        <span class="nav-icon">👑</span><span>المميزين</span>
+      </div>
+      <div class="nav-item" data-href="reports.html">
+        <span class="nav-icon">📊</span><span>تقارير</span>
+      </div>
+    </nav>
 
-      <button type="submit" class="btn btn-primary" style="margin-bottom:10px">
-        ✅ تأكيد إنشاء الحوالة
-      </button>
-      <button type="button" class="btn btn-outline" onclick="history.back()">
-        ❌ إلغاء
-      </button>
+    <script src="../script.js"></script>
 
-    </form>
-  </div>
+    <!-- حساب العمولة -->
+    <script>
+      const amountInput = document.getElementById('transferAmount');
+      amountInput.addEventListener('input', function () {
+        const amount = parseFloat(this.value) || 0;
+        const commission = Math.round(amount * 0.05);
+        const total = amount + commission;
+        document.getElementById('originalAmount').textContent = amount.toLocaleString('ar-SA') + ' ر.ي';
+        document.getElementById('commissionAmount').textContent = commission.toLocaleString('ar-SA') + ' ر.ي';
+        document.getElementById('totalAmount').textContent = total.toLocaleString('ar-SA') + ' ر.ي';
+      });
+    </script>
 
-  <nav class="bottom-nav">
-    <div class="nav-item" data-href="../index.html">
-      <span class="nav-icon">🏠</span><span>الرئيسية</span>
-    </div>
-    <div class="nav-item active" data-href="transfer.html">
-      <span class="nav-icon">💸</span><span>تحويل</span>
-    </div>
-    <div class="nav-item" data-href="vip.html">
-      <span class="nav-icon">👑</span><span>المميزين</span>
-    </div>
-    <div class="nav-item" data-href="reports.html">
-      <span class="nav-icon">📊</span><span>تقارير</span>
-    </div>
-  </nav>
+    <!-- Firebase + واتساب تلقائي -->
+    <script type="module">
+      import { addTransfer, logWA } from "../firebase.js";
 
-  <script src="../script.js"></script>
-  <script>
-    const amountInput = document.getElementById('transferAmount');
-    const originalDisplay = document.getElementById('originalAmount');
-    amountInput.addEventListener('input', function () {
-      const amount = parseFloat(this.value) || 0;
-      const commission = Math.round(amount * 0.05);
-      const total = amount + commission;
-      originalDisplay.textContent = amount.toLocaleString('ar-SA') + ' ر.ي';
-      document.getElementById('commissionAmount').textContent = commission.toLocaleString('ar-SA') + ' ر.ي';
-      document.getElementById('totalAmount').textContent = total.toLocaleString('ar-SA') + ' ر.ي';
-    });
-  </script>
+      const WA_ADMIN = '967733231636';
+      let savedTransfer = null;
 
-    
-  <script type="module">
-  import { addTransfer, openWA, logWA } from "../firebase.js";
+      function formatWANum(phone) {
+        const clean = String(phone || '').replace(/[^0-9]/g, '');
+        if (!clean) return null;
+        if (clean.startsWith('00')) return clean.slice(2);
+        if (clean.startsWith('0')) return '967' + clean.slice(1);
+        return clean;
+      }
 
-  const WA_ADMIN = '967733231636';
-  const form = document.getElementById('transferForm') || document.querySelector('form');
-  const submitBtn = form ? form.querySelector('button[type=submit], button.btn-primary, .btn') : null;
+      function openWA(phone, text) {
+        const num = formatWANum(phone);
+        if (!num) return;
+        window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(text), '_blank');
+      }
 
-  if(form) {
-    form.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent='جاري الحفظ...'; }
+      // إرسال النموذج
+      document.getElementById('transferForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ جاري الحفظ...';
 
-      const g = id => (document.getElementById(id)||document.querySelector('[name='+id+']'))?.value?.trim() || '';
+        const senderName      = document.getElementById('senderName').value.trim();
+        const senderPhone     = document.getElementById('senderPhone').value.trim();
+        const beneficiary     = document.getElementById('beneficiary').value.trim();
+        const beneficiaryPhone= document.getElementById('beneficiaryPhone').value.trim();
+        const amount          = parseFloat(document.getElementById('transferAmount').value) || 0;
+        const currency        = document.getElementById('currency').value;
+        const transferType    = document.getElementById('transferType').value;
+        const status          = document.getElementById('transferStatus').value;
+        const notes           = document.getElementById('notes').value.trim();
+        const commission      = Math.round(amount * 0.05);
+        const total           = amount + commission;
 
-      const senderName     = g('senderName')     || g('sender_name')     || g('sender');
-      const senderPhone    = g('senderPhone')    || g('sender_phone')    || '';
-      const beneficiary    = g('beneficiary')    || g('receiver')        || g('beneficiary_name');
-      const beneficiaryPhone = g('beneficiaryPhone') || g('receiver_phone') || g('beneficiary_phone') || '';
-      const amount         = parseFloat(g('amount')  || g('transferAmount') || '0') || 0;
-      const currency       = g('currency') || 'ر.ي';
-      const commission     = parseFloat(g('commission') || '0') || 0;
-      const total          = amount + commission;
-      const note           = g('note') || g('notes') || '';
-
-      if(!senderName && !beneficiary && amount === 0) {
-        // fallback — جمع كل حقول النموذج
-        const allInputs = [...form.querySelectorAll('input,select,textarea')];
-        const data = {};
-        allInputs.forEach(i=>{ if(i.name||i.id) data[i.name||i.id]=i.value; });
         try {
-          await addTransfer({ ...data, source:'form_fallback' });
-          if(typeof showNotification==='function') showNotification('تم حفظ الحوالة ✓','success');
-        } catch(err) { console.error(err); }
-        if(submitBtn){ submitBtn.disabled=false; submitBtn.textContent='تأكيد الحوالة'; }
-        return;
-      }
+          await addTransfer({ senderName, senderPhone, beneficiary, beneficiaryPhone, amount, currency, commission, total, transferType, status, notes });
 
-      try {
-        await addTransfer({ senderName, senderPhone, beneficiary, beneficiaryPhone, amount, currency, commission, total, note });
+          savedTransfer = { senderName, senderPhone, beneficiary, beneficiaryPhone, amount, currency, commission, total };
 
-        // واتساب للمرسل
-        if(senderPhone) {
-          const msgSender = `نظام محمد سالم: تم استلام حوالتك بمبلغ ${amount.toLocaleString('ar-SA')} ${currency} للمستفيد ${beneficiary}. المجموع مع العمولة: ${total.toLocaleString('ar-SA')} ${currency}.`;
-          openWA(senderPhone, msgSender);
-          await logWA({ type:'transfer_sender', accountName:senderName, phone:senderPhone, message:msgSender });
-          await new Promise(r=>setTimeout(r,600));
+          // تحضير رسائل الواتساب
+          const msgClient = `🏦 نظام محمد سالم للحوالات
+  ━━━━━━━━━━━━━━━
+  ✅ تم استلام حوالتك بنجاح
+
+  👤 العميل: ${senderName}
+  💰 المبلغ: ${amount.toLocaleString('ar-SA')} ${currency}
+  📊 العمولة: ${commission.toLocaleString('ar-SA')} ${currency}
+  💳 الإجمالي: ${total.toLocaleString('ar-SA')} ${currency}
+  📦 المستفيد: ${beneficiary}
+  🔖 النوع: ${transferType}
+  ━━━━━━━━━━━━━━━
+  شكراً لثقتكم بنا 🙏`;
+
+          const msgBen = `🏦 نظام محمد سالم للحوالات
+  ━━━━━━━━━━━━━━━
+  📬 لديك حوالة جديدة!
+
+  💰 المبلغ: ${amount.toLocaleString('ar-SA')} ${currency}
+  👤 من: ${senderName}
+  🔖 النوع: ${transferType}
+  ━━━━━━━━━━━━━━━
+  للاستفسار تواصل معنا 📞`;
+
+          // تسجيل في Firestore
+          if (senderPhone) await logWA({ type:'transfer_client', accountName:senderName, phone:senderPhone, message:msgClient });
+          if (beneficiaryPhone) await logWA({ type:'transfer_beneficiary', accountName:beneficiary, phone:beneficiaryPhone, message:msgBen });
+
+          // إعداد أزرار الواتساب في المودال
+          document.getElementById('waModalMsg').textContent =
+            `تم حفظ الحوالة في قاعدة البيانات ✓ اضغط أدناه لإرسال إشعار واتساب للعميل أو المستفيد`;
+
+          document.getElementById('waClientBtn').onclick = function() {
+            if (!senderPhone) { alert('لم يُدخل رقم هاتف العميل'); return; }
+            openWA(senderPhone, msgClient);
+          };
+          document.getElementById('waBenBtn').onclick = function() {
+            if (!beneficiaryPhone) { alert('لم يُدخل رقم هاتف المستفيد'); return; }
+            openWA(beneficiaryPhone, msgBen);
+          };
+
+          // إظهار المودال
+          document.getElementById('waModal').style.display = 'flex';
+
+          if (typeof showNotification === 'function')
+            showNotification('تم حفظ الحوالة في قاعدة البيانات ✓', 'success');
+
+        } catch(err) {
+          console.error('Firebase error:', err);
+          if (typeof showNotification === 'function')
+            showNotification('خطأ في الحفظ: ' + err.message, 'error');
         }
 
-        // واتساب للمستفيد
-        if(beneficiaryPhone && beneficiaryPhone !== senderPhone) {
-          const msgBen = `نظام محمد سالم: سيصلك مبلغ ${amount.toLocaleString('ar-SA')} ${currency} من ${senderName}. تواصل معنا لأي استفسار.`;
-          openWA(beneficiaryPhone, msgBen);
-          await logWA({ type:'transfer_beneficiary', accountName:beneficiary, phone:beneficiaryPhone, message:msgBen });
-        }
+        btn.disabled = false;
+        btn.textContent = '✅ تأكيد إنشاء الحوالة';
+      });
+    </script>
 
-        if(typeof showNotification==='function') showNotification('تم حفظ الحوالة وإرسال إشعار واتساب ✓','success');
-        form.reset();
-      } catch(err) {
-        console.error(err);
-        if(typeof showNotification==='function') showNotification('خطأ في الحفظ: '+err.message,'error');
-      }
-      if(submitBtn){ submitBtn.disabled=false; submitBtn.textContent='تأكيد الحوالة'; }
-    });
-  }
-  </script>
   </body>
-</html>
+  </html>
