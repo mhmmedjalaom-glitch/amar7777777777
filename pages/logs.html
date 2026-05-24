@@ -174,39 +174,89 @@
 
   <script src="../script.js"></script>
 
-    <script type="module">
-      import { listenTransfers, updateTransferStatus, deleteTransfer } from "../firebase.js";
+    
+  <script type="module">
+  import { listenTransfers, updateTransferStatus, deleteTransfer, logWA, openWA } from "../firebase.js";
 
-      const statusColors = { pending: '#f57c00', completed: '#2e7d32', cancelled: '#c62828' };
-      const statusLabels = { pending: 'قيد التنفيذ', completed: 'مكتملة', cancelled: 'ملغية' };
+  const WA = '967733231636';
+  let allTransfers = [], currentFilter = 'all', currentSearch = '';
 
-      function renderLogs(transfers) {
-        const list = document.getElementById('opList') || document.querySelector('.op-list');
-        if (!list) return;
-        if (transfers.length === 0) {
-          list.innerHTML = '<p style="text-align:center;color:#999;padding:30px;font-family:Tajawal,sans-serif">لا توجد عمليات</p>';
-          return;
-        }
-        list.innerHTML = transfers.map(t => {
-          const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString('ar-SA') : '';
-          const color = statusColors[t.status] || '#666';
-          const label = statusLabels[t.status] || t.status;
-          return `<div class="op-item">
-            <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:18px">💸</div>
-            <div class="op-info">
-              <div class="op-name">${t.senderName || ''} ← ${t.beneficiary || ''}</div>
-              <div class="op-date">${date} · <span style="color:${color}">${label}</span></div>
-            </div>
-            <div style="text-align:left">
-              <div class="op-amount">${Number(t.amount||0).toLocaleString('ar-SA')}</div>
-              <div class="op-currency">${t.currency || 'ر.ي'}</div>
-            </div>
-          </div>`;
-        }).join('');
-      }
+  function statusLabel(s){
+    const m = { completed:'<span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px">مكتملة</span>', pending:'<span style="background:#f57c00;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px">معلقة</span>', cancelled:'<span style="background:#c62828;color:#fff;padding:2px 8px;border-radius:8px;font-size:11px">ملغاة</span>' };
+    return m[s] || s;
+  }
 
-      listenTransfers(renderLogs);
-    </script>
-  
-</body>
+  function render() {
+    const list = document.getElementById('transfersList') || document.querySelector('.op-list');
+    if(!list) return;
+    let filtered = allTransfers;
+    if(currentFilter !== 'all') filtered = filtered.filter(t => t.status === currentFilter);
+    if(currentSearch) filtered = filtered.filter(t =>
+      (t.senderName||'').includes(currentSearch) || (t.beneficiary||'').includes(currentSearch)
+    );
+    const svs = document.querySelectorAll('.stat-card .stat-value');
+    if(svs[0]) svs[0].textContent = allTransfers.length;
+    if(svs[1]) svs[1].textContent = allTransfers.filter(t=>t.status==='completed').length;
+    if(svs[2]) svs[2].textContent = allTransfers.filter(t=>t.status==='pending').length;
+    if(svs[3]) {
+      const total = allTransfers.reduce((s,t)=>s+(Number(t.commission)||0),0);
+      svs[3].textContent = total.toLocaleString('ar-SA');
+    }
+    if(!filtered.length){
+      list.innerHTML='<p style="text-align:center;color:#999;padding:30px;font-family:Tajawal">لا توجد حوالات بعد. أضف حوالة جديدة من صفحة التحويل.</p>';
+      return;
+    }
+    list.innerHTML = filtered.map(t => {
+      const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleString('ar-SA') : '';
+      return `<div class="op-item">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">💸</div>
+        <div class="op-info" style="flex:1">
+          <div class="op-name">${t.senderName||'—'} ← ${t.beneficiary||'—'}</div>
+          <div class="op-date">${date} ${statusLabel(t.status)}</div>
+          <div style="font-size:11px;color:#666;margin-top:2px;display:flex;gap:8px">
+            <button onclick="completeT('${t.id}','${t.beneficiaryPhone||''}','${t.beneficiary||''}','${t.amount||0}','${t.currency||'ر.ي'}')" style="background:#2e7d32;color:#fff;border:none;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">✓ مكتملة</button>
+            <button onclick="sendWAT('${t.beneficiaryPhone||''}','${t.beneficiary||''}','${t.amount||0}','${t.currency||'ر.ي'}')" style="background:#25D366;color:#fff;border:none;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">💬</button>
+            <button onclick="delT('${t.id}')" style="background:#c62828;color:#fff;border:none;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">🗑</button>
+          </div>
+        </div>
+        <div style="text-align:left;min-width:70px">
+          <div style="font-size:15px;font-weight:800;color:#8B0000">${Number(t.amount||0).toLocaleString('ar-SA')}</div>
+          <div style="font-size:11px;color:#999">${t.currency||'ر.ي'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  listenTransfers(ts => { allTransfers = ts; render(); });
+
+  const si = document.getElementById('searchInput');
+  if(si) si.addEventListener('input', function(){ currentSearch=this.value; render(); });
+
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', function(){
+    const m={'الكل':'all','مكتملة':'completed','معلقة':'pending','ملغاة':'cancelled'};
+    currentFilter = m[this.textContent.trim()] || 'all'; render();
+  }));
+
+  window.completeT = async function(id, phone, name, amount, currency) {
+    await updateTransferStatus(id, 'completed');
+    if(phone){
+      const msg = `نظام محمد سالم: تم إتمام حوالتك بمبلغ ${Number(amount).toLocaleString('ar-SA')} ${currency}. شكراً ${name}.`;
+      openWA(phone, msg);
+      await logWA({ type:'transfer_completed', accountName:name, phone, message:msg });
+    }
+    if(typeof showNotification==='function') showNotification('تم تغيير الحالة إلى مكتملة ✓','success');
+  };
+  window.delT = async function(id) {
+    if(!confirm('هل تريد حذف هذه الحوالة؟')) return;
+    await deleteTransfer(id);
+    if(typeof showNotification==='function') showNotification('تم الحذف','info');
+  };
+  window.sendWAT = async function(phone, name, amount, currency) {
+    if(!phone){ alert('لا يوجد رقم واتساب للمستفيد'); return; }
+    const msg = `نظام محمد سالم: تذكير بحوالتك ${Number(amount).toLocaleString('ar-SA')} ${currency} للمستفيد ${name}.`;
+    openWA(phone, msg);
+    await logWA({ type:'transfer_reminder', accountName:name, phone, message:msg });
+  };
+  </script>
+  </body>
 </html>
