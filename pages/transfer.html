@@ -6,36 +6,11 @@
   <title>إنشاء حوالة - نظام محمد سالم</title>
   <link rel="stylesheet" href="../style.css" />
   <style>
-    .account-option {
-      padding: 12px;
-      border-bottom: 1px solid #f0f0f0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-    }
-    .account-option:hover {
-      background: #f5f5f5;
-    }
-    .acc-avatar {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, #8B0000, #660000);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-    }
-    .acc-name {
-      font-weight: 700;
-      color: #333;
-    }
-    .acc-phone {
-      font-size: 12px;
-      color: #999;
-    }
+    .account-option { padding:12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:10px;cursor:pointer; }
+    .account-option:hover { background:#f5f5f5; }
+    .acc-avatar { width:40px;height:40px;background:linear-gradient(135deg,#8B0000,#660000);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700; }
+    .acc-name { font-weight:700;color:#333; }
+    .acc-phone { font-size:12px;color:#999; }
   </style>
 </head>
 <body>
@@ -46,11 +21,10 @@
       <span class="sub-header-title">💸 إنشاء حوالة جديدة</span>
       <div style="width:38px"></div>
     </div>
-    <div class="sub-header-subtitle">حوالة آمنة وسريعة للعملاء</div>
+    <div class="sub-header-subtitle">حوالة آمنة وسريعة — إشعار واتساب تلقائي للعميل</div>
   </div>
 
   <div class="page-content">
-
     <form id="transferForm" style="margin-bottom:20px">
 
       <!-- اختيار المستقبل -->
@@ -59,8 +33,7 @@
         <div style="position:relative">
           <input id="beneficiarySearch" type="text" placeholder="ابحث عن العميل أو الرقم..."
             style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none"/>
-          <div id="accountDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #ddd;border-top:none;border-radius:0 0 12px 12px;max-height:200px;overflow-y:auto;z-index:100">
-          </div>
+          <div id="accountDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #ddd;border-top:none;border-radius:0 0 12px 12px;max-height:200px;overflow-y:auto;z-index:100"></div>
         </div>
       </div>
 
@@ -70,10 +43,11 @@
         <div style="display:flex;align-items:center;gap:10px">
           <div id="selAvatar" style="width:50px;height:50px;background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px">--</div>
           <div style="flex:1">
-            <div id="selName" style="font-weight:700;color:#333">-</div>
-            <div id="selPhone" style="font-size:12px;color:#999">-</div>
+            <div id="selName" style="font-weight:700;color:#333">—</div>
+            <div id="selPhone" style="font-size:12px;color:#999">—</div>
             <div id="selStatus" style="font-size:11px;margin-top:4px"></div>
           </div>
+          <div id="waIndicator" style="display:none;background:#25D366;color:#fff;padding:4px 10px;border-radius:10px;font-size:11px;font-family:Cairo">💬 سيُرسل واتساب</div>
         </div>
         <input id="beneficiary" type="hidden" required />
         <input id="beneficiaryPhone" type="hidden" />
@@ -113,8 +87,8 @@
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">📊 الحالة</label>
         <select id="transferStatus" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;background:#fff;outline:none">
-          <option value="completed">✅ مكتملة</option>
           <option value="pending">⏳ قيد التنفيذ</option>
+          <option value="completed">✅ مكتملة</option>
           <option value="cancelled">❌ ملغاة</option>
         </select>
       </div>
@@ -141,33 +115,30 @@
         </div>
       </div>
 
-      <button type="submit" id="submitBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;transition:all 0.3s">
-        ✅ تأكيد إنشاء الحوالة
+      <!-- تنبيه واتساب -->
+      <div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:12px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">💬</span>
+        <div style="font-size:12px;color:#2e7d32;font-family:Tajawal,sans-serif">سيتم إرسال إشعار واتساب تلقائي للعميل ونسخة لرقمك بعد تأكيد الحوالة</div>
+      </div>
+
+      <button type="submit" id="submitBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif">
+        ✅ تأكيد وإرسال إشعار واتساب
       </button>
 
     </form>
-
   </div>
 
   <nav class="bottom-nav">
-    <div class="nav-item" data-href="../index.html">
-      <span class="nav-icon">🏠</span><span>الرئيسية</span>
-    </div>
-    <div class="nav-item active" data-href="transfer.html">
-      <span class="nav-icon">💸</span><span>تحويل</span>
-    </div>
-    <div class="nav-item" data-href="vip.html">
-      <span class="nav-icon">👑</span><span>المميزين</span>
-    </div>
-    <div class="nav-item" data-href="reports.html">
-      <span class="nav-icon">📊</span><span>تقارير</span>
-    </div>
+    <div class="nav-item" data-href="../index.html"><span class="nav-icon">🏠</span><span>الرئيسية</span></div>
+    <div class="nav-item active" data-href="transfer.html"><span class="nav-icon">💸</span><span>تحويل</span></div>
+    <div class="nav-item" data-href="vip.html"><span class="nav-icon">👑</span><span>المميزين</span></div>
+    <div class="nav-item" data-href="reports.html"><span class="nav-icon">📊</span><span>تقارير</span></div>
   </nav>
 
   <script src="../script.js"></script>
 
   <script type="module">
-    import { getAccounts, addTransfer, logWA, openWA } from "../firebase.js";
+    import { getAccounts, addTransfer, notifyClient, buildMsg } from "../firebase.js";
 
     let accounts = [];
 
@@ -178,33 +149,15 @@
         const pid = params.get('id');
         const pname = params.get('name');
         const pphone = params.get('phone');
-        
         if (pname) {
-          const found = accounts.find(a => a.id === pid) || { 
-            id: pid || '', 
-            name: pname, 
-            phone: pphone || '', 
-            status: 'active' 
-          };
-          selectAccount({ 
-            id: found.id, 
-            name: found.name, 
-            phone: found.phone || '', 
-            status: found.status || 'active' 
-          });
+          const found = accounts.find(a => a.id === pid) || { id: pid || '', name: pname, phone: pphone || '', status: 'active' };
+          selectAccount({ id: found.id, name: found.name, phone: found.phone || '', status: found.status || 'active' });
         }
-      } catch(e) { 
-        console.error('Failed to load accounts:', e);
-        if (typeof showNotification === 'function') 
-          showNotification('خطأ في تحميل الحسابات', 'error');
+      } catch(e) {
+        if (typeof showNotification === 'function') showNotification('خطأ في تحميل الحسابات', 'error');
       }
     }
-    
     loadAccounts();
-
-    const searchInput = document.getElementById('beneficiarySearch');
-    const dropdown = document.getElementById('accountDropdown');
-    const selectedBox = document.getElementById('selectedAccount');
 
     function statusLabel(s) {
       if (s === 'vip') return '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:1px 8px;border-radius:7px;font-size:11px">👑 VIP</span>';
@@ -212,94 +165,80 @@
       return '<span style="background:#2e7d32;color:#fff;padding:1px 8px;border-radius:7px;font-size:11px">✅ نشط</span>';
     }
 
+    const searchInput = document.getElementById('beneficiarySearch');
+    const dropdown = document.getElementById('accountDropdown');
+
     function showDropdown(query) {
       const q = query.trim().toLowerCase();
-      const filtered = q ? accounts.filter(a => 
-        (a.name || '').toLowerCase().includes(q) || (a.phone || '').includes(q)
-      ) : accounts.slice(0, 10);
-      
+      const filtered = q ? accounts.filter(a => (a.name||'').toLowerCase().includes(q) || (a.phone||'').includes(q)) : accounts.slice(0, 10);
       if (!filtered.length) {
-        dropdown.innerHTML = '<div style="padding:14px;text-align:center;color:#999;font-family:Tajawal,sans-serif;font-size:13px">لا توجد نتائج</div>';
+        dropdown.innerHTML = '<div style="padding:14px;text-align:center;color:#999;font-family:Tajawal;font-size:13px">لا توجد نتائج</div>';
         dropdown.style.display = 'block';
         return;
       }
-      
       dropdown.innerHTML = filtered.map(a => `
-        <div class="account-option" data-id="${a.id || ''}" data-name="${(a.name || '').replace(/"/g, '')}" data-phone="${(a.phone || '').replace(/"/g, '')}" data-status="${a.status || 'active'}">
-          <div class="acc-avatar">${(a.name || 'ع').substring(0, 2)}</div>
-          <div style="flex:1">
-            <div class="acc-name">${a.name || '—'}</div>
-            <div class="acc-phone">${a.phone || 'لا يوجد رقم'}</div>
-          </div>
+        <div class="account-option" data-id="${a.id||''}" data-name="${(a.name||'').replace(/"/g,'')}" data-phone="${(a.phone||'').replace(/"/g,'')}" data-status="${a.status||'active'}">
+          <div class="acc-avatar">${(a.name||'ع').substring(0,2)}</div>
+          <div style="flex:1"><div class="acc-name">${a.name||'—'}</div><div class="acc-phone">${a.phone||'لا يوجد رقم'}</div></div>
           <div>${statusLabel(a.status)}</div>
-        </div>
-      `).join('');
-      
+        </div>`).join('');
       dropdown.style.display = 'block';
-      dropdown.querySelectorAll('.account-option').forEach(el => 
-        el.addEventListener('click', () => selectAccount(el.dataset))
-      );
+      dropdown.querySelectorAll('.account-option').forEach(el => el.addEventListener('click', () => selectAccount(el.dataset)));
     }
 
     function selectAccount(data) {
       document.getElementById('beneficiary').value = data.name;
       document.getElementById('beneficiaryPhone').value = data.phone || '';
       document.getElementById('beneficiaryId').value = data.id || '';
-      document.getElementById('selAvatar').textContent = (data.name || '').substring(0, 2);
+      document.getElementById('selAvatar').textContent = (data.name||'').substring(0,2);
       document.getElementById('selName').textContent = data.name;
       document.getElementById('selPhone').textContent = data.phone || 'لا يوجد رقم';
       document.getElementById('selStatus').innerHTML = statusLabel(data.status);
+      document.getElementById('waIndicator').style.display = data.phone ? 'block' : 'none';
       searchInput.value = '';
       dropdown.style.display = 'none';
-      selectedBox.style.display = 'block';
+      document.getElementById('selectedAccount').style.display = 'block';
     }
 
-    searchInput.addEventListener('focus', () => { 
-      if (accounts.length) showDropdown(searchInput.value); 
-    });
+    searchInput.addEventListener('focus', () => { if (accounts.length) showDropdown(searchInput.value); });
     searchInput.addEventListener('input', () => showDropdown(searchInput.value));
-    
     document.addEventListener('click', e => {
-      if (!e.target.closest('#beneficiarySearch') && !e.target.closest('#accountDropdown'))
-        dropdown.style.display = 'none';
+      if (!e.target.closest('#beneficiarySearch') && !e.target.closest('#accountDropdown')) dropdown.style.display = 'none';
     });
-    
-    document.getElementById('clearSel').addEventListener('click', (e) => {
+    document.getElementById('clearSel').addEventListener('click', e => {
       e.preventDefault();
       document.getElementById('beneficiary').value = '';
       document.getElementById('beneficiaryPhone').value = '';
       document.getElementById('beneficiaryId').value = '';
-      selectedBox.style.display = 'none';
+      document.getElementById('waIndicator').style.display = 'none';
+      document.getElementById('selectedAccount').style.display = 'none';
       searchInput.value = '';
       searchInput.focus();
     });
 
-    // تحديث الملخص عند تغيير المبلغ
     document.getElementById('transferAmount').addEventListener('input', function() {
       const amount = parseFloat(this.value) || 0;
       const commission = Math.round(amount * 0.05);
       const total = amount + commission;
-      document.getElementById('originalAmount').textContent = amount.toLocaleString('ar-SA') + ' ر.ي';
-      document.getElementById('commissionAmount').textContent = commission.toLocaleString('ar-SA') + ' ر.ي';
-      document.getElementById('totalAmount').textContent = total.toLocaleString('ar-SA') + ' ر.ي';
+      const cur = document.getElementById('currency').value;
+      document.getElementById('originalAmount').textContent = amount.toLocaleString('ar-SA') + ' ' + cur;
+      document.getElementById('commissionAmount').textContent = commission.toLocaleString('ar-SA') + ' ' + cur;
+      document.getElementById('totalAmount').textContent = total.toLocaleString('ar-SA') + ' ' + cur;
     });
 
-    // إرسال الحوالة
     document.getElementById('transferForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
-
       const beneficiary = document.getElementById('beneficiary').value.trim();
       const beneficiaryPhone = document.getElementById('beneficiaryPhone').value.trim();
 
       if (!beneficiary) {
-        if (typeof showNotification === 'function') 
-          showNotification('يرجى اختيار المستقبل من القائمة', 'error');
+        if (typeof showNotification === 'function') showNotification('يرجى اختيار المستقبل من القائمة', 'error');
         return;
       }
 
       btn.disabled = true;
-      btn.textContent = '⏳ جاري الحفظ...';
+      btn.textContent = '⏳ جاري الحفظ وإرسال الإشعار...';
 
       const amount = parseFloat(document.getElementById('transferAmount').value) || 0;
       const currency = document.getElementById('currency').value;
@@ -309,67 +248,32 @@
       const commission = Math.round(amount * 0.05);
       const total = amount + commission;
 
-      const msg = `🏦 نظام محمد سالم للحوالات
-━━━━━━━━━━━━━━━━━━
-📬 لديك حوالة جديدة!
-
-👤 المستقبل: ${beneficiary}
-💰 المبلغ: ${amount.toLocaleString('ar-SA')} ${currency}
-📊 العمولة: ${commission.toLocaleString('ar-SA')} ${currency}
-💳 الإجمالي: ${total.toLocaleString('ar-SA')} ${currency}
-🔖 النوع: ${transferType}
-━━━━━━━━━━━━━━━━━━
-للاستفسار تواصل معنا 📞`;
-
       try {
-        await addTransfer({ 
-          beneficiary, 
-          beneficiaryPhone, 
-          amount, 
-          currency, 
-          commission, 
-          total, 
-          transferType, 
-          status, 
-          notes 
-        });
-        
-        await logWA({ 
-          type: 'transfer_new', 
-          accountName: beneficiary, 
-          phone: beneficiaryPhone, 
-          message: msg 
-        });
+        // حفظ الحوالة
+        await addTransfer({ beneficiary, beneficiaryPhone, amount, currency, commission, total, transferType, status, notes });
 
-        if (beneficiaryPhone) {
-          openWA(beneficiaryPhone, msg);
-        }
+        // ✅ إشعار واتساب تلقائي للعميل (ونسخة للأدمن)
+        const msgType = status === 'completed' ? 'transfer_completed' : 'transfer_new';
+        await notifyClient(beneficiaryPhone, msgType, { name: beneficiary, amount, currency, commission, transferType });
 
         if (typeof showNotification === 'function')
-          showNotification(`✅ تم إنشاء الحوالة${beneficiaryPhone ? ' وفُتح واتساب' : ''}`, 'success');
+          showNotification(`✅ تم حفظ الحوالة${beneficiaryPhone ? ' وفُتح واتساب للعميل' : ' (لا يوجد رقم للعميل)'}`, 'success');
 
         setTimeout(() => {
           this.reset();
-          document.getElementById('beneficiary').value = '';
-          document.getElementById('beneficiaryPhone').value = '';
-          document.getElementById('beneficiaryId').value = '';
+          ['beneficiary','beneficiaryPhone','beneficiaryId'].forEach(id => document.getElementById(id).value = '');
           document.getElementById('selectedAccount').style.display = 'none';
-          document.getElementById('originalAmount').textContent = '0 ر.ي';
-          document.getElementById('commissionAmount').textContent = '0 ر.ي';
-          document.getElementById('totalAmount').textContent = '0 ر.ي';
+          document.getElementById('waIndicator').style.display = 'none';
+          ['originalAmount','commissionAmount','totalAmount'].forEach(id => document.getElementById(id).textContent = '0 ر.ي');
         }, 500);
 
       } catch(err) {
-        console.error('Transfer error:', err);
-        if (typeof showNotification === 'function') 
-          showNotification('❌ خطأ: ' + (err.message || 'فشل إنشاء الحوالة'), 'error');
+        if (typeof showNotification === 'function') showNotification('❌ خطأ: ' + (err.message || 'فشل إنشاء الحوالة'), 'error');
       } finally {
         btn.disabled = false;
-        btn.textContent = '✅ تأكيد إنشاء الحوالة';
+        btn.textContent = '✅ تأكيد وإرسال إشعار واتساب';
       }
     });
-
   </script>
-
 </body>
 </html>
