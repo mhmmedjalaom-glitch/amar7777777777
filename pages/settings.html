@@ -163,5 +163,48 @@
   </nav>
 
   <script src="../script.js"></script>
-</body>
+
+  <div id="waModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:20px;padding:24px;width:88%;max-width:380px;direction:rtl;font-family:Cairo">
+      <h3 style="margin:0 0 16px;font-size:16px">⚙️ إعداد رقم الواتساب</h3>
+      <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:6px">رقم الواتساب (بالصيغة الدولية)</label>
+      <input id="waNumInput" type="tel" placeholder="967XXXXXXXXX" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;box-sizing:border-box;direction:ltr;margin-bottom:16px"/>
+      <div style="display:flex;gap:10px">
+        <button id="saveWaNum" style="flex:1;padding:12px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">حفظ</button>
+        <button onclick="document.getElementById('waModal').style.display='none'" style="flex:1;padding:12px;background:#f5f5f5;color:#333;border:none;border-radius:12px;font-size:14px;cursor:pointer">إلغاء</button>
+      </div>
+    </div>
+  </div>
+  <script type="module">
+  import { saveSettings, loadSettings } from "../firebase.js";
+
+  async function init() {
+    const s = await loadSettings();
+    const waNum = s.waNumber || '967733231636';
+    localStorage.setItem('setting_waNumber', waNum);
+    const waDesc = document.querySelector('.settings-item-desc');
+    if(waDesc && waDesc.closest('.settings-item')?.onclick?.toString().includes('whatsapp')) {
+      waDesc.textContent = '+' + waNum;
+    }
+    document.getElementById('waNumInput').value = waNum;
+  }
+  init();
+
+  // ربط زر الواتساب في الإعدادات لفتح المودال
+  document.querySelectorAll('.settings-item').forEach(item => {
+    if(item.textContent.includes('واتساب') || item.textContent.includes('WhatsApp')) {
+      item.onclick = () => { document.getElementById('waModal').style.display='flex'; };
+    }
+  });
+
+  document.getElementById('saveWaNum').onclick = async function() {
+    const val = document.getElementById('waNumInput').value.replace(/[^0-9]/g,'');
+    if(!val) return;
+    await saveSettings({ waNumber: val });
+    localStorage.setItem('setting_waNumber', val);
+    document.getElementById('waModal').style.display='none';
+    if(typeof showNotification==='function') showNotification('تم حفظ رقم الواتساب ✓','success');
+  };
+  </script>
+  </body>
 </html>
