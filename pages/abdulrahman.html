@@ -3,143 +3,345 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>حساب عبد الرحمن - نظام محمد سالم</title>
+  <title>حساب عبد الرحمن عقلان - نظام محمد سالم</title>
   <link rel="stylesheet" href="../style.css" />
+  <style>
+    .action-row { display:flex;gap:8px;margin-bottom:10px; }
+    .action-row button { flex:1;padding:11px 6px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo; }
+    .btn-blue { background:#1565c0;color:#fff; }
+    .btn-orange { background:#e65100;color:#fff; }
+    .btn-green { background:#25D366;color:#fff; }
+    .btn-red { background:#c62828;color:#fff; }
+    .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:flex-end;justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;direction:rtl;font-family:Cairo,sans-serif;max-height:85vh;overflow-y:auto; }
+    .field-label { font-size:13px;font-weight:700;color:#444;display:block;margin-bottom:6px; }
+    .field-input { width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none; }
+  </style>
 </head>
 <body>
 
   <div class="sub-header">
     <div class="sub-header-top">
+      <img src="../logo.svg" alt="شعار" style="width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.7);flex-shrink:0;margin-left:4px" />
       <div class="back-btn">➡️</div>
-      <span class="sub-header-title">حساب عبد الرحمن</span>
-      <div class="header-icon-btn">⋯</div>
+      <span class="sub-header-title">حساب عبد الرحمن عقلان</span>
+      <div class="header-icon-btn" id="refreshBtn" title="تحديث">🔄</div>
     </div>
-    <div class="sub-header-subtitle">حساب نشط - مزامنة فورية 🔄</div>
+    <div class="sub-header-subtitle" id="syncStatus">جاري التحميل...</div>
   </div>
 
   <div class="page-content">
 
-    <!-- Balance Card -->
-    <div class="card" style="background:linear-gradient(135deg,#fff8f0,#fff3e0);border-color:#f5e6b8">
+    <!-- بطاقة الرصيد -->
+    <div class="card" style="background:linear-gradient(135deg,#fff8f0,#fff3e0);border-color:#f5e6b8;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-        <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#D4AF37,#c9a227);display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff">عب</div>
+        <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#D4AF37,#c9a227);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;font-weight:800">عب</div>
         <div>
-          <div style="font-size:17px;font-weight:800;color:#1a1a1a">عبد الرحمن سالم</div>
-          <div style="font-size:12px;color:#666;font-family:Tajawal,sans-serif">عميل VIP · منذ 2022</div>
-          <span class="badge badge-gold" style="margin-top:4px">👑 VIP</span>
+          <div style="font-size:17px;font-weight:800;color:#1a1a1a">عبد الرحمن عقلان</div>
+          <div style="font-size:12px;color:#666;font-family:Tajawal">عميل VIP مميز</div>
+          <span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:2px 10px;border-radius:8px;font-size:11px;display:inline-block;margin-top:4px">👑 VIP</span>
         </div>
       </div>
-      <div style="background:rgba(139,0,0,0.05);border-radius:12px;padding:14px">
-        <div style="font-size:12px;color:#666;font-family:Tajawal,sans-serif;margin-bottom:4px">صافي المديونية المتبقية</div>
-        <div style="display:flex;align-items:baseline;gap:6px">
-          <span style="font-size:28px;font-weight:800;color:#8B0000">2,450,000</span>
-          <span style="font-size:14px;color:#666;font-family:Tajawal,sans-serif">ر.ي</span>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1;background:rgba(139,0,0,0.05);border-radius:12px;padding:12px">
+          <div style="font-size:11px;color:#666;font-family:Tajawal;margin-bottom:4px">الرصيد (ر.ي)</div>
+          <div style="font-size:22px;font-weight:800;color:#8B0000" id="balYER">—</div>
+        </div>
+        <div style="flex:1;background:rgba(21,101,192,0.05);border-radius:12px;padding:12px">
+          <div style="font-size:11px;color:#666;font-family:Tajawal;margin-bottom:4px">الرصيد (ر.س)</div>
+          <div style="font-size:22px;font-weight:800;color:#1565c0" id="balSAR">—</div>
         </div>
       </div>
     </div>
 
-    <!-- Account Stats -->
-    <div style="display:flex;gap:10px;margin-bottom:12px">
+    <!-- إحصاءات -->
+    <div style="display:flex;gap:10px;margin-bottom:14px">
       <div class="stat-card" style="flex:1">
-        <div class="stat-value" style="color:#2e7d32">23</div>
-        <div class="stat-label">حوالة مكتملة</div>
+        <div class="stat-value" id="statCompleted" style="color:#2e7d32">—</div>
+        <div class="stat-label">مكتملة</div>
       </div>
       <div class="stat-card" style="flex:1">
-        <div class="stat-value" style="color:#e65100">3</div>
-        <div class="stat-label">قيد التنفيذ</div>
+        <div class="stat-value" id="statPending" style="color:#e65100">—</div>
+        <div class="stat-label">معلقة</div>
       </div>
       <div class="stat-card" style="flex:1">
-        <div class="stat-value" style="color:#c62828">1</div>
-        <div class="stat-label">متأخرة</div>
+        <div class="stat-value" id="statTotal" style="color:#1565c0">—</div>
+        <div class="stat-label">إجمالي</div>
       </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div style="display:flex;gap:10px;margin-bottom:16px">
-      <button class="btn btn-primary" style="flex:1" id="alertBtn">
-        🔔 إرسال تنبيه
-      </button>
-      <button class="btn btn-whatsapp" style="flex:1">
-        💬 واتساب
-      </button>
+    <!-- أزرار الإجراءات -->
+    <div class="action-row">
+      <button class="btn-blue" id="btnReceipt">🧾+ سند قبض</button>
+      <button class="btn-orange" id="btnPaymentVoucher">🧾- سند صرف</button>
     </div>
-    <button class="btn btn-outline" style="margin-bottom:16px" onclick="showNotification('تم إرسال كشف الحساب عبر الواتساب ✓','success')">
-      📄 إرسال كشف حساب تلقائي عبر الواتساب
-    </button>
+    <div class="action-row">
+      <button onclick="window.location.href='transfer.html?name=عبد الرحمن عقلان'" style="flex:1;padding:11px 6px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo;background:#8B0000;color:#fff">💸 حوالة جديدة</button>
+      <button class="btn-green" id="btnWAStatement">💬 إرسال كشف حساب</button>
+    </div>
 
-    <!-- سجل العمليات -->
-    <div class="section-header">
-      <span class="section-title">📋 سجل العمليات الأخيرة</span>
+    <!-- فلترة السجل -->
+    <div class="section-header" style="margin-top:8px">
+      <span class="section-title">📋 سجل العمليات</span>
     </div>
     <div class="filter-chips">
-      <div class="chip active">فلترة الكل</div>
-      <div class="chip">مكتملة</div>
-      <div class="chip">متأخرة</div>
+      <div class="chip active" data-filter="all">الكل</div>
+      <div class="chip" data-filter="completed">مكتملة</div>
+      <div class="chip" data-filter="pending">معلقة</div>
+      <div class="chip" data-filter="sent">مرسلة</div>
+      <div class="chip" data-filter="voucher">سندات</div>
     </div>
-    <div class="op-list">
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#2e7d32,#1b5e20)">✓</div>
-        <div class="op-info">
-          <div class="op-name">حوالة #TRN-1230</div>
-          <div class="op-date">15 مايو 2026 · <span class="badge badge-green">مكتملة</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">500,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#e65100,#bf360c)">⏳</div>
-        <div class="op-info">
-          <div class="op-name">حوالة #TRN-1218</div>
-          <div class="op-date">10 مايو 2026 · <span class="badge badge-orange">قيد التنفيذ</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">750,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#c62828,#b71c1c)">!</div>
-        <div class="op-info">
-          <div class="op-name">حوالة #TRN-1205</div>
-          <div class="op-date">5 مايو 2026 · <span class="badge badge-red">متأخرة</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">1,200,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#2e7d32,#1b5e20)">✓</div>
-        <div class="op-info">
-          <div class="op-name">حوالة #TRN-1192</div>
-          <div class="op-date">28 أبريل 2026 · <span class="badge badge-green">مكتملة</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">300,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
+
+    <div id="statementList" class="op-list" style="margin-top:8px">
+      <p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">جاري التحميل...</p>
     </div>
 
   </div>
 
   <nav class="bottom-nav">
-    <div class="nav-item" data-href="../index.html">
-      <span class="nav-icon">🏠</span><span>الرئيسية</span>
-    </div>
-    <div class="nav-item" data-href="transfer.html">
-      <span class="nav-icon">💸</span><span>تحويل</span>
-    </div>
-    <div class="nav-item" data-href="vip.html">
-      <span class="nav-icon">👑</span><span>المميزين</span>
-    </div>
-    <div class="nav-item" data-href="reports.html">
-      <span class="nav-icon">📊</span><span>تقارير</span>
-    </div>
+    <div class="nav-item" data-href="../index.html"><span class="nav-icon">🏠</span><span>الرئيسية</span></div>
+    <div class="nav-item" data-href="transfer.html"><span class="nav-icon">💸</span><span>تحويل</span></div>
+    <div class="nav-item" data-href="vip.html"><span class="nav-icon">👑</span><span>المميزين</span></div>
+    <div class="nav-item" data-href="reports.html"><span class="nav-icon">📊</span><span>تقارير</span></div>
   </nav>
 
+  <!-- Modal: سند قبض -->
+  <div id="receiptModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="font-size:16px;font-weight:800;margin:0">🧾 سند قبض — عبد الرحمن</h3>
+        <button onclick="document.getElementById('receiptModal').classList.remove('open')" style="font-size:26px;cursor:pointer;color:#999;background:none;border:none;line-height:1">×</button>
+      </div>
+      <div style="background:#e3f2fd;border-radius:10px;padding:10px;margin-bottom:14px;font-size:13px;color:#1565c0;font-family:Tajawal">💡 سيُضاف المبلغ لرصيده تلقائياً</div>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="flex:2">
+          <label class="field-label">المبلغ *</label>
+          <input id="rAmount" type="number" placeholder="0" class="field-input"/>
+        </div>
+        <div style="flex:1">
+          <label class="field-label">العملة</label>
+          <select id="rCurrency" class="field-input" style="background:#fff">
+            <option value="YER">ر.ي</option>
+            <option value="SAR">ر.س</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label class="field-label">السبب</label>
+        <input id="rReason" type="text" placeholder="سبب القبض..." class="field-input"/>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button id="btnRSave" style="flex:1;padding:13px;background:#1565c0;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ</button>
+        <button id="btnRSaveWA" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾+واتساب</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: سند صرف -->
+  <div id="paymentModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="font-size:16px;font-weight:800;margin:0">🧾 سند صرف — عبد الرحمن</h3>
+        <button onclick="document.getElementById('paymentModal').classList.remove('open')" style="font-size:26px;cursor:pointer;color:#999;background:none;border:none;line-height:1">×</button>
+      </div>
+      <div style="background:#fff3e0;border-radius:10px;padding:10px;margin-bottom:14px;font-size:13px;color:#e65100;font-family:Tajawal">💡 سيُخصم المبلغ من رصيده تلقائياً</div>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="flex:2">
+          <label class="field-label">المبلغ *</label>
+          <input id="pAmount" type="number" placeholder="0" class="field-input"/>
+        </div>
+        <div style="flex:1">
+          <label class="field-label">العملة</label>
+          <select id="pCurrency" class="field-input" style="background:#fff">
+            <option value="YER">ر.ي</option>
+            <option value="SAR">ر.س</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label class="field-label">السبب</label>
+        <input id="pReason" type="text" placeholder="سبب الصرف..." class="field-input"/>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button id="btnPSave" style="flex:1;padding:13px;background:#e65100;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ</button>
+        <button id="btnPSaveWA" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾+واتساب</button>
+      </div>
+    </div>
+  </div>
+
   <script src="../script.js"></script>
+
+  <script type="module">
+    import { getAccounts, getAccountStatement, addVoucher, notifyClient, buildMsg, openWA, listenTransfers } from "../firebase.js";
+
+    const ABDU_PHONE = '967755667788';
+    const ABDU_NAME = 'عبد الرحمن عقلان';
+    let abduAccount = null;
+    let allEntries = [];
+    let currentFilter = 'all';
+
+    async function loadData() {
+      try {
+        const accounts = await getAccounts();
+        abduAccount = accounts.find(a => (a.name||'').includes('عبد الرحمن') && (a.name||'').includes('عقلان'))
+          || accounts.find(a => (a.name||'').includes('عبد الرحمن'))
+          || null;
+        if (abduAccount) {
+          document.getElementById('balYER').textContent = Number(abduAccount.balance||0).toLocaleString('ar-SA');
+          document.getElementById('balSAR').textContent = Number(abduAccount.balanceSAR||0).toLocaleString('ar-SA');
+          document.getElementById('syncStatus').textContent = 'مزامنة فورية 🔄';
+          const entries = await getAccountStatement(abduAccount.id);
+          allEntries = entries;
+          renderEntries();
+        } else {
+          document.getElementById('syncStatus').textContent = 'البيانات التجريبية نشطة 📱';
+          document.getElementById('balYER').textContent = '2,450,000';
+          document.getElementById('balSAR').textContent = '0';
+          renderSampleEntries();
+        }
+      } catch(e) {
+        document.getElementById('syncStatus').textContent = 'خطأ في التحميل ⚠️';
+        renderSampleEntries();
+      }
+    }
+
+    function renderEntries() {
+      const statusColors = { completed:'#2e7d32', pending:'#f57c00', cancelled:'#c62828', sent:'#1565c0' };
+      const statusTx = { completed:'مكتملة ✅', pending:'معلقة ⏳', cancelled:'ملغاة ❌', sent:'مرسلة 📤' };
+      let filtered = allEntries;
+      if (currentFilter === 'voucher') {
+        filtered = allEntries.filter(e => e.entryType === 'voucher');
+      } else if (currentFilter !== 'all') {
+        filtered = allEntries.filter(e => e.entryType === 'transfer' && e.status === currentFilter);
+      }
+      const completed = allEntries.filter(e => e.entryType==='transfer' && e.status==='completed').length;
+      const pending = allEntries.filter(e => e.entryType==='transfer' && e.status==='pending').length;
+      document.getElementById('statCompleted').textContent = completed;
+      document.getElementById('statPending').textContent = pending;
+      document.getElementById('statTotal').textContent = allEntries.length;
+      if (!filtered.length) {
+        document.getElementById('statementList').innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد عمليات</p>';
+        return;
+      }
+      document.getElementById('statementList').innerHTML = filtered.map(e => {
+        const d = e.createdAt?.toDate ? e.createdAt.toDate() : new Date(e.createdAt||0);
+        const dateStr = d.toLocaleDateString('ar-SA') + ' ' + d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+        if (e.entryType === 'transfer') {
+          const codeDisp = e.transferCode ? `<span style="font-size:10px;background:#f0f0f0;padding:2px 7px;border-radius:6px;cursor:pointer" onclick="navigator.clipboard.writeText('${e.transferCode}').then(()=>showNotification('تم نسخ الكود ✓','success'))">${e.transferCode} 📋</span>` : '';
+          return `<div class="op-item">
+            <div class="op-avatar" style="background:linear-gradient(135deg,${statusColors[e.status]||'#666'},${statusColors[e.status]||'#666'})">💸</div>
+            <div class="op-info">
+              <div class="op-name">${codeDisp}</div>
+              <div class="op-date">${dateStr}</div>
+              <div><span style="background:${statusColors[e.status]||'#666'};color:#fff;padding:2px 8px;border-radius:7px;font-size:10px">${statusTx[e.status]||e.status}</span></div>
+            </div>
+            <div style="text-align:left">
+              <div style="font-weight:800;color:#8B0000">${Number(e.amount||0).toLocaleString('ar-SA')}</div>
+              <div style="font-size:11px;color:#999">${e.currency||'ر.ي'}</div>
+            </div>
+          </div>`;
+        } else {
+          const isR = e.type==='receipt';
+          return `<div class="op-item">
+            <div class="op-avatar" style="background:${isR?'#1565c0':'#e65100'}">${isR?'📥':'📤'}</div>
+            <div class="op-info">
+              <div class="op-name">${isR?'سند قبض':'سند صرف'}</div>
+              <div class="op-date">${dateStr}</div>
+              <div style="font-size:11px;color:#666">${e.reason||'—'}</div>
+            </div>
+            <div style="text-align:left">
+              <div style="font-weight:800;color:${isR?'#2e7d32':'#c62828'}">${isR?'+':'−'}${Number(e.amount||0).toLocaleString('ar-SA')}</div>
+              <div style="font-size:11px;color:#999">${e.currency==='SAR'?'ر.س':'ر.ي'}</div>
+            </div>
+          </div>`;
+        }
+      }).join('');
+    }
+
+    function renderSampleEntries() {
+      document.getElementById('statCompleted').textContent = '23';
+      document.getElementById('statPending').textContent = '3';
+      document.getElementById('statTotal').textContent = '26';
+      document.getElementById('statementList').innerHTML = `
+        <div class="op-item">
+          <div class="op-avatar" style="background:#2e7d32">💸</div>
+          <div class="op-info"><div class="op-name"><span style="font-size:10px;background:#f0f0f0;padding:2px 7px;border-radius:6px">حو-260515-A1B2 📋</span></div><div class="op-date">15 مايو 2026</div><div><span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:7px;font-size:10px">مكتملة ✅</span></div></div>
+          <div style="text-align:left"><div style="font-weight:800;color:#8B0000">500,000</div><div style="font-size:11px;color:#999">ر.ي</div></div>
+        </div>
+        <div class="op-item">
+          <div class="op-avatar" style="background:#f57c00">💸</div>
+          <div class="op-info"><div class="op-name"><span style="font-size:10px;background:#f0f0f0;padding:2px 7px;border-radius:6px">حو-260510-C3D4 📋</span></div><div class="op-date">10 مايو 2026</div><div><span style="background:#f57c00;color:#fff;padding:2px 8px;border-radius:7px;font-size:10px">معلقة ⏳</span></div></div>
+          <div style="text-align:left"><div style="font-weight:800;color:#8B0000">750,000</div><div style="font-size:11px;color:#999">ر.ي</div></div>
+        </div>`;
+    }
+
+    // فلترة
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        currentFilter = this.dataset.filter || 'all';
+        if (allEntries.length) renderEntries();
+      });
+    });
+
+    // تحديث
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      document.getElementById('syncStatus').textContent = 'جاري التحديث...';
+      loadData();
+    });
+
+    // كشف الحساب واتساب
+    document.getElementById('btnWAStatement').addEventListener('click', () => {
+      const bal = abduAccount ? abduAccount.balance : 2450000;
+      const balSAR = abduAccount ? abduAccount.balanceSAR : 0;
+      let msg = buildMsg('account_statement', {name: ABDU_NAME, balance: bal, currency:'ر.ي'});
+      if (Number(balSAR) > 0) msg += `\n💵 الرصيد (ر.س): ${Number(balSAR).toLocaleString('ar-SA')}`;
+      openWA(ABDU_PHONE, msg);
+      showNotification('تم فتح واتساب ✓', 'success');
+    });
+
+    // سند قبض
+    document.getElementById('btnReceipt').addEventListener('click', () => document.getElementById('receiptModal').classList.add('open'));
+
+    async function saveReceipt(sendWA) {
+      const amount = parseFloat(document.getElementById('rAmount').value) || 0;
+      const currency = document.getElementById('rCurrency').value;
+      const reason = document.getElementById('rReason').value.trim();
+      if (!amount) { showNotification('يرجى إدخال المبلغ', 'error'); return; }
+      const accountId = abduAccount?.id || 'abdu_default';
+      await addVoucher({ accountId, accountName: ABDU_NAME, type:'receipt', amount, currency, reason, phone: ABDU_PHONE });
+      showNotification('✅ تم حفظ سند القبض', 'success');
+      if (sendWA) await notifyClient(ABDU_PHONE, 'voucher_receipt', { name: ABDU_NAME, amount, currency: currency==='SAR'?'ر.س':'ر.ي', reason });
+      document.getElementById('receiptModal').classList.remove('open');
+      loadData();
+    }
+    document.getElementById('btnRSave').addEventListener('click', () => saveReceipt(false));
+    document.getElementById('btnRSaveWA').addEventListener('click', () => saveReceipt(true));
+
+    // سند صرف
+    document.getElementById('btnPaymentVoucher').addEventListener('click', () => document.getElementById('paymentModal').classList.add('open'));
+
+    async function savePayment(sendWA) {
+      const amount = parseFloat(document.getElementById('pAmount').value) || 0;
+      const currency = document.getElementById('pCurrency').value;
+      const reason = document.getElementById('pReason').value.trim();
+      if (!amount) { showNotification('يرجى إدخال المبلغ', 'error'); return; }
+      const accountId = abduAccount?.id || 'abdu_default';
+      await addVoucher({ accountId, accountName: ABDU_NAME, type:'payment', amount, currency, reason, phone: ABDU_PHONE });
+      showNotification('✅ تم حفظ سند الصرف', 'success');
+      if (sendWA) await notifyClient(ABDU_PHONE, 'voucher_payment', { name: ABDU_NAME, amount, currency: currency==='SAR'?'ر.س':'ر.ي', reason });
+      document.getElementById('paymentModal').classList.remove('open');
+      loadData();
+    }
+    document.getElementById('btnPSave').addEventListener('click', () => savePayment(false));
+    document.getElementById('btnPSaveWA').addEventListener('click', () => savePayment(true));
+
+    // إغلاق modals
+    document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+
+    loadData();
+  </script>
 </body>
 </html>
