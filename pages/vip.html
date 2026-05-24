@@ -26,23 +26,18 @@
         <span class="badge badge-gold">👑 النخبة</span>
       </div>
       <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:12px">
-        <span style="font-size:30px;font-weight:800;color:#8B0000">12,450,000</span>
+        <span id="vipTotalBalance" style="font-size:30px;font-weight:800;color:#8B0000">0</span>
         <span style="font-size:14px;color:#666;font-family:Tajawal,sans-serif">ر.ي</span>
       </div>
       <div style="display:flex;gap:16px">
         <div>
-          <div style="font-size:20px;font-weight:800;color:#2e7d32">18</div>
+          <div id="vipActiveCount" style="font-size:20px;font-weight:800;color:#2e7d32">0</div>
           <div style="font-size:11px;color:#666;font-family:Tajawal,sans-serif">نشط حالياً</div>
         </div>
         <div style="width:1px;background:#ffd54f"></div>
         <div>
-          <div style="font-size:20px;font-weight:800;color:#e65100">2</div>
+          <div id="vipNeedingCount" style="font-size:20px;font-weight:800;color:#e65100">0</div>
           <div style="font-size:11px;color:#666;font-family:Tajawal,sans-serif">يحتاج متابعة</div>
-        </div>
-        <div style="width:1px;background:#ffd54f"></div>
-        <div>
-          <div style="font-size:20px;font-weight:800;color:#1565c0">5</div>
-          <div style="font-size:11px;color:#666;font-family:Tajawal,sans-serif">حوالة اليوم</div>
         </div>
       </div>
     </div>
@@ -50,74 +45,16 @@
     <!-- VIP Clients -->
     <div class="section-header">
       <span class="section-title">👑 عملاء VIP</span>
-      <span class="section-link">18 عميل</span>
+      <span class="section-link" id="vipClientCount">0 عميل</span>
     </div>
 
-    <a href="abdulrahman.html" style="text-decoration:none">
-      <div class="vip-card">
-        <div class="vip-avatar">عب</div>
-        <div class="vip-info">
-          <div class="vip-name">عبد الرحمن سالم</div>
-          <div class="vip-balance">2,450,000 ر.ي</div>
-          <span class="badge badge-gold">نشط ● مزامنة فورية</span>
-        </div>
-        <div style="font-size:20px">›</div>
-      </div>
-    </a>
-
-    <div class="vip-card">
-      <div class="vip-avatar">خا</div>
-      <div class="vip-info">
-        <div class="vip-name">خالد إبراهيم النقيب</div>
-        <div class="vip-balance">5,800,000 ر.ي</div>
-        <span class="badge badge-gold">نشط ● خدمة عاجلة</span>
-      </div>
-      <div style="font-size:20px">›</div>
-    </div>
-
-    <div class="vip-card">
-      <div class="vip-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">مح</div>
-      <div class="vip-info">
-        <div class="vip-name">محمد عبدالله الصالح</div>
-        <div class="vip-balance">1,950,000 ر.ي</div>
-        <span class="badge badge-gold">نشط</span>
-      </div>
-      <div style="font-size:20px">›</div>
-    </div>
-
-    <div class="vip-card">
-      <div class="vip-avatar" style="background:linear-gradient(135deg,#1565c0,#0d47a1)">سا</div>
-      <div class="vip-info">
-        <div class="vip-name">سامي فيصل الرشيدي</div>
-        <div class="vip-balance">870,000 ر.ي</div>
-        <span class="badge badge-orange">يحتاج متابعة</span>
-      </div>
-      <div style="font-size:20px">›</div>
-    </div>
-
-    <div class="vip-card">
-      <div class="vip-avatar" style="background:linear-gradient(135deg,#2e7d32,#1b5e20)">عم</div>
-      <div class="vip-info">
-        <div class="vip-name">عمر يحيى المقطري</div>
-        <div class="vip-balance">680,000 ر.ي</div>
-        <span class="badge badge-gold">نشط</span>
-      </div>
-      <div style="font-size:20px">›</div>
-    </div>
-
-    <div class="vip-card">
-      <div class="vip-avatar" style="background:linear-gradient(135deg,#6a1b9a,#4a148c)">ها</div>
-      <div class="vip-info">
-        <div class="vip-name">هاشم علي الحداد</div>
-        <div class="vip-balance">700,000 ر.ي</div>
-        <span class="badge badge-gold">نشط</span>
-      </div>
-      <div style="font-size:20px">›</div>
+    <div class="op-list" id="vipList" style="margin-bottom:20px">
+      <p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">جاري تحميل عملاء VIP...</p>
     </div>
 
     <div style="height:10px"></div>
-    <button class="btn btn-secondary">
-      ➕ إضافة عميل VIP
+    <button class="btn btn-secondary" onclick="window.location.href='accounts.html'" style="width:100%">
+      ➕ إدارة الحسابات
     </button>
 
   </div>
@@ -140,60 +77,97 @@
   <script src="../script.js"></script>
 
   <script type="module">
-  import { listenAccounts, logWA } from "../firebase.js";
+    import { listenAccounts, logWA } from "../firebase.js";
 
-  const WA = '967733231636';
-  function openWA(phone, text) {
-    const clean = String(phone||WA).replace(/[^0-9]/g,'');
-    const num = clean.startsWith('00')?clean.slice(2):clean.startsWith('0')?'967'+clean.slice(1):clean||WA;
-    window.open('https://wa.me/'+num+'?text='+encodeURIComponent(text),'_blank');
-  }
+    const WA = '967733231636';
 
-  listenAccounts(accounts => {
-    const vip = accounts.filter(a => a.status === 'vip' || a.status === 'VIP');
-    const late = vip.filter(a => Number(a.balance) > 0);
-    const totalBal = vip.reduce((s,a) => s + (Number(a.balance)||0), 0);
+    function openWA(phone, text) {
+      const clean = String(phone || WA).replace(/[^0-9]/g, '');
+      const num = clean.startsWith('00') ? clean.slice(2) : 
+                  clean.startsWith('0') ? '967' + clean.slice(1) : 
+                  clean || WA;
+      window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(text), '_blank');
+    }
 
-    // Stats
-    const statVals = document.querySelectorAll('.stat-card .stat-value, [style*="font-size:20px"]');
-    const totalEl = document.querySelector('[style*="font-size:30px"]');
-    if(totalEl) totalEl.textContent = totalBal.toLocaleString('ar-SA');
-    statVals.forEach((el,i) => {
-      if(i===0) el.textContent = vip.length;
-      if(i===1) el.textContent = late.length;
+    listenAccounts(accounts => {
+      if (!accounts || accounts.length === 0) {
+        const listEl = document.getElementById('vipList');
+        listEl.innerHTML = '<p style="text-align:center;color:#999;padding:30px;font-family:Tajawal">لا يوجد عملاء VIP بعد. أنشئ حساباً من صفحة الحسابات وحدده كـ VIP.</p>';
+        document.getElementById('vipTotalBalance').textContent = '0';
+        document.getElementById('vipActiveCount').textContent = '0';
+        document.getElementById('vipNeedingCount').textContent = '0';
+        document.getElementById('vipClientCount').textContent = '0 عميل';
+        return;
+      }
+
+      const vip = accounts.filter(a => a.status === 'vip' || a.status === 'VIP');
+      const active = vip.filter(a => Number(a.balance || 0) > 0);
+      const needing = vip.filter(a => Number(a.balance || 0) <= 0);
+      const totalBal = vip.reduce((s, a) => s + (Number(a.balance) || 0), 0);
+
+      // تحديث الإحصاءات
+      document.getElementById('vipTotalBalance').textContent = totalBal.toLocaleString('ar-SA');
+      document.getElementById('vipActiveCount').textContent = active.length;
+      document.getElementById('vipNeedingCount').textContent = needing.length;
+      document.getElementById('vipClientCount').textContent = vip.length + ' عميل';
+
+      // قائمة VIP
+      const listEl = document.getElementById('vipList');
+      
+      if (!vip.length) {
+        listEl.innerHTML = '<p style="text-align:center;color:#999;padding:30px;font-family:Tajawal">لا يوجد عملاء VIP. أنشئ حساباً وحدده كـ VIP.</p>';
+        return;
+      }
+
+      listEl.innerHTML = vip.map(a => `
+        <div class="op-item">
+          <div class="op-avatar" style="background:linear-gradient(135deg,#D4AF37,#c9a227);cursor:pointer;font-size:14px" 
+            onclick="window.sendVIPMsg('${(a.phone || WA).replace(/'/g, '')}', '${(a.name || 'VIP').replace(/'/g, '')}')"
+            title="إرسال رسالة واتساب">
+            ${(a.name || 'VIP').substring(0, 2)}
+          </div>
+          <div class="op-info">
+            <div class="op-name">
+              ${a.name || '—'} 
+              <span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:1px 7px;border-radius:8px;font-size:10px">👑 VIP</span>
+            </div>
+            <div class="op-date">${a.phone || 'لا يوجد رقم'}</div>
+          </div>
+          <div style="text-align:left">
+            <div style="font-size:16px;font-weight:800;color:#8B0000">${Number(a.balance || 0).toLocaleString('ar-SA')}</div>
+            <div style="font-size:11px;color:#999">ر.ي</div>
+          </div>
+        </div>
+      `).join('');
     });
 
-    // قائمة VIP
-    const listEl = document.querySelector('.op-list, .vip-list');
-    if(!listEl) return;
-    if(!vip.length) {
-      listEl.innerHTML = '<p style="text-align:center;color:#999;padding:30px;font-family:Tajawal">لا يوجد عملاء VIP بعد. أضفهم من صفحة الحسابات.</p>';
-      return;
-    }
-    listEl.innerHTML = vip.map(a => `
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#D4AF37,#c9a227);cursor:pointer" onclick="sendVIPMsg('${a.phone||WA}','${a.name||''}')">
-          ${(a.name||'VIP').substring(0,2)}
-        </div>
-        <div class="op-info">
-          <div class="op-name">${a.name||'—'} <span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:1px 7px;border-radius:8px;font-size:10px">👑 VIP</span></div>
-          <div class="op-date">${a.phone||'لا يوجد رقم'}</div>
-        </div>
-        <div style="text-align:left">
-          <div style="font-size:16px;font-weight:800;color:#8B0000">${Number(a.balance||0).toLocaleString('ar-SA')}</div>
-          <div style="font-size:11px;color:#999">ر.ي</div>
-        </div>
-      </div>
-    `).join('');
-  });
+    window.sendVIPMsg = async function(phone, name) {
+      try {
+        const msg = `السلام عليكم ${name}، نظام محمد سالم للحوالات يرحب بك كعميل VIP. لأي استفسار نحن في خدمتك.`;
+        const clean = String(phone || WA).replace(/[^0-9]/g, '');
+        const num = clean.startsWith('00') ? clean.slice(2) : 
+                    clean.startsWith('0') ? '967' + clean.slice(1) : 
+                    clean || WA;
+        
+        window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(msg), '_blank');
+        
+        await logWA({ 
+          type: 'vip_message', 
+          accountName: name, 
+          phone: num, 
+          message: msg 
+        });
+        
+        if (typeof showNotification === 'function') 
+          showNotification('✅ تم فتح واتساب', 'success');
+      } catch(err) {
+        console.error('Error sending VIP message:', err);
+        if (typeof showNotification === 'function') 
+          showNotification('❌ خطأ في الإرسال', 'error');
+      }
+    };
 
-  window.sendVIPMsg = async function(phone, name) {
-    const msg = `السلام عليكم ${name}، نظام محمد سالم للحوالات يرحب بك كعميل VIP. لأي استفسار نحن في خدمتك.`;
-    const clean = String(phone||WA).replace(/[^0-9]/g,'');
-    const num = clean.startsWith('00')?clean.slice(2):clean.startsWith('0')?'967'+clean.slice(1):clean||WA;
-    window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');
-    await logWA({ type:'vip_message', accountName:name, phone, message:msg });
-  };
   </script>
-  </body>
+
+</body>
 </html>
