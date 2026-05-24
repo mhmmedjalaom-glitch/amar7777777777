@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إعداد قاعدة البيانات</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { background: white; border-radius: 20px; padding: 32px 24px; max-width: 420px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.1); text-align: center; }
+  .icon { font-size: 56px; margin-bottom: 16px; }
+  h1 { color: #1a1a2e; font-size: 22px; margin-bottom: 8px; }
+  p { color: #666; font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+  .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-bottom: 12px; }
+  .btn-main { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; }
+  .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(79,70,229,0.4); }
+  .btn-main:disabled { background: #ccc; transform: none; box-shadow: none; cursor: not-allowed; }
+  .status { padding: 14px; border-radius: 10px; margin-top: 16px; font-size: 14px; display: none; }
+  .status.loading { background: #eff6ff; color: #1d4ed8; display: block; }
+  .status.success { background: #f0fdf4; color: #16a34a; display: block; }
+  .status.error   { background: #fef2f2; color: #dc2626; display: block; }
+  .step { display: flex; align-items: center; gap: 10px; text-align: right; margin-bottom: 10px; font-size: 13px; color: #555; }
+  .step-icon { font-size: 18px; flex-shrink: 0; }
+  .input-group { margin-bottom: 16px; text-align: right; }
+  .input-group label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; font-weight: 600; }
+  .input-group input { width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 13px; direction: ltr; }
+  .input-group input:focus { border-color: #4f46e5; outline: none; }
+  .pat-help { font-size: 12px; color: #888; margin-top: 4px; }
+  a { color: #4f46e5; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">🗄️</div>
+  <h1>إعداد قاعدة البيانات</h1>
+  <p>اضغط الزر أدناه لإنشاء جداول Supabase تلقائياً</p>
+
+  <div class="input-group">
+    <label>🔑 مفتاح الإدارة (Personal Access Token)</label>
+    <input type="password" id="patInput" placeholder="sbp_xxxxxxxxxxxxxxxx" />
+    <div class="pat-help">
+      احصل عليه من:
+      <a href="https://supabase.com/dashboard/account/tokens" target="_blank">supabase.com/dashboard/account/tokens</a>
+      ← اضغط "Generate new token"
+    </div>
+  </div>
+
+  <button class="btn btn-main" id="setupBtn" onclick="runSetup()">
+    🚀 إنشاء الجداول تلقائياً
+  </button>
+
+  <div id="status" class="status"></div>
+</div>
+
+<script>
+const SUPA_URL = "https://ezektgzwesrtezeghmrs.supabase.co";
+const PROJ_REF = "ezektgzwesrtezeghmrs";
+const SUPA_KEY = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
+
+const SQL = `
+create table if not exists accounts (id text primary key, name text not null, phone text default '', balance bigint default 0, balance_sar numeric default 0, status text default 'active', notes text default '', created_at timestamptz default now());
+create table if not exists transfers (id text primary key, transfer_code text, beneficiary text, beneficiary_phone text default '', beneficiary_id text, amount bigint default 0, currency text default 'ر.ي', commission bigint default 0, total bigint default 0, transfer_type text default 'تحويل عادي', payment_method text default 'cash', status text default 'pending', notes text default '', created_at timestamptz default now());
+create table if not exists vouchers (id text primary key, account_id text, type text, amount bigint default 0, currency text default 'YER', reason text default '', created_at timestamptz default now());
+create table if not exists wa_logs (id text primary key, type text default '', account_name text default '', phone text default '', message text default '', sent_at timestamptz default now());
+create table if not exists settings (key text primary key, value text default '');
+alter table accounts enable row level security;
+alter table transfers enable row level security;
+alter table vouchers enable row level security;
+alter table wa_logs enable row level security;
+alter table settings enable row level security;
+do $$ begin if not exists (select 1 from pg_policies where tablename='accounts' and policyname='public_all') then create policy "public_all" on accounts for all using (true) with check (true); end if; end $$;
+do $$ begin if not exists (select 1 from pg_policies where tablename='transfers' and policyname='public_all') then create policy "public_all" on transfers for all using (true) with check (true); end if; end $$;
+do $$ begin if not exists (select 1 from pg_policies where tablename='vouchers' and policyname='public_all') then create policy "public_all" on vouchers for all using (true) with check (true); end if; end $$;
+do $$ begin if not exists (select 1 from pg_policies where tablename='wa_logs' and policyname='public_all') then create policy "public_all" on wa_logs for all using (true) with check (true); end if; end $$;
+do $$ begin if not exists (select 1 from pg_policies where tablename='settings' and policyname='public_all') then create policy "public_all" on settings for all using (true) with check (true); end if; end $$;
+`;
+
+function showStatus(type, msg) {
+  const el = document.getElementById('status');
+  el.className = 'status ' + type;
+  el.innerHTML = msg;
+}
+
+async function runSetup() {
+  const pat = document.getElementById('patInput').value.trim();
+  if (!pat) { showStatus('error', '❌ أدخل مفتاح الإدارة أولاً'); return; }
+
+  const btn = document.getElementById('setupBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري الإنشاء...';
+  showStatus('loading', '⏳ جاري إنشاء الجداول...');
+
+  try {
+    const res = await fetch(`https://api.supabase.com/v1/projects/${PROJ_REF}/database/query`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + pat, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: SQL })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showStatus('success', `✅ تم إنشاء الجداول بنجاح!<br><br>الموقع الآن مربوط مع Supabase 🎉<br><br><a href="https://mhmmedjalaom-glitch.github.io/amar7777777777/" target="_blank">👉 افتح الموقع الآن</a>`);
+      btn.textContent = '✅ تم الإنشاء';
+    } else {
+      throw new Error(data.message || JSON.stringify(data));
+    }
+  } catch(e) {
+    showStatus('error', '❌ خطأ: ' + e.message + '<br><br>تأكد أن المفتاح صحيح');
+    btn.disabled = false;
+    btn.textContent = '🚀 إنشاء الجداول تلقائياً';
+  }
+}
+</script>
+</body>
+</html>
