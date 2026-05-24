@@ -193,10 +193,18 @@
 
       let accounts = [];
 
-      // تحميل الحسابات عند فتح الصفحة
+      // تحميل الحسابات + قراءة URL params
       async function loadAccounts() {
         try {
           accounts = await getAccounts();
+          const params = new URLSearchParams(window.location.search);
+          const pid    = params.get('id');
+          const pname  = params.get('name');
+          const pphone = params.get('phone');
+          if (pname) {
+            const found = accounts.find(a => a.id === pid) || { id: pid||'', name: pname, phone: pphone||'', status:'active' };
+            selectAccount({ id: found.id, name: found.name, phone: found.phone||'', status: found.status||'active' });
+          }
         } catch(e) {
           console.error('Failed to load accounts:', e);
         }
