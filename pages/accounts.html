@@ -5,27 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>إدارة الحسابات - نظام محمد سالم</title>
   <link rel="stylesheet" href="../style.css" />
+  <style>
+    .acc-action-btns { display:flex;gap:4px;flex-wrap:wrap;margin-top:5px; }
+    .acc-action-btns button { border:none;border-radius:7px;padding:4px 8px;font-size:10px;cursor:pointer;font-family:Cairo;font-weight:700; }
+    .btn-transfer { background:#8B0000;color:#fff; }
+    .btn-wa { background:#25D366;color:#fff; }
+    .btn-receipt { background:#1565c0;color:#fff; }
+    .btn-payment { background:#e65100;color:#fff; }
+    .btn-statement { background:#37474f;color:#fff; }
+    .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:flex-end;justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;direction:rtl;font-family:Cairo,sans-serif;max-height:90vh;overflow-y:auto; }
+    .modal-title { font-size:16px;font-weight:800;margin-bottom:18px;color:#1a1a1a; }
+    .modal-close { float:left;font-size:26px;cursor:pointer;color:#999;line-height:1;background:none;border:none; }
+    .field-group { margin-bottom:12px; }
+    .field-label { font-size:13px;font-weight:700;color:#444;display:block;margin-bottom:6px; }
+    .field-input { width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none; }
+    .stmt-item { padding:10px 0;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:10px; }
+    .stmt-badge { padding:2px 8px;border-radius:7px;font-size:10px;font-weight:700; }
+  </style>
 </head>
 <body>
 
   <div class="sub-header">
-    <div class="sub-header-top"><img src="../logo.svg" alt="شعار" style="width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.7);flex-shrink:0;margin-left:4px" />
+    <div class="sub-header-top">
+      <img src="../logo.svg" alt="شعار" style="width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.7);flex-shrink:0;margin-left:4px" />
       <div class="back-btn">➡️</div>
       <span class="sub-header-title">إدارة الحسابات</span>
-      <div class="header-icon-btn" style="cursor: pointer;">➕</div>
+      <div class="header-icon-btn" id="addNewAccountBtn" style="cursor:pointer">➕</div>
     </div>
     <div class="sub-header-subtitle">كافة الحسابات المسجلة في النظام</div>
   </div>
 
   <div class="page-content">
-
-    <!-- Search Bar -->
     <div class="search-bar">
       <span class="search-icon">🔍</span>
-      <input type="text" placeholder="بحث عن حساب..." id="searchInput" />
+      <input type="text" placeholder="بحث بالاسم أو الرقم..." id="searchInput" />
     </div>
 
-    <!-- Filter Chips -->
     <div class="filter-chips">
       <div class="chip active" data-filter="all">الكل</div>
       <div class="chip" data-filter="active">نشط</div>
@@ -33,117 +50,201 @@
       <div class="chip" data-filter="vip">VIP</div>
     </div>
 
-    <!-- Stats Row -->
     <div style="display:flex;gap:10px;margin-bottom:16px">
       <div class="stat-card" style="flex:1;padding:12px">
-        <div class="stat-value" style="font-size:20px">0</div>
+        <div class="stat-value" id="statTotal" style="font-size:20px">0</div>
         <div class="stat-label">إجمالي الحسابات</div>
       </div>
       <div class="stat-card" style="flex:1;padding:12px">
-        <div class="stat-value" style="font-size:20px;color:#2e7d32">0</div>
-        <div class="stat-label">حساب نشط</div>
+        <div class="stat-value" id="statActive" style="font-size:20px;color:#2e7d32">0</div>
+        <div class="stat-label">نشط</div>
       </div>
       <div class="stat-card" style="flex:1;padding:12px">
-        <div class="stat-value" style="font-size:20px;color:#c62828">0</div>
+        <div class="stat-value" id="statLate" style="font-size:20px;color:#c62828">0</div>
         <div class="stat-label">متأخر</div>
       </div>
     </div>
 
-    <!-- Accounts List -->
     <div class="op-list" id="accountsList">
       <p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">جاري تحميل الحسابات...</p>
     </div>
 
     <div style="height:16px"></div>
-    <button class="btn btn-primary" id="addNewAccountBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">
+    <button id="addNewAccountBtnBottom" style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo">
       ➕ إنشاء حساب جديد
     </button>
-
   </div>
 
   <nav class="bottom-nav">
-    <div class="nav-item" data-href="../index.html">
-      <span class="nav-icon">🏠</span><span>الرئيسية</span>
-    </div>
-    <div class="nav-item" data-href="transfer.html">
-      <span class="nav-icon">💸</span><span>تحويل</span>
-    </div>
-    <div class="nav-item" data-href="vip.html">
-      <span class="nav-icon">👑</span><span>المميزين</span>
-    </div>
-    <div class="nav-item" data-href="reports.html">
-      <span class="nav-icon">📊</span><span>تقارير</span>
-    </div>
+    <div class="nav-item" data-href="../index.html"><span class="nav-icon">🏠</span><span>الرئيسية</span></div>
+    <div class="nav-item" data-href="transfer.html"><span class="nav-icon">💸</span><span>تحويل</span></div>
+    <div class="nav-item" data-href="vip.html"><span class="nav-icon">👑</span><span>المميزين</span></div>
+    <div class="nav-item" data-href="reports.html"><span class="nav-icon">📊</span><span>تقارير</span></div>
   </nav>
 
-  <script src="../script.js"></script>
-
-  <!-- Modal إضافة حساب جديد -->
-  <div id="addAccountModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:flex-end;justify-content:center">
-    <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;direction:rtl;font-family:Cairo,sans-serif;max-height:85vh;overflow-y:auto">
+  <!-- Modal: إضافة حساب -->
+  <div id="addAccountModal" class="modal-overlay">
+    <div class="modal-box">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-        <h3 style="font-size:16px;font-weight:800;margin:0;color:#1a1a1a">➕ إضافة حساب جديد</h3>
-        <span id="closeModal" style="font-size:26px;cursor:pointer;color:#999;line-height:1">×</span>
+        <h3 class="modal-title" style="margin:0">➕ إضافة حساب جديد</h3>
+        <button class="modal-close" onclick="document.getElementById('addAccountModal').classList.remove('open')">×</button>
       </div>
       <form id="addAccountForm" autocomplete="off">
-        <div style="margin-bottom:12px">
-          <label style="font-size:13px;font-weight:700;color:#444;display:block;margin-bottom:6px">اسم العميل *</label>
-          <input id="accName" type="text" required placeholder="أدخل الاسم الكامل"
-            style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none"/>
+        <div class="field-group">
+          <label class="field-label">اسم العميل *</label>
+          <input id="accName" type="text" required placeholder="أدخل الاسم الكامل" class="field-input"/>
         </div>
-        <div style="margin-bottom:12px">
-          <label style="font-size:13px;font-weight:700;color:#444;display:block;margin-bottom:6px">رقم الهاتف (للواتساب)</label>
-          <input id="accPhone" type="tel" placeholder="967XXXXXXXXX"
-            style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;direction:ltr;outline:none"/>
+        <div class="field-group">
+          <label class="field-label">رقم الهاتف (للواتساب)</label>
+          <input id="accPhone" type="tel" placeholder="967XXXXXXXXX" class="field-input" style="direction:ltr"/>
         </div>
-        <div style="margin-bottom:12px">
-          <label style="font-size:13px;font-weight:700;color:#444;display:block;margin-bottom:6px">الرصيد الابتدائي (ر.ي)</label>
-          <input id="accBalance" type="number" placeholder="0" min="0"
-            style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none"/>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <div style="flex:1">
+            <label class="field-label">الرصيد (ر.ي)</label>
+            <input id="accBalance" type="number" placeholder="0" min="0" class="field-input"/>
+          </div>
+          <div style="flex:1">
+            <label class="field-label">الرصيد (ر.س)</label>
+            <input id="accBalanceSAR" type="number" placeholder="0" min="0" class="field-input"/>
+          </div>
         </div>
-        <div style="margin-bottom:20px">
-          <label style="font-size:13px;font-weight:700;color:#444;display:block;margin-bottom:6px">نوع الحساب</label>
-          <select id="accStatus"
-            style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;background:#fff;outline:none">
+        <div class="field-group">
+          <label class="field-label">نوع الحساب</label>
+          <select id="accStatus" class="field-input" style="background:#fff">
             <option value="active">✅ نشط</option>
             <option value="vip">👑 VIP</option>
             <option value="late">⚠️ متأخر</option>
           </select>
         </div>
-        <button type="submit" id="saveAccBtn"
-          style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif;transition:all 0.3s">
-          💾 حفظ الحساب في قاعدة البيانات
+        <button type="submit" id="saveAccBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Cairo">
+          💾 حفظ الحساب
         </button>
       </form>
     </div>
   </div>
 
+  <!-- Modal: سند قبض -->
+  <div id="receiptModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <h3 class="modal-title" style="margin:0">🧾 سند قبض</h3>
+        <button class="modal-close" onclick="document.getElementById('receiptModal').classList.remove('open')">×</button>
+      </div>
+      <div style="background:#e3f2fd;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#1565c0;font-family:Tajawal">
+        💡 سيُضاف المبلغ لرصيد العميل تلقائياً
+      </div>
+      <div class="field-group">
+        <label class="field-label">العميل</label>
+        <div id="receiptClientName" style="padding:12px;background:#f5f5f5;border-radius:10px;font-weight:700;color:#333"></div>
+        <input id="receiptClientId" type="hidden"/>
+        <input id="receiptClientPhone" type="hidden"/>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="flex:2">
+          <label class="field-label">المبلغ *</label>
+          <input id="receiptAmount" type="number" placeholder="0" min="0" class="field-input"/>
+        </div>
+        <div style="flex:1">
+          <label class="field-label">العملة</label>
+          <select id="receiptCurrency" class="field-input" style="background:#fff">
+            <option value="YER">ر.ي</option>
+            <option value="SAR">ر.س</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">السبب / الملاحظة</label>
+        <input id="receiptReason" type="text" placeholder="سبب القبض..." class="field-input"/>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button id="btnReceiptSave" style="flex:1;padding:13px;background:#1565c0;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ</button>
+        <button id="btnReceiptSaveWA" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ + واتساب</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: سند صرف -->
+  <div id="paymentModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <h3 class="modal-title" style="margin:0">🧾 سند صرف</h3>
+        <button class="modal-close" onclick="document.getElementById('paymentModal').classList.remove('open')">×</button>
+      </div>
+      <div style="background:#fff3e0;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#e65100;font-family:Tajawal">
+        💡 سيُخصم المبلغ من رصيد العميل تلقائياً
+      </div>
+      <div class="field-group">
+        <label class="field-label">العميل</label>
+        <div id="paymentClientName" style="padding:12px;background:#f5f5f5;border-radius:10px;font-weight:700;color:#333"></div>
+        <input id="paymentClientId" type="hidden"/>
+        <input id="paymentClientPhone" type="hidden"/>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="flex:2">
+          <label class="field-label">المبلغ *</label>
+          <input id="paymentAmount" type="number" placeholder="0" min="0" class="field-input"/>
+        </div>
+        <div style="flex:1">
+          <label class="field-label">العملة</label>
+          <select id="paymentCurrency" class="field-input" style="background:#fff">
+            <option value="YER">ر.ي</option>
+            <option value="SAR">ر.س</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">السبب / الملاحظة</label>
+        <input id="paymentReason" type="text" placeholder="سبب الصرف..." class="field-input"/>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button id="btnPaymentSave" style="flex:1;padding:13px;background:#e65100;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ</button>
+        <button id="btnPaymentSaveWA" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ + واتساب</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: كشف الحساب -->
+  <div id="statementModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <h3 class="modal-title" style="margin:0">📋 كشف الحساب</h3>
+        <button class="modal-close" onclick="document.getElementById('statementModal').classList.remove('open')">×</button>
+      </div>
+      <div id="statementHeader" style="background:#f5f5f5;border-radius:12px;padding:12px;margin-bottom:14px"></div>
+      <div id="statementList" style="max-height:50vh;overflow-y:auto">
+        <p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">جاري التحميل...</p>
+      </div>
+      <button id="btnShareStatement" style="width:100%;margin-top:12px;padding:12px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">
+        💬 مشاركة كشف الحساب عبر واتساب
+      </button>
+    </div>
+  </div>
+
+  <script src="../script.js"></script>
+
   <script type="module">
-  import { addAccount, listenAccounts, logWA } from "../firebase.js";
+  import { addAccount, listenAccounts, addVoucher, getAccountStatement, notifyClient, buildMsg, openWA, logWA } from "../firebase.js";
 
   let allAccounts = [];
   let currentFilter = 'all';
   let currentSearch = '';
+  let activeStatementAccount = null;
 
-  // دالة آمنة لتنسيق رقم الهاتف
   function formatPhoneNumber(phone) {
     if (!phone || typeof phone !== 'string') return null;
     const clean = phone.replace(/[^0-9]/g, '');
-    if (clean.length === 0) return null;
+    if (!clean) return null;
     if (clean.startsWith('00')) return clean.slice(2);
     if (clean.startsWith('0')) return '967' + clean.slice(1);
     return clean;
   }
 
-  // تحديث الإحصاءات
   function updateStats() {
-    const stats = document.querySelectorAll('.stat-card .stat-value');
-    if (stats[0]) stats[0].textContent = allAccounts.length;
-    if (stats[1]) stats[1].textContent = allAccounts.filter(a => a.status !== 'late').length;
-    if (stats[2]) stats[2].textContent = allAccounts.filter(a => a.status === 'late').length;
+    document.getElementById('statTotal').textContent = allAccounts.length;
+    document.getElementById('statActive').textContent = allAccounts.filter(a => a.status !== 'late').length;
+    document.getElementById('statLate').textContent = allAccounts.filter(a => a.status === 'late').length;
   }
 
-  // تسمية الحالة
   function statusLabel(status) {
     const labels = {
       'late': '<span style="background:#c62828;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">⚠️ متأخر</span>',
@@ -153,203 +254,205 @@
     return labels[status] || labels['active'];
   }
 
-  // عرض الحسابات
   function render() {
     const list = document.getElementById('accountsList');
     if (!list) return;
-
     let filtered = allAccounts;
-    if (currentFilter !== 'all') {
-      filtered = filtered.filter(a => a.status === currentFilter);
-    }
-    if (currentSearch) {
-      filtered = filtered.filter(a =>
-        (a.name || '').toLowerCase().includes(currentSearch.toLowerCase()) || 
-        (a.phone || '').includes(currentSearch)
-      );
-    }
-
+    if (currentFilter !== 'all') filtered = filtered.filter(a => a.status === currentFilter);
+    if (currentSearch) filtered = filtered.filter(a =>
+      (a.name||'').toLowerCase().includes(currentSearch.toLowerCase()) || (a.phone||'').includes(currentSearch)
+    );
     if (!filtered.length) {
-      list.innerHTML = '<p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">لا توجد حسابات — اضغط ➕ لإضافة حساب جديد</p>';
-      updateStats();
-      return;
+      list.innerHTML = '<p style="text-align:center;color:#999;padding:32px;font-family:Tajawal">لا توجد حسابات</p>';
+      updateStats(); return;
     }
-
     list.innerHTML = filtered.map(account => {
-      const displayName = (account.name || 'ع').substring(0, 2);
-      const formattedBalance = Number(account.balance || 0).toLocaleString('ar-SA');
-      const safePhone = (account.phone || '').replace(/'/g, '');
-      const safeName = (account.name || '').replace(/'/g, '');
-
+      const initials = (account.name||'ع').substring(0,2);
+      const balYER = Number(account.balance||0).toLocaleString('ar-SA');
+      const balSAR = Number(account.balanceSAR||0);
+      const safePhone = (account.phone||'').replace(/'/g,'');
+      const safeName = (account.name||'').replace(/'/g,'');
+      const sarLine = balSAR > 0 ? `<div style="font-size:10px;color:#1565c0;font-weight:700">${balSAR.toLocaleString('ar-SA')} ر.س</div>` : '';
       return `
         <div class="op-item">
           <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:14px;cursor:pointer"
-            onclick="viewAccountDetails('${account.id}','${safeName}','${safePhone}','${account.balance || 0}')"
-            title="تفاصيل الحساب">
-            ${displayName}
+            onclick="openStatement('${account.id}','${safeName}','${safePhone}','${account.balance||0}','${account.balanceSAR||0}')">
+            ${initials}
           </div>
           <div class="op-info" style="flex:1">
-            <div class="op-name">${account.name || '—'}</div>
-            <div class="op-date">${account.phone || 'لا يوجد رقم'} · ${statusLabel(account.status)}</div>
+            <div class="op-name">${account.name||'—'}</div>
+            <div class="op-date">${account.phone||'لا يوجد رقم'} · ${statusLabel(account.status)}</div>
+            <div class="acc-action-btns">
+              <button class="btn-transfer" onclick="goToTransfer('${account.id}','${safeName}','${safePhone}')">💸 حوالة</button>
+              <button class="btn-receipt" onclick="openReceipt('${account.id}','${safeName}','${safePhone}')">🧾+ قبض</button>
+              <button class="btn-payment" onclick="openPayment('${account.id}','${safeName}','${safePhone}')">🧾- صرف</button>
+              <button class="btn-statement" onclick="openStatement('${account.id}','${safeName}','${safePhone}','${account.balance||0}','${account.balanceSAR||0}')">📋 كشف</button>
+              <button class="btn-wa" onclick="sendWAAccount('${safePhone}','${safeName}','${account.balance||0}')">💬</button>
+            </div>
           </div>
-          <div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-            <div style="font-size:15px;font-weight:800;color:#8B0000">${formattedBalance}</div>
+          <div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+            <div style="font-size:15px;font-weight:800;color:#8B0000">${balYER}</div>
             <div style="font-size:11px;color:#999">ر.ي</div>
-            <button onclick="sendWAAccount('${safePhone}','${safeName}','${account.balance || 0}')"
-              style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:Cairo">
-              💬 واتساب
-            </button>
-            <button onclick="goToTransfer('${account.id}','${safeName}','${safePhone}')"
-              style="background:#8B0000;color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:Cairo;margin-top:3px">
-              💸 حوالة
-            </button>
+            ${sarLine}
           </div>
-        </div>
-      `;
+        </div>`;
     }).join('');
-
     updateStats();
   }
 
-  // الذهاب للحوالة
-  window.goToTransfer = function(accountId, name, phone) {
-    if (!accountId) {
-      showNotification('خطأ: معرف الحساب غير صحيح', 'error');
-      return;
-    }
-    const params = new URLSearchParams({ id: accountId, name, phone });
+  window.goToTransfer = function(id, name, phone) {
+    const params = new URLSearchParams({ id, name, phone });
     window.location.href = 'transfer.html?' + params.toString();
   };
 
-  // عرض تفاصيل الحساب
-  window.viewAccountDetails = function(id, name, phone, balance) {
-    const msg = `📊 تفاصيل الحساب:\n━━━━━━━━━━━━━━━\n👤 الاسم: ${name}\n📞 الهاتف: ${phone}\n💰 الرصيد: ${Number(balance).toLocaleString('ar-SA')} ر.ي`;
-    if (typeof showNotification === 'function') showNotification(msg, 'info');
+  window.openReceipt = function(id, name, phone) {
+    document.getElementById('receiptClientId').value = id;
+    document.getElementById('receiptClientPhone').value = phone;
+    document.getElementById('receiptClientName').textContent = name;
+    document.getElementById('receiptAmount').value = '';
+    document.getElementById('receiptReason').value = '';
+    document.getElementById('receiptModal').classList.add('open');
   };
 
-  // إرسال واتساب آمن
-  window.sendWAAccount = async function(phone, name, balance) {
+  window.openPayment = function(id, name, phone) {
+    document.getElementById('paymentClientId').value = id;
+    document.getElementById('paymentClientPhone').value = phone;
+    document.getElementById('paymentClientName').textContent = name;
+    document.getElementById('paymentAmount').value = '';
+    document.getElementById('paymentReason').value = '';
+    document.getElementById('paymentModal').classList.add('open');
+  };
+
+  window.openStatement = async function(id, name, phone, balance, balanceSAR) {
+    activeStatementAccount = { id, name, phone, balance, balanceSAR };
+    document.getElementById('statementHeader').innerHTML = `
+      <div style="font-weight:800;font-size:15px;color:#1a1a1a;margin-bottom:8px">👤 ${name}</div>
+      <div style="display:flex;gap:16px">
+        <div><span style="color:#666;font-size:12px">الرصيد (ر.ي)</span><br><span style="color:#8B0000;font-weight:800;font-size:16px">${Number(balance||0).toLocaleString('ar-SA')}</span></div>
+        <div><span style="color:#666;font-size:12px">الرصيد (ر.س)</span><br><span style="color:#1565c0;font-weight:800;font-size:16px">${Number(balanceSAR||0).toLocaleString('ar-SA')}</span></div>
+      </div>`;
+    document.getElementById('statementModal').classList.add('open');
+    document.getElementById('statementList').innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">جاري التحميل...</p>';
     try {
-      if (!phone || phone.trim() === '') {
-        if (typeof showNotification === 'function') showNotification('لا يوجد رقم واتساب لهذا العميل', 'error');
+      const entries = await getAccountStatement(id);
+      if (!entries.length) {
+        document.getElementById('statementList').innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد عمليات مسجلة</p>';
         return;
       }
-
-      const formattedPhone = formatPhoneNumber(phone);
-      if (!formattedPhone) {
-        if (typeof showNotification === 'function') showNotification('رقم الهاتف غير صحيح', 'error');
-        return;
-      }
-
-      const msg = `🏦 نظام محمد سالم للحوالات
-━━━━━━━━━━━━━━━
-السلام عليكم ${name.trim()}
-
-كشف حسابك:
-💰 الرصيد الحالي: ${Number(balance).toLocaleString('ar-SA')} ر.ي
-
-للاستفسار تواصل معنا 📞`;
-
-      window.open('https://wa.me/' + formattedPhone + '?text=' + encodeURIComponent(msg), '_blank');
-      await logWA({ type: 'account_statement', accountName: name.trim(), phone: formattedPhone, message: msg });
-      if (typeof showNotification === 'function') showNotification('تم فتح واتساب ✓', 'success');
-    } catch (error) {
-      console.error('Error sending WhatsApp:', error);
-      if (typeof showNotification === 'function') showNotification('خطأ في إرسال الواتساب', 'error');
+      const statusColors = { completed:'#2e7d32', pending:'#f57c00', cancelled:'#c62828', sent:'#1565c0' };
+      const statusTx = { completed:'مكتملة ✅', pending:'معلقة ⏳', cancelled:'ملغاة ❌', sent:'مرسلة 📤' };
+      document.getElementById('statementList').innerHTML = entries.map(e => {
+        const d = e.createdAt?.toDate ? e.createdAt.toDate() : new Date(e.createdAt||0);
+        const dateStr = d.toLocaleDateString('ar-SA') + ' ' + d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+        if (e.entryType === 'transfer') {
+          return `<div class="stmt-item">
+            <div style="width:36px;height:36px;border-radius:50%;background:#e3f2fd;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">💸</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:13px">${e.transferCode||'حوالة'}</div>
+              <div style="font-size:11px;color:#999">${dateStr}</div>
+              <div style="font-size:11px"><span class="stmt-badge" style="background:${statusColors[e.status]||'#666'};color:#fff">${statusTx[e.status]||e.status}</span></div>
+            </div>
+            <div style="text-align:left"><div style="font-weight:800;color:#8B0000">${Number(e.amount||0).toLocaleString('ar-SA')}</div><div style="font-size:11px;color:#999">${e.currency||'ر.ي'}</div></div>
+          </div>`;
+        } else {
+          const isReceipt = e.type === 'receipt';
+          return `<div class="stmt-item">
+            <div style="width:36px;height:36px;border-radius:50%;background:${isReceipt?'#e8f5e9':'#fff3e0'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${isReceipt?'📥':'📤'}</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:13px">${isReceipt?'سند قبض':'سند صرف'}</div>
+              <div style="font-size:11px;color:#999">${dateStr}</div>
+              <div style="font-size:11px;color:#666">${e.reason||'—'}</div>
+            </div>
+            <div style="text-align:left"><div style="font-weight:800;color:${isReceipt?'#2e7d32':'#c62828'}">${isReceipt?'+':'−'}${Number(e.amount||0).toLocaleString('ar-SA')}</div><div style="font-size:11px;color:#999">${e.currency==='SAR'?'ر.س':'ر.ي'}</div></div>
+          </div>`;
+        }
+      }).join('');
+    } catch(err) {
+      document.getElementById('statementList').innerHTML = '<p style="text-align:center;color:#c62828;padding:20px;font-family:Tajawal">خطأ في تحميل البيانات</p>';
     }
   };
 
-  // التحكم بـ Modal
-  const addNewAccountBtn = document.getElementById('addNewAccountBtn');
-  const closeModalBtn = document.getElementById('closeModal');
-  const addAccountModal = document.getElementById('addAccountModal');
-  const addAccountForm = document.getElementById('addAccountForm');
+  document.getElementById('btnShareStatement').addEventListener('click', () => {
+    if (!activeStatementAccount) return;
+    const {name, phone, balance, balanceSAR} = activeStatementAccount;
+    const msg = buildMsg('account_statement', {name, balance, currency:'ر.ي'}) + (Number(balanceSAR)>0?`\n💵 الرصيد (ر.س): ${Number(balanceSAR).toLocaleString('ar-SA')}`:'');
+    if (phone) { openWA(phone, msg); showNotification('تم فتح واتساب ✓', 'success'); }
+    else showNotification('لا يوجد رقم للعميل', 'error');
+  });
 
-  if (addNewAccountBtn) {
-    addNewAccountBtn.addEventListener('click', () => {
-      addAccountModal.style.display = 'flex';
-    });
-  }
+  window.sendWAAccount = async function(phone, name, balance) {
+    if (!phone) { showNotification('لا يوجد رقم واتساب', 'error'); return; }
+    const msg = buildMsg('account_statement', {name, balance, currency:'ر.ي'});
+    openWA(phone, msg);
+    await logWA({type:'account_statement', accountName:name, phone, message:msg});
+    showNotification('تم فتح واتساب ✓', 'success');
+  };
 
-  if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', () => {
-      addAccountModal.style.display = 'none';
-    });
-  }
-
-  if (addAccountModal) {
-    addAccountModal.addEventListener('click', function(e) {
-      if (e.target === this) this.style.display = 'none';
-    });
-  }
-
-  // معالج النموذج
-  if (addAccountForm) {
-    addAccountForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-
-      const btn = document.getElementById('saveAccBtn');
-      const name = document.getElementById('accName').value.trim();
-      const phone = document.getElementById('accPhone').value.trim();
-      const balance = parseFloat(document.getElementById('accBalance').value) || 0;
-      const status = document.getElementById('accStatus').value;
-
-      if (!name) {
-        if (typeof showNotification === 'function') showNotification('الرجاء إدخال اسم العميل', 'error');
-        return;
+  // سند قبض
+  async function saveVoucher(type, sendWA) {
+    const isReceipt = type === 'receipt';
+    const prefix = isReceipt ? 'receipt' : 'payment';
+    const id = document.getElementById(prefix+'ClientId').value;
+    const name = document.getElementById(prefix+'ClientName').textContent;
+    const phone = document.getElementById(prefix+'ClientPhone').value;
+    const amount = parseFloat(document.getElementById(prefix+'Amount').value) || 0;
+    const currency = document.getElementById(prefix+'Currency').value;
+    const reason = document.getElementById(prefix+'Reason').value.trim();
+    if (!amount) { showNotification('يرجى إدخال المبلغ', 'error'); return; }
+    try {
+      await addVoucher({ accountId: id, accountName: name, type, amount, currency, reason, phone });
+      showNotification(`✅ تم حفظ سند ${isReceipt?'القبض':'الصرف'}`, 'success');
+      if (sendWA && phone) {
+        const msgType = isReceipt ? 'voucher_receipt' : 'voucher_payment';
+        await notifyClient(phone, msgType, { name, amount, currency: currency==='SAR'?'ر.س':'ر.ي', reason });
       }
-
-      if (btn) btn.disabled = true;
-      if (btn) btn.textContent = '⏳ جاري الحفظ...';
-
-      try {
-        const formattedPhone = phone ? formatPhoneNumber(phone) : null;
-        const docRef = await addAccount({ name, phone: formattedPhone || '', balance, status });
-
-        if (!docRef || !docRef.id) throw new Error('فشل حفظ الحساب');
-
-        addAccountModal.style.display = 'none';
-        this.reset();
-
-        if (formattedPhone) {
-          const welcomeMsg = `🏦 نظام محمد سالم للحوالات
-━━━━━━━━━━━━━━━━━━
-👋 مرحباً ${name}!
-
-تم تسجيلك بنجاح في النظام
-معرف حسابك: ${docRef.id}
-الرصيد الابتدائي: ${Number(balance).toLocaleString('ar-SA')} ر.ي
-
-🔒 نتمنى لك خدمة ممتازة`;
-
-          try {
-            window.open('https://wa.me/' + formattedPhone + '?text=' + encodeURIComponent(welcomeMsg), '_blank');
-            await logWA({ type: 'account_welcome', accountName: name, phone: formattedPhone, message: welcomeMsg });
-          } catch (waError) {
-            console.warn('WhatsApp warning:', waError);
-          }
-        }
-
-        if (typeof showNotification === 'function') showNotification(`✅ تم إنشاء الحساب بنجاح`, 'success');
-
-      } catch (error) {
-        console.error('Error adding account:', error);
-        if (typeof showNotification === 'function') showNotification(`❌ خطأ: ${error.message || 'حدث خطأ أثناء حفظ الحساب'}`, 'error');
-      } finally {
-        if (btn) btn.disabled = false;
-        if (btn) btn.textContent = '💾 حفظ الحساب في قاعدة البيانات';
-      }
-    });
+      document.getElementById(prefix+'Modal').classList.remove('open');
+    } catch(err) {
+      showNotification('❌ خطأ: ' + (err.message||''), 'error');
+    }
   }
 
-  // البحث والفلترة
+  document.getElementById('btnReceiptSave').addEventListener('click', () => saveVoucher('receipt', false));
+  document.getElementById('btnReceiptSaveWA').addEventListener('click', () => saveVoucher('receipt', true));
+  document.getElementById('btnPaymentSave').addEventListener('click', () => saveVoucher('payment', false));
+  document.getElementById('btnPaymentSaveWA').addEventListener('click', () => saveVoucher('payment', true));
+
+  // فتح modal إضافة حساب
+  ['addNewAccountBtn','addNewAccountBtnBottom'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', () => document.getElementById('addAccountModal').classList.add('open'));
+  });
+
+  // إغلاق الـ modals عند الضغط خارجها
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+
+  // إضافة حساب
+  document.getElementById('addAccountForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveAccBtn');
+    const name = document.getElementById('accName').value.trim();
+    const phone = document.getElementById('accPhone').value.trim();
+    const balance = parseFloat(document.getElementById('accBalance').value) || 0;
+    const balanceSAR = parseFloat(document.getElementById('accBalanceSAR').value) || 0;
+    const status = document.getElementById('accStatus').value;
+    if (!name) { showNotification('يرجى إدخال اسم العميل', 'error'); return; }
+    btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...';
+    try {
+      const formattedPhone = phone ? formatPhoneNumber(phone) : null;
+      await addAccount({ name, phone: formattedPhone||'', balance, balanceSAR, status });
+      document.getElementById('addAccountModal').classList.remove('open');
+      this.reset();
+      showNotification(`✅ تم إنشاء حساب ${name} بنجاح`, 'success');
+    } catch(err) {
+      showNotification('❌ خطأ: ' + (err.message||''), 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 حفظ الحساب';
+    }
+  });
+
   const searchInput = document.getElementById('searchInput');
-  if (searchInput) {
-    searchInput.addEventListener('input', function() {
-      currentSearch = this.value;
-      render();
-    });
-  }
+  if (searchInput) searchInput.addEventListener('input', function() { currentSearch = this.value; render(); });
 
   document.querySelectorAll('.chip').forEach(chip => {
     chip.addEventListener('click', function() {
@@ -360,13 +463,7 @@
     });
   });
 
-  // الاستماع للحسابات من Firebase
-  listenAccounts(accounts => {
-    allAccounts = accounts || [];
-    render();
-  });
-
+  listenAccounts(accounts => { allAccounts = accounts || []; render(); });
   </script>
-
-  </body>
+</body>
 </html>
