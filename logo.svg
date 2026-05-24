@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#a00000"/>
+      <stop offset="100%" stop-color="#4a0000"/>
+    </radialGradient>
+    <radialGradient id="goldGrad" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#f5d060"/>
+      <stop offset="100%" stop-color="#b8860b"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- الحلقة الخارجية الذهبية -->
+  <circle cx="150" cy="150" r="145" fill="url(#goldGrad)" />
+
+  <!-- الدائرة الرئيسية -->
+  <circle cx="150" cy="150" r="133" fill="url(#bgGrad)" />
+
+  <!-- حلقة ذهبية داخلية -->
+  <circle cx="150" cy="150" r="125" fill="none" stroke="#D4AF37" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- نجمة ثمانية الأضلاع خلفية -->
+  <g transform="translate(150,150)" opacity="0.12">
+    <polygon points="0,-60 14,-14 60,0 14,14 0,60 -14,14 -60,0 -14,-14" fill="#D4AF37"/>
+    <polygon points="0,-60 14,-14 60,0 14,14 0,60 -14,14 -60,0 -14,-14" fill="#D4AF37" transform="rotate(22.5)"/>
+  </g>
+
+  <!-- خط أفقي مزخرف -->
+  <line x1="60" y1="175" x2="240" y2="175" stroke="#D4AF37" stroke-width="1" opacity="0.6"/>
+  <circle cx="60" cy="175" r="3" fill="#D4AF37" opacity="0.8"/>
+  <circle cx="240" cy="175" r="3" fill="#D4AF37" opacity="0.8"/>
+  <circle cx="150" cy="175" r="4" fill="#D4AF37"/>
+
+  <!-- الحرف الأول المزخرف "م" -->
+  <text x="150" y="115" 
+    font-family="'Amiri', 'Scheherazade', 'Traditional Arabic', serif"
+    font-size="72" font-weight="bold"
+    fill="url(#goldGrad)" 
+    text-anchor="middle"
+    filter="url(#glow)"
+    letter-spacing="4">م</text>
+
+  <!-- اسم محمد سالم -->
+  <text x="150" y="160"
+    font-family="'Amiri', 'Scheherazade', 'Traditional Arabic', 'Cairo', serif"
+    font-size="26" font-weight="bold"
+    fill="#ffffff"
+    text-anchor="middle"
+    letter-spacing="2">محمد سالم</text>
+
+  <!-- النص الفرعي -->
+  <text x="150" y="200"
+    font-family="'Tajawal', 'Cairo', Arial, sans-serif"
+    font-size="14"
+    fill="#D4AF37"
+    text-anchor="middle"
+    letter-spacing="1">للحوالات المالية</text>
+
+  <!-- نقاط زخرفية -->
+  <circle cx="100" cy="218" r="2.5" fill="#D4AF37" opacity="0.7"/>
+  <circle cx="115" cy="218" r="2.5" fill="#D4AF37" opacity="0.7"/>
+  <circle cx="185" cy="218" r="2.5" fill="#D4AF37" opacity="0.7"/>
+  <circle cx="200" cy="218" r="2.5" fill="#D4AF37" opacity="0.7"/>
+  <circle cx="150" cy="232" r="2" fill="#D4AF37" opacity="0.5"/>
+
+  <!-- تاج صغير في الأعلى -->
+  <g transform="translate(150,42)" fill="#D4AF37" opacity="0.9">
+    <polygon points="0,-10 -18,8 -10,2 0,12 10,2 18,8" />
+    <circle cx="-18" cy="8" r="3"/>
+    <circle cx="0" cy="-10" r="3"/>
+    <circle cx="18" cy="8" r="3"/>
+  </g>
+</svg>
