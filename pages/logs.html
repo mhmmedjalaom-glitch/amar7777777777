@@ -20,46 +20,45 @@
   <div class="page-content">
 
     <!-- Alert Banner -->
-    <div style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:1px solid #ffb74d;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    <div id="alertBanner" style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:1px solid #ffb74d;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px">
       <span style="font-size:20px">🔔</span>
       <div>
         <div style="font-size:13px;font-weight:700;color:#e65100">حوالات تتطلب إجراء</div>
-        <div style="font-size:12px;color:#bf360c;font-family:Tajawal,sans-serif">2 تنبيه · يحتاج إلى مراجعة فورية</div>
+        <div id="alertText" style="font-size:12px;color:#bf360c;font-family:Tajawal,sans-serif">جاري التحميل...</div>
       </div>
     </div>
 
     <!-- Search -->
     <div class="search-bar">
       <span class="search-icon">🔍</span>
-      <input type="text" placeholder="بحث في السجل..." />
+      <input type="text" id="searchInput" placeholder="بحث في السجل..." />
     </div>
 
     <!-- Filter Chips -->
     <div class="filter-chips">
-      <div class="chip active">فلترة الكل</div>
-      <div class="chip">مكتملة</div>
-      <div class="chip">قيد التنفيذ</div>
-      <div class="chip">متأخرة</div>
-      <div class="chip">معلقة</div>
+      <div class="chip active" data-filter="all">فلترة الكل</div>
+      <div class="chip" data-filter="completed">مكتملة</div>
+      <div class="chip" data-filter="pending">قيد التنفيذ</div>
+      <div class="chip" data-filter="cancelled">ملغاة</div>
     </div>
 
     <!-- Stats Row -->
     <div style="display:flex;gap:8px;margin-bottom:14px">
       <div style="flex:1;background:#e8f5e9;border-radius:10px;padding:10px;text-align:center">
-        <div style="font-size:18px;font-weight:800;color:#2e7d32">47</div>
+        <div id="cntCompleted" style="font-size:18px;font-weight:800;color:#2e7d32">—</div>
         <div style="font-size:10px;color:#388e3c;font-family:Tajawal,sans-serif">مكتملة</div>
       </div>
       <div style="flex:1;background:#fff3e0;border-radius:10px;padding:10px;text-align:center">
-        <div style="font-size:18px;font-weight:800;color:#e65100">12</div>
+        <div id="cntPending" style="font-size:18px;font-weight:800;color:#e65100">—</div>
         <div style="font-size:10px;color:#bf360c;font-family:Tajawal,sans-serif">قيد التنفيذ</div>
       </div>
       <div style="flex:1;background:#ffebee;border-radius:10px;padding:10px;text-align:center">
-        <div style="font-size:18px;font-weight:800;color:#c62828">5</div>
-        <div style="font-size:10px;color:#b71c1c;font-family:Tajawal,sans-serif">متأخرة</div>
+        <div id="cntCancelled" style="font-size:18px;font-weight:800;color:#c62828">—</div>
+        <div style="font-size:10px;color:#b71c1c;font-family:Tajawal,sans-serif">ملغاة</div>
       </div>
       <div style="flex:1;background:#e3f2fd;border-radius:10px;padding:10px;text-align:center">
-        <div style="font-size:18px;font-weight:800;color:#1565c0">3</div>
-        <div style="font-size:10px;color:#0d47a1;font-family:Tajawal,sans-serif">معلقة</div>
+        <div id="cntTotal" style="font-size:18px;font-weight:800;color:#1565c0">—</div>
+        <div style="font-size:10px;color:#0d47a1;font-family:Tajawal,sans-serif">الكل</div>
       </div>
     </div>
 
@@ -67,92 +66,8 @@
     <div class="section-header">
       <span class="section-title">🕐 العمليات الأخيرة</span>
     </div>
-    <div class="op-list">
-
-      <div class="op-item" style="border-right:4px solid #c62828">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#c62828,#b71c1c)">أح</div>
-        <div class="op-info">
-          <div class="op-name">أحمد محمد · #TRN-1247</div>
-          <div class="op-date">اليوم 10:30 · <span class="badge badge-red">متأخرة لأكثر من 5 أيام</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">680,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" style="border-right:4px solid #c62828">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#c62828,#b71c1c)">عل</div>
-        <div class="op-info">
-          <div class="op-name">علي حسن · #TRN-1246</div>
-          <div class="op-date">اليوم 09:15 · <span class="badge badge-red">متأخرة</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">320,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" style="border-right:4px solid #2e7d32">
-        <div class="op-avatar">سا</div>
-        <div class="op-info">
-          <div class="op-name">سالم القحطاني · #TRN-1245</div>
-          <div class="op-date">اليوم 08:50 · <span class="badge badge-green">مكتملة</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">150,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" style="border-right:4px solid #e65100">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#e65100,#bf360c)">مح</div>
-        <div class="op-info">
-          <div class="op-name">محمد الشمري · #TRN-1244</div>
-          <div class="op-date">أمس 16:20 · <span class="badge badge-orange">قيد التنفيذ</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">450,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" style="border-right:4px solid #2e7d32">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#D4AF37,#c9a227)">خا</div>
-        <div class="op-info">
-          <div class="op-name">خالد النقيب · #TRN-1243</div>
-          <div class="op-date">أمس 14:05 · <span class="badge badge-green">مكتملة</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">1,200,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" style="border-right:4px solid #2e7d32">
-        <div class="op-avatar">يو</div>
-        <div class="op-info">
-          <div class="op-name">يوسف البهكلي · #TRN-1242</div>
-          <div class="op-date">أمس 11:30 · <span class="badge badge-green">مكتملة</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">90,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
-      <div class="op-item" style="border-right:4px solid #1565c0">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#1565c0,#0d47a1)">عم</div>
-        <div class="op-info">
-          <div class="op-name">عمر الحربي · #TRN-1241</div>
-          <div class="op-date">منذ يومين · <span class="badge badge-blue">معلقة</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="op-amount">260,000</div>
-          <div class="op-currency">ر.ي</div>
-        </div>
-      </div>
-
+    <div class="op-list" id="transferList">
+      <p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">جاري تحميل الحوالات...</p>
     </div>
 
   </div>
@@ -174,95 +89,136 @@
 
   <script src="../script.js"></script>
 
-    
-  
   <script type="module">
   import { listenTransfers, updateTransferStatus, deleteTransfer, logWA, openWA } from "../firebase.js";
 
   let allTransfers = [], currentFilter = 'all', currentSearch = '';
 
-  function fmtDate(iso) {
-    if (!iso) return '';
-    try { return new Date(iso).toLocaleString('ar-SA',{hour12:true,year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); } catch { return iso; }
+  function toDate(val) {
+    if (!val) return null;
+    if (typeof val.toDate === 'function') return val.toDate();
+    return new Date(val);
   }
+
+  function fmtDate(val) {
+    const d = toDate(val);
+    if (!d) return '';
+    return d.toLocaleString('ar-SA', { hour12: true, year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
   function statusBadge(s) {
-    const m = { completed:'<span style="background:#2e7d32;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">✅ مكتملة</span>', pending:'<span style="background:#f57c00;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">⏳ قيد التنفيذ</span>', cancelled:'<span style="background:#c62828;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">❌ ملغاة</span>' };
-    return m[s] || s || '';
+    const m = {
+      completed: '<span style="background:#2e7d32;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">✅ مكتملة</span>',
+      pending:   '<span style="background:#f57c00;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">⏳ قيد التنفيذ</span>',
+      cancelled: '<span style="background:#c62828;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">❌ ملغاة</span>'
+    };
+    return m[s] || `<span style="background:#888;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">${s}</span>`;
+  }
+
+  function borderColor(s) {
+    return s === 'completed' ? '#2e7d32' : s === 'cancelled' ? '#c62828' : '#f57c00';
+  }
+
+  function updateStats(list) {
+    document.getElementById('cntCompleted').textContent = list.filter(t => t.status === 'completed').length;
+    document.getElementById('cntPending').textContent   = list.filter(t => t.status === 'pending').length;
+    document.getElementById('cntCancelled').textContent = list.filter(t => t.status === 'cancelled').length;
+    document.getElementById('cntTotal').textContent     = list.length;
+
+    const pending = list.filter(t => t.status === 'pending').length;
+    const alertText = document.getElementById('alertText');
+    if (alertText) {
+      alertText.textContent = pending > 0
+        ? `${pending} حوالة قيد التنفيذ تحتاج مراجعة`
+        : 'لا توجد حوالات تحتاج إجراء';
+    }
   }
 
   function render() {
-    const list = document.querySelector('.op-list');
+    const list = document.getElementById('transferList');
     if (!list) return;
-    const stats = document.querySelectorAll('.stat-card .stat-value');
-    if (stats[0]) stats[0].textContent = allTransfers.length;
-    if (stats[1]) stats[1].textContent = allTransfers.filter(t=>t.status==='completed').length;
-    if (stats[2]) stats[2].textContent = allTransfers.filter(t=>t.status==='pending').length;
-    if (stats[3]) stats[3].textContent = allTransfers.reduce((s,t)=>s+(Number(t.commission)||0),0).toLocaleString('ar-SA');
+
     let filtered = allTransfers;
     if (currentFilter !== 'all') filtered = filtered.filter(t => t.status === currentFilter);
-    if (currentSearch) filtered = filtered.filter(t =>
-      (t.beneficiary||'').includes(currentSearch) || (t.transferType||'').includes(currentSearch)
-    );
+    if (currentSearch) {
+      const q = currentSearch.toLowerCase();
+      filtered = filtered.filter(t =>
+        (t.beneficiary || '').toLowerCase().includes(q) ||
+        (t.transferType || '').includes(q) ||
+        (t.notes || '').includes(q)
+      );
+    }
+
+    updateStats(allTransfers);
+
     if (!filtered.length) {
       list.innerHTML = '<p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">لا توجد حوالات — أضف من صفحة التحويل</p>';
       return;
     }
-    list.innerHTML = filtered.map(t => `
-      <div class="op-item">
-        <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:18px">💸</div>
-        <div class="op-info" style="flex:1;min-width:0">
-          <div class="op-name">${t.beneficiary||'—'}</div>
-          <div class="op-date">${fmtDate(t.createdAt)}</div>
-          <div style="margin-top:4px">${statusBadge(t.status)} <span style="font-size:11px;color:#888;margin-right:6px">${t.transferType||''}</span></div>
-          <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
-            <button onclick="completeT('${t.id}','${(t.beneficiaryPhone||'').replace(/'/g,'')}','${(t.beneficiary||'').replace(/'/g,'')}',${t.amount||0},'${t.currency||'ر.ي'}')"
-              style="background:#2e7d32;color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:Cairo">✓ مكتملة</button>
-            <button onclick="sendWAT('${(t.beneficiaryPhone||'').replace(/'/g,'')}','${(t.beneficiary||'').replace(/'/g,'')}',${t.amount||0},'${t.currency||'ر.ي'}')"
-              style="background:#25D366;color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:Cairo">💬 واتساب</button>
-            <button onclick="delT('${t.id}')"
-              style="background:#c62828;color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:Cairo">🗑 حذف</button>
+
+    list.innerHTML = filtered.map(t => {
+      const phone = (t.beneficiaryPhone || '').replace(/'/g, '');
+      const name  = (t.beneficiary || '—').replace(/'/g, '');
+      return `
+        <div class="op-item" style="border-right:4px solid ${borderColor(t.status)}">
+          <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:18px">💸</div>
+          <div class="op-info" style="flex:1;min-width:0">
+            <div class="op-name">${t.beneficiary || '—'}</div>
+            <div class="op-date">${fmtDate(t.createdAt)}</div>
+            <div style="margin-top:4px">${statusBadge(t.status)} <span style="font-size:11px;color:#888;margin-right:6px">${t.transferType || ''}</span></div>
+            ${t.notes ? `<div style="font-size:11px;color:#888;margin-top:3px;font-family:Tajawal">📝 ${t.notes}</div>` : ''}
+            <div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">
+              ${t.status !== 'completed' ? `<button onclick="doComplete('${t.id}','${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#2e7d32;color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:Cairo">✓ مكتملة</button>` : ''}
+              ${phone ? `<button onclick="doWA('${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#25D366;color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:Cairo">💬 واتساب</button>` : ''}
+              <button onclick="doDelete('${t.id}')" style="background:#c62828;color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:Cairo">🗑 حذف</button>
+            </div>
+          </div>
+          <div style="text-align:left;min-width:72px">
+            <div style="font-size:15px;font-weight:800;color:#8B0000">${Number(t.amount||0).toLocaleString('ar-SA')}</div>
+            <div style="font-size:11px;color:#999">${t.currency||'ر.ي'}</div>
+            <div style="font-size:11px;color:#e65100;margin-top:2px">عمولة: ${Number(t.commission||0).toLocaleString('ar-SA')}</div>
           </div>
         </div>
-        <div style="text-align:left;min-width:64px">
-          <div style="font-size:15px;font-weight:800;color:#8B0000">${Number(t.amount||0).toLocaleString('ar-SA')}</div>
-          <div style="font-size:11px;color:#999">${t.currency||'ر.ي'}</div>
-          <div style="font-size:11px;color:#e65100;margin-top:2px">عمولة: ${Number(t.commission||0).toLocaleString('ar-SA')}</div>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   listenTransfers(ts => { allTransfers = ts; render(); });
 
-  const si = document.querySelector('#searchInput, input[placeholder*="بحث"]');
-  if (si) si.addEventListener('input', function() { currentSearch = this.value; render(); });
+  document.getElementById('searchInput').addEventListener('input', function() {
+    currentSearch = this.value;
+    render();
+  });
+
   document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', function() {
-    const m = {'الكل':'all','مكتملة':'completed','معلقة':'pending','ملغاة':'cancelled','قيد التنفيذ':'pending'};
-    currentFilter = m[this.textContent.trim()] || 'all'; render();
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    currentFilter = this.dataset.filter || 'all';
+    render();
   }));
 
-  window.completeT = async function(id, phone, name, amount, currency) {
+  window.doComplete = async function(id, phone, name, amount, currency) {
     await updateTransferStatus(id, 'completed');
     const msg = `🏦 نظام محمد سالم للحوالات\n━━━━━━━━━━━━━━━━━━\n✅ تم إتمام حوالتك بنجاح!\n\n👤 المستلم: ${name}\n💰 المبلغ: ${Number(amount).toLocaleString('ar-SA')} ${currency}\n━━━━━━━━━━━━━━━━━━\nشكراً لثقتكم بنا 🙏`;
     if (phone) {
-      openWA(phone, msg); // يفتح تلقائياً
-      await logWA({ type:'transfer_completed', accountName:name, phone, message:msg });
-      if (typeof showNotification==='function') showNotification('✅ تم التأكيد وفُتح واتساب للعميل','success');
-    } else {
-      if (typeof showNotification==='function') showNotification('✅ تم تحديث الحالة (لا يوجد رقم واتساب)','success');
+      openWA(phone, msg);
+      await logWA({ type: 'transfer_completed', accountName: name, phone, message: msg });
     }
+    if (typeof showNotification === 'function') showNotification('✅ تم التحديث' + (phone ? ' وفُتح واتساب' : ''), 'success');
   };
-  window.delT = async function(id) {
-    if (!confirm('هل تريد حذف هذه الحوالة؟')) return;
+
+  window.doDelete = async function(id) {
+    if (!confirm('هل تريد حذف هذه الحوالة نهائياً؟')) return;
     await deleteTransfer(id);
-    if (typeof showNotification==='function') showNotification('تم الحذف','info');
+    if (typeof showNotification === 'function') showNotification('تم الحذف', 'info');
   };
-  window.sendWAT = async function(phone, name, amount, currency) {
-    if (!phone) { if(typeof showNotification==='function') showNotification('لا يوجد رقم واتساب','error'); return; }
+
+  window.doWA = async function(phone, name, amount, currency) {
     const msg = `🏦 نظام محمد سالم\n📬 تذكير حوالة ${name}\n💰 ${Number(amount).toLocaleString('ar-SA')} ${currency}`;
     openWA(phone, msg);
-    await logWA({ type:'transfer_reminder', accountName:name, phone, message:msg });
+    await logWA({ type: 'transfer_reminder', accountName: name, phone, message: msg });
   };
   </script>
-  </body>
+
+</body>
 </html>
