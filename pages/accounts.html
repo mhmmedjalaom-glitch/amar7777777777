@@ -362,6 +362,10 @@
             style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:Cairo">
             💬 واتساب
           </button>
+          <button onclick="newTransfer('${a.id}','${(a.name||'').replace(/'/g,'')}','${(a.phone||'').replace(/'/g,'')}')"
+            style="background:#8B0000;color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:Cairo;margin-top:3px">
+            💸 حوالة
+          </button>
         </div>
       </div>
     `).join('');
@@ -385,6 +389,11 @@
   }
 
   // ===== واتساب للحسابات =====
+  window.newTransfer = function(id, name, phone) {
+    const params = new URLSearchParams({ id, name, phone });
+    window.location.href = 'transfer.html?' + params.toString();
+  };
+
   window.sendWAAccount = async function(phone, name, balance) {
     if (!phone || phone.trim() === '') {
       if (typeof showNotification === 'function') showNotification('لا يوجد رقم واتساب لهذا العميل', 'error');
