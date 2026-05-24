@@ -190,50 +190,50 @@
   <script src="script.js"></script>
 
     
+  
   <script type="module">
-  import { getStats, listenAccounts, listenTransfers } from "./firebase.js";
+  import { getStats, listenTransfers } from "./firebase.js";
 
-  async function loadStats() {
+  async function refreshStats() {
     try {
       const s = await getStats();
-      const numFmt = n => Number(n||0).toLocaleString('ar-SA');
-      const set = (sel, val) => { const el=document.querySelector(sel); if(el) el.textContent=val; };
+      const fmt = n => Number(n||0).toLocaleString('ar-SA');
 
-      // إجمالي الأرصدة
-      const balEls = document.querySelectorAll('[style*="font-size:28px"],[style*="font-size:30px"],[style*="font-size:32px"]');
-      if(balEls[0]) balEls[0].textContent = numFmt(s.totalBalance);
+      // الرصيد الكلي
+      const bigNums = document.querySelectorAll('[style*="font-size:28px"],[style*="font-size:30px"],[style*="font-size:32px"]');
+      if (bigNums[0]) bigNums[0].textContent = fmt(s.totalBalance);
 
-      // الإحصائيات
-      const statVals = document.querySelectorAll('.stat-card .stat-value');
-      if(statVals[0]) statVals[0].textContent = s.activeAccounts;
-      if(statVals[1]) statVals[1].textContent = s.lateAccounts;
-      if(statVals[2]) statVals[2].textContent = s.todayCompleted + s.todayPending;
-      if(statVals[3]) statVals[3].textContent = numFmt(s.todayProfit);
-    } catch(e) { console.error('Stats error:', e); }
+      // stat cards
+      const sv = document.querySelectorAll('.stat-card .stat-value');
+      if (sv[0]) sv[0].textContent = s.activeAccounts;
+      if (sv[1]) sv[1].textContent = s.lateAccounts;
+      if (sv[2]) sv[2].textContent = s.todayCompleted + s.todayPending;
+      if (sv[3]) sv[3].textContent = fmt(s.todayProfit);
+    } catch(e) { console.error('stats error', e); }
   }
 
-  loadStats();
+  refreshStats();
 
-  // حوالات اليوم للعرض الحي
+  // آخر الحوالات اليوم
   listenTransfers(transfers => {
+    refreshStats();
     const listEl = document.querySelector('.op-list');
-    if(!listEl) return;
+    if (!listEl) return;
     const today = new Date(); today.setHours(0,0,0,0);
-    const todayT = transfers.filter(t => t.createdAt?.toDate && t.createdAt.toDate() >= today).slice(0,5);
-    if(!todayT.length) return;
-
-    const statusBg = {completed:'#2e7d32', pending:'#f57c00', cancelled:'#c62828'};
-    const statusTxt = {completed:'مكتملة', pending:'معلقة', cancelled:'ملغاة'};
+    const todayT = transfers.filter(t => new Date(t.createdAt) >= today).slice(0,5);
+    if (!todayT.length) { listEl.innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد حوالات اليوم</p>'; return; }
+    const statusBg = { completed:'#2e7d32', pending:'#f57c00', cancelled:'#c62828' };
+    const statusTx = { completed:'مكتملة ✅', pending:'قيد التنفيذ ⏳', cancelled:'ملغاة ❌' };
     listEl.innerHTML = todayT.map(t => `
       <div class="op-item">
         <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000)">💸</div>
         <div class="op-info">
-          <div class="op-name">${t.senderName||'—'} → ${t.beneficiary||'—'}</div>
-          <div class="op-date">${t.createdAt?.toDate?t.createdAt.toDate().toLocaleTimeString('ar-SA'):''}</div>
+          <div class="op-name">${t.beneficiary||'—'}</div>
+          <div class="op-date">${new Date(t.createdAt).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}</div>
         </div>
         <div style="text-align:left">
           <div style="font-size:14px;font-weight:800;color:#8B0000">${Number(t.amount||0).toLocaleString('ar-SA')}</div>
-          <span style="background:${statusBg[t.status]||'#666'};color:#fff;padding:1px 7px;border-radius:8px;font-size:10px">${statusTxt[t.status]||t.status}</span>
+          <span style="background:${statusBg[t.status]||'#666'};color:#fff;padding:1px 7px;border-radius:7px;font-size:10px">${statusTx[t.status]||t.status}</span>
         </div>
       </div>
     `).join('');
