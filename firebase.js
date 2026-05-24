@@ -1,7 +1,6 @@
 // ===== نظام محمد سالم — يعمل بدون VPN وبدون إنترنت =====
 // CDN: esm.sh (ليس Google) + LocalStorage كاحتياطي كامل
 
-// ===== LocalStorage helpers (يعملون دائماً) =====
 function _lsGet(key)      { try { return JSON.parse(localStorage.getItem("ms_"+key)||"[]"); } catch { return []; } }
 function _lsSet(key, val) { localStorage.setItem("ms_"+key, JSON.stringify(val)); }
 function _uid()           { return Math.random().toString(36).slice(2)+Date.now().toString(36); }
@@ -9,39 +8,33 @@ function _uid()           { return Math.random().toString(36).slice(2)+Date.now(
 const _listeners = {};
 function _notify(col) { (_listeners[col]||[]).forEach(cb => cb(_lsGet(col))); }
 
-// ===== بيانات تجريبية حقيقية عند أول تشغيل =====
 function _seedLocalData() {
   if (localStorage.getItem("ms_seeded")) return;
   const now = Date.now(), h = 3600000, day = 86400000;
   _lsSet("accounts", [
-    { id:_uid(), name:"أحمد محمد الوادعي",     phone:"967712345678", balance:850000,  status:"active", notes:"عميل منتظم",    createdAt:now-10*day },
-    { id:_uid(), name:"خالد سالم العمري",       phone:"967798765432", balance:1200000, status:"active", notes:"VIP",           createdAt:now-8*day  },
-    { id:_uid(), name:"محمد علي الشمري",        phone:"967733445566", balance:320000,  status:"late",   notes:"متأخر 7 أيام", createdAt:now-15*day },
-    { id:_uid(), name:"عبد الرحمن الزبيدي",     phone:"967755667788", balance:2500000, status:"active", notes:"VIP كبير",      createdAt:now-5*day  },
-    { id:_uid(), name:"سالم القحطاني",          phone:"967722334455", balance:650000,  status:"late",   notes:"متأخر 5 أيام", createdAt:now-20*day },
-    { id:_uid(), name:"فهد ناصر المالكي",       phone:"967788990011", balance:480000,  status:"active", notes:"",             createdAt:now-3*day  },
+    { id:_uid(), name:"أحمد محمد الوادعي",     phone:"967712345678", balance:850000,  balanceSAR:0, status:"active", notes:"عميل منتظم",    createdAt:now-10*day },
+    { id:_uid(), name:"خالد سالم العمري",       phone:"967798765432", balance:1200000, balanceSAR:0, status:"active", notes:"VIP",           createdAt:now-8*day  },
+    { id:_uid(), name:"محمد علي الشمري",        phone:"967733445566", balance:320000,  balanceSAR:0, status:"late",   notes:"متأخر 7 أيام", createdAt:now-15*day },
+    { id:_uid(), name:"عبد الرحمن عقلان",       phone:"967755667788", balance:2500000, balanceSAR:0, status:"vip",   notes:"VIP كبير",      createdAt:now-5*day  },
+    { id:_uid(), name:"سالم القحطاني",          phone:"967722334455", balance:650000,  balanceSAR:0, status:"late",   notes:"متأخر 5 أيام", createdAt:now-20*day },
+    { id:_uid(), name:"فهد ناصر المالكي",       phone:"967788990011", balance:480000,  balanceSAR:0, status:"active", notes:"",             createdAt:now-3*day  },
   ]);
   _lsSet("transfers", [
-    { id:_uid(), beneficiary:"أحمد محمد الوادعي",  beneficiaryPhone:"967712345678", amount:150000, currency:"ر.ي", commission:7500,  total:157500, transferType:"تحويل عادي",  status:"completed", notes:"", createdAt:now-2*day   },
-    { id:_uid(), beneficiary:"خالد سالم العمري",    beneficiaryPhone:"967798765432", amount:500000, currency:"ر.ي", commission:25000, total:525000, transferType:"تحويل VIP",   status:"completed", notes:"", createdAt:now-day     },
-    { id:_uid(), beneficiary:"محمد علي الشمري",     beneficiaryPhone:"967733445566", amount:80000,  currency:"ر.ي", commission:4000,  total:84000,  transferType:"تحويل عادي",  status:"pending",   notes:"", createdAt:now-3*h     },
-    { id:_uid(), beneficiary:"عبد الرحمن الزبيدي",  beneficiaryPhone:"967755667788", amount:900000, currency:"ر.ي", commission:45000, total:945000, transferType:"تحويل عاجل", status:"completed", notes:"", createdAt:now-5*h     },
-    { id:_uid(), beneficiary:"سالم القحطاني",       beneficiaryPhone:"967722334455", amount:200000, currency:"ر.ي", commission:10000, total:210000, transferType:"تحويل عادي",  status:"pending",   notes:"", createdAt:now-30*60000},
-    { id:_uid(), beneficiary:"فهد ناصر المالكي",    beneficiaryPhone:"967788990011", amount:350000, currency:"ر.ي", commission:17500, total:367500, transferType:"تحويل عادي",  status:"cancelled", notes:"", createdAt:now-4*day   },
-    { id:_uid(), beneficiary:"أحمد محمد الوادعي",  beneficiaryPhone:"967712345678", amount:220000, currency:"ر.ي", commission:11000, total:231000, transferType:"تحويل عادي",  status:"pending",   notes:"", createdAt:now-10*60000},
+    { id:_uid(), transferCode:"حو-260524-A1B2", beneficiary:"أحمد محمد الوادعي", beneficiaryPhone:"967712345678", amount:150000, currency:"ر.ي", commission:7500, total:157500, transferType:"تحويل عادي", paymentMethod:"cash", status:"completed", notes:"", createdAt:now-2*day },
+    { id:_uid(), transferCode:"حو-260523-C3D4", beneficiary:"خالد سالم العمري",  beneficiaryPhone:"967798765432", amount:500000, currency:"ر.ي", commission:25000, total:525000, transferType:"تحويل VIP", paymentMethod:"balance", status:"completed", notes:"", createdAt:now-day },
+    { id:_uid(), transferCode:"حو-260524-E5F6", beneficiary:"محمد علي الشمري",   beneficiaryPhone:"967733445566", amount:80000, currency:"ر.ي", commission:4000, total:84000, transferType:"تحويل عادي", paymentMethod:"debt", status:"pending", notes:"", createdAt:now-3*h },
+    { id:_uid(), transferCode:"حو-260524-G7H8", beneficiary:"عبد الرحمن عقلان",  beneficiaryPhone:"967755667788", amount:900000, currency:"ر.ي", commission:45000, total:945000, transferType:"تحويل عاجل", paymentMethod:"cash", status:"completed", notes:"", createdAt:now-5*h },
+    { id:_uid(), transferCode:"حو-260524-I9J0", beneficiary:"سالم القحطاني",     beneficiaryPhone:"967722334455", amount:200000, currency:"ر.ي", commission:10000, total:210000, transferType:"تحويل عادي", paymentMethod:"debt", status:"pending", notes:"", createdAt:now-30*60000 },
   ]);
+  _lsSet("vouchers", []);
   _lsSet("wa_logs", []);
   localStorage.setItem("ms_seeded","1");
 }
-
-// تشغيل البيانات التجريبية فوراً
 _seedLocalData();
 
-// ===== حالة Firebase =====
 let _db = null, _useLocal = true;
 let _fsModule = null;
 
-// ===== تحميل Firebase من esm.sh (ليس Google) =====
 async function _initFirebase() {
   try {
     const [appMod, fsMod] = await Promise.all([
@@ -58,7 +51,6 @@ async function _initFirebase() {
       appId: "1:836341455693:web:402c70589e2190ef6cb504"
     });
     _db = fsMod.getFirestore(app);
-    // اختبار الاتصال
     await fsMod.getDoc(fsMod.doc(_db, "settings", "main"));
     _useLocal = false;
     console.log("✅ Firestore متصل");
@@ -69,17 +61,24 @@ async function _initFirebase() {
 }
 _initFirebase();
 
-// ===== Firestore helpers =====
 function _col(name)     { return _fsModule.collection(_db, name); }
 function _doc(name, id) { return _fsModule.doc(_db, name, id); }
 function _ts()          { return _fsModule.serverTimestamp(); }
 
-// ===== رقم الأدمن =====
+// ===== كود الحوالة التلقائي =====
+export function generateTransferCode() {
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const rand = Math.random().toString(36).slice(2,6).toUpperCase();
+  return `حو-${yy}${mm}${dd}-${rand}`;
+}
+
 export function getAdminWA() {
   return localStorage.getItem("s_waNumber") || "967733231636";
 }
 
-// ===== فتح واتساب =====
 export function openWA(phone, text) {
   const clean = String(phone||"").replace(/[^0-9]/g,"");
   if (!clean) return false;
@@ -89,26 +88,29 @@ export function openWA(phone, text) {
 }
 export function openAdminWA(text) { return openWA(getAdminWA(), text); }
 
-// ===== رسائل واتساب =====
 export function buildMsg(type, data={}) {
   const fmt = n => Number(n||0).toLocaleString('ar-SA');
   const name=data.name||data.beneficiary||'العميل', amount=fmt(data.amount),
         cur=data.currency||'ر.ي', comm=fmt(data.commission), bal=fmt(data.balance);
+  const code = data.transferCode ? `\n🔖 كود الحوالة: *${data.transferCode}*` : '';
+  const pm = data.paymentMethod==='balance'?'من الرصيد':data.paymentMethod==='debt'?'دين على العميل':'نقدي عند الإرسال';
+  const pmLine = data.paymentMethod ? `\n💳 طريقة الدفع: ${pm}` : '';
   const hd=`🏦 *نظام محمد سالم للحوالات*\n━━━━━━━━━━━━━━━━━━`,
         ft=`━━━━━━━━━━━━━━━━━━\n📞 للاستفسار تواصل معنا مباشرة`;
   const msgs={
-    transfer_new:       `${hd}\n\n📬 *تم إنشاء حوالة جديدة*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}\n📊 العمولة: ${comm} ${cur}\n🔖 النوع: ${data.transferType||'تحويل عادي'}\n⏳ الحالة: قيد التنفيذ\n\n${ft}`,
-    transfer_completed: `${hd}\n\n✅ *تم إتمام الحوالة بنجاح*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}\n🕐 وقت الإتمام: ${new Date().toLocaleString('ar-SA')}\n\nشكراً لثقتكم بنا 🙏\n\n${ft}`,
-    transfer_cancelled: `${hd}\n\n❌ *تم إلغاء الحوالة*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}\n\nللاستفسار تواصل معنا.\n\n${ft}`,
-    transfer_reminder:  `${hd}\n\n🔔 *تذكير بحوالة معلقة*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}\n\n${ft}`,
+    transfer_new:       `${hd}\n\n📬 *تم إنشاء حوالة جديدة*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}\n📊 العمولة: ${comm} ${cur}${pmLine}${code}\n🔖 النوع: ${data.transferType||'تحويل عادي'}\n⏳ الحالة: قيد التنفيذ\n\n${ft}`,
+    transfer_completed: `${hd}\n\n✅ *تم إتمام الحوالة بنجاح*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}${code}\n🕐 وقت الإتمام: ${new Date().toLocaleString('ar-SA')}\n\nشكراً لثقتكم بنا 🙏\n\n${ft}`,
+    transfer_cancelled: `${hd}\n\n❌ *تم إلغاء الحوالة*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}${code}\n\nللاستفسار تواصل معنا.\n\n${ft}`,
+    transfer_reminder:  `${hd}\n\n🔔 *تذكير بحوالة معلقة*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}${code}\n\n${ft}`,
     account_welcome:    `${hd}\n\n👋 *أهلاً وسهلاً ${name}*\n\nتم تسجيلك في نظام محمد سالم.\n💰 الرصيد: ${bal} ${cur}\n\n${ft}`,
-    account_statement:  `${hd}\n\n📊 *كشف حسابك*\n\n👤 ${name}\n💰 الرصيد: ${bal} ${cur}\n📅 ${new Date().toLocaleDateString('ar-SA')}\n\n${ft}`,
+    account_statement:  `${hd}\n\n📊 *كشف حسابك*\n\n👤 ${name}\n💰 الرصيد (ر.ي): ${bal}\n📅 ${new Date().toLocaleDateString('ar-SA')}\n\n${ft}`,
     late_alert:         `${hd}\n\n⚠️ *تنبيه: رصيد متأخر*\n\n${name}، لديك رصيد متأخر:\n💰 ${bal} ${cur}\n\nيرجى التواصل لترتيب السداد.\n\n${ft}`,
+    voucher_receipt:    `${hd}\n\n🧾 *سند قبض*\n\n👤 الاسم: ${name}\n💰 المبلغ المستلم: ${amount} ${cur}\n📝 السبب: ${data.reason||'—'}\n📅 التاريخ: ${new Date().toLocaleDateString('ar-SA')}\n\nتم التوثيق في النظام ✓\n\n${ft}`,
+    voucher_payment:    `${hd}\n\n🧾 *سند صرف*\n\n👤 الاسم: ${name}\n💰 المبلغ المصروف: ${amount} ${cur}\n📝 السبب: ${data.reason||'—'}\n📅 التاريخ: ${new Date().toLocaleDateString('ar-SA')}\n\nتم التوثيق في النظام ✓\n\n${ft}`,
   };
   return msgs[type]||`${hd}\n\n📋 عملية جديدة في حسابك\n\n${ft}`;
 }
 
-// ===== إشعار العميل + نسخة أدمن =====
 export async function notifyClient(clientPhone, type, data={}) {
   const msg=buildMsg(type,data), sent=clientPhone?openWA(clientPhone,msg):false;
   const adm=getAdminWA(), cc=String(clientPhone||"").replace(/[^0-9]/g,""), ac=String(adm).replace(/[^0-9]/g,"");
@@ -117,7 +119,6 @@ export async function notifyClient(clientPhone, type, data={}) {
   return sent;
 }
 
-// ===== الإعدادات =====
 export async function saveSettings(data) {
   Object.keys(data).forEach(k=>localStorage.setItem("s_"+k, data[k]));
   if(!_useLocal && _db) {
@@ -133,9 +134,18 @@ export async function loadSettings() {
 
 // ===== الحوالات =====
 export async function addTransfer(data) {
-  const entry={id:_uid(),...data,status:data.status||"pending",createdAt:Date.now()};
+  const code = data.transferCode || generateTransferCode();
+  const entry={id:_uid(),...data,transferCode:code,status:data.status||"pending",createdAt:Date.now()};
   if(!_useLocal && _db) {
-    try { return await _fsModule.addDoc(_col("transfers"),{...data,status:data.status||"pending",createdAt:_ts()}); } catch { _useLocal=true; }
+    try { return await _fsModule.addDoc(_col("transfers"),{...data,transferCode:code,status:data.status||"pending",createdAt:_ts()}); } catch { _useLocal=true; }
+  }
+  // تحديث الرصيد إذا كانت طريقة الدفع من الرصيد
+  if (data.paymentMethod === 'balance' && data.beneficiaryId) {
+    const accounts = _lsGet("accounts");
+    _lsSet("accounts", accounts.map(a => a.id === data.beneficiaryId
+      ? {...a, balance: Math.max(0,(Number(a.balance)||0) - (Number(data.total)||0))}
+      : a));
+    _notify("accounts");
   }
   const list=_lsGet("transfers"); list.unshift(entry); _lsSet("transfers",list); _notify("transfers");
   return entry;
@@ -184,11 +194,16 @@ export async function deleteTransfer(id) {
   _notify("transfers");
 }
 
+export async function findTransferByCode(code) {
+  const all = await getTransfers(1000);
+  return all.find(t => t.transferCode === code) || null;
+}
+
 // ===== الحسابات =====
 export async function addAccount(data) {
-  const entry={id:_uid(),...data,balance:Number(data.balance)||0,status:data.status||"active",createdAt:Date.now()};
+  const entry={id:_uid(),...data,balance:Number(data.balance)||0,balanceSAR:Number(data.balanceSAR)||0,status:data.status||"active",createdAt:Date.now()};
   if(!_useLocal && _db) {
-    try { return await _fsModule.addDoc(_col("accounts"),{...data,balance:Number(data.balance)||0,status:data.status||"active",createdAt:_ts()}); } catch { _useLocal=true; }
+    try { return await _fsModule.addDoc(_col("accounts"),{...data,balance:Number(data.balance)||0,balanceSAR:Number(data.balanceSAR)||0,status:data.status||"active",createdAt:_ts()}); } catch { _useLocal=true; }
   }
   const list=_lsGet("accounts"); list.unshift(entry); _lsSet("accounts",list); _notify("accounts");
   return entry;
@@ -237,6 +252,88 @@ export async function deleteAccount(id) {
   _notify("accounts");
 }
 
+// ===== سندات القبض والصرف =====
+export async function addVoucher(data) {
+  // type: 'receipt' (قبض) أو 'payment' (صرف)
+  // currency: 'YER' أو 'SAR'
+  const entry={id:_uid(),...data,createdAt:Date.now()};
+  if(!_useLocal && _db) {
+    try { return await _fsModule.addDoc(_col("vouchers"),{...data,createdAt:_ts()}); } catch { _useLocal=true; }
+  }
+  const list=_lsGet("vouchers"); list.unshift(entry); _lsSet("vouchers",list); _notify("vouchers");
+  // تحديث رصيد الحساب تلقائياً
+  if (data.accountId) {
+    const accounts = _lsGet("accounts");
+    _lsSet("accounts", accounts.map(a => {
+      if (a.id !== data.accountId) return a;
+      if (data.currency === 'SAR') {
+        const newSAR = data.type === 'receipt'
+          ? (Number(a.balanceSAR)||0) + (Number(data.amount)||0)
+          : (Number(a.balanceSAR)||0) - (Number(data.amount)||0);
+        return {...a, balanceSAR: newSAR};
+      } else {
+        const newBal = data.type === 'receipt'
+          ? (Number(a.balance)||0) + (Number(data.amount)||0)
+          : (Number(a.balance)||0) - (Number(data.amount)||0);
+        return {...a, balance: newBal};
+      }
+    }));
+    _notify("accounts");
+  }
+  return entry;
+}
+
+export async function getVouchers(accountId) {
+  if(!_useLocal && _db) {
+    try {
+      let q = _fsModule.query(_col("vouchers"),_fsModule.orderBy("createdAt","desc"),_fsModule.limit(200));
+      if (accountId) q = _fsModule.query(_col("vouchers"),_fsModule.where("accountId","==",accountId),_fsModule.orderBy("createdAt","desc"));
+      const s = await _fsModule.getDocs(q);
+      return s.docs.map(d=>({id:d.id,...d.data()}));
+    } catch { _useLocal=true; }
+  }
+  const all = _lsGet("vouchers");
+  return accountId ? all.filter(v=>v.accountId===accountId) : all;
+}
+
+export function listenVouchers(cb) {
+  if(!_useLocal && _db) {
+    try {
+      const q=_fsModule.query(_col("vouchers"),_fsModule.orderBy("createdAt","desc"),_fsModule.limit(100));
+      return _fsModule.onSnapshot(q, s=>cb(s.docs.map(d=>({id:d.id,...d.data()}))), ()=>{
+        _useLocal=true;
+        _listeners["vouchers"]=_listeners["vouchers"]||[];
+        _listeners["vouchers"].push(cb); cb(_lsGet("vouchers"));
+      });
+    } catch { _useLocal=true; }
+  }
+  _listeners["vouchers"]=_listeners["vouchers"]||[];
+  _listeners["vouchers"].push(cb);
+  setTimeout(()=>cb(_lsGet("vouchers")),50);
+  return ()=>{ _listeners["vouchers"]=(_listeners["vouchers"]||[]).filter(f=>f!==cb); };
+}
+
+export async function getAccountStatement(accountId) {
+  const [transfers, vouchers] = await Promise.all([getTransfers(1000), getVouchers(accountId)]);
+  const accTransfers = transfers.filter(t => t.beneficiaryId === accountId);
+  return [...accTransfers.map(t=>({...t,entryType:'transfer'})),
+          ...vouchers.map(v=>({...v,entryType:'voucher'}))]
+    .sort((a,b)=>{
+      const ta=a.createdAt?.toDate?a.createdAt.toDate().getTime():(typeof a.createdAt==='number'?a.createdAt:0);
+      const tb=b.createdAt?.toDate?b.createdAt.toDate().getTime():(typeof b.createdAt==='number'?b.createdAt:0);
+      return tb-ta;
+    });
+}
+
+// ===== تحويل العملة =====
+export function convertCurrency(amount, from, to, rates) {
+  // rates: { YER_SAR: 0.014, SAR_YER: 70 } (تقريبي)
+  const r = rates || { YER_SAR: 0.014, SAR_YER: 70 };
+  if (from === 'YER' && to === 'SAR') return Math.round(amount * r.YER_SAR * 100) / 100;
+  if (from === 'SAR' && to === 'YER') return Math.round(amount * r.SAR_YER);
+  return amount;
+}
+
 // ===== سجل الواتساب =====
 export async function logWA(data) {
   const entry={id:_uid(),...data,sentAt:Date.now()};
@@ -274,6 +371,7 @@ export async function getStats() {
   });
   return {
     totalBalance:   accounts.reduce((s,a)=>s+(Number(a.balance)||0),0),
+    totalBalanceSAR:accounts.reduce((s,a)=>s+(Number(a.balanceSAR)||0),0),
     todayCompleted: todayT.filter(t=>t.status==="completed").length,
     todayPending:   todayT.filter(t=>t.status==="pending").length,
     todayProfit:    todayT.reduce((s,t)=>s+(Number(t.commission)||0),0),
