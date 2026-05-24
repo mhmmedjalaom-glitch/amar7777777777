@@ -138,5 +138,62 @@
   </nav>
 
   <script src="../script.js"></script>
-</body>
+
+  <script type="module">
+  import { listenAccounts, logWA } from "../firebase.js";
+
+  const WA = '967733231636';
+  function openWA(phone, text) {
+    const clean = String(phone||WA).replace(/[^0-9]/g,'');
+    const num = clean.startsWith('00')?clean.slice(2):clean.startsWith('0')?'967'+clean.slice(1):clean||WA;
+    window.open('https://wa.me/'+num+'?text='+encodeURIComponent(text),'_blank');
+  }
+
+  listenAccounts(accounts => {
+    const vip = accounts.filter(a => a.status === 'vip' || a.status === 'VIP');
+    const late = vip.filter(a => Number(a.balance) > 0);
+    const totalBal = vip.reduce((s,a) => s + (Number(a.balance)||0), 0);
+
+    // Stats
+    const statVals = document.querySelectorAll('.stat-card .stat-value, [style*="font-size:20px"]');
+    const totalEl = document.querySelector('[style*="font-size:30px"]');
+    if(totalEl) totalEl.textContent = totalBal.toLocaleString('ar-SA');
+    statVals.forEach((el,i) => {
+      if(i===0) el.textContent = vip.length;
+      if(i===1) el.textContent = late.length;
+    });
+
+    // قائمة VIP
+    const listEl = document.querySelector('.op-list, .vip-list');
+    if(!listEl) return;
+    if(!vip.length) {
+      listEl.innerHTML = '<p style="text-align:center;color:#999;padding:30px;font-family:Tajawal">لا يوجد عملاء VIP بعد. أضفهم من صفحة الحسابات.</p>';
+      return;
+    }
+    listEl.innerHTML = vip.map(a => `
+      <div class="op-item">
+        <div class="op-avatar" style="background:linear-gradient(135deg,#D4AF37,#c9a227);cursor:pointer" onclick="sendVIPMsg('${a.phone||WA}','${a.name||''}')">
+          ${(a.name||'VIP').substring(0,2)}
+        </div>
+        <div class="op-info">
+          <div class="op-name">${a.name||'—'} <span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:1px 7px;border-radius:8px;font-size:10px">👑 VIP</span></div>
+          <div class="op-date">${a.phone||'لا يوجد رقم'}</div>
+        </div>
+        <div style="text-align:left">
+          <div style="font-size:16px;font-weight:800;color:#8B0000">${Number(a.balance||0).toLocaleString('ar-SA')}</div>
+          <div style="font-size:11px;color:#999">ر.ي</div>
+        </div>
+      </div>
+    `).join('');
+  });
+
+  window.sendVIPMsg = async function(phone, name) {
+    const msg = `السلام عليكم ${name}، نظام محمد سالم للحوالات يرحب بك كعميل VIP. لأي استفسار نحن في خدمتك.`;
+    const clean = String(phone||WA).replace(/[^0-9]/g,'');
+    const num = clean.startsWith('00')?clean.slice(2):clean.startsWith('0')?'967'+clean.slice(1):clean||WA;
+    window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');
+    await logWA({ type:'vip_message', accountName:name, phone, message:msg });
+  };
+  </script>
+  </body>
 </html>
