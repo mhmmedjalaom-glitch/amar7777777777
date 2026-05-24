@@ -1,76 +1,78 @@
-// ===== نظام محمد سالم — Firestore + LocalStorage Fallback =====
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs, onSnapshot,
-  query, orderBy, limit, serverTimestamp, doc, updateDoc,
-  deleteDoc, setDoc, getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// ===== نظام محمد سالم — يعمل بدون VPN وبدون إنترنت =====
+// CDN: esm.sh (ليس Google) + LocalStorage كاحتياطي كامل
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBBLJxtTdr6TiNQJigDNIudkr38DukAZXE",
-  authDomain: "amar77477-d30fd.firebaseapp.com",
-  projectId: "amar77477-d30fd",
-  storageBucket: "amar77477-d30fd.firebasestorage.app",
-  messagingSenderId: "836341455693",
-  appId: "1:836341455693:web:402c70589e2190ef6cb504"
-};
-
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-
-// ===== وضع العمل: Firestore أو LocalStorage =====
-let _useLocal = false;
-
-(async () => {
-  try {
-    await getDoc(doc(db, "settings", "main"));
-    _useLocal = false;
-  } catch {
-    _useLocal = true;
-    _seedLocalData();
-  }
-})();
-
-// ===== LocalStorage helpers =====
+// ===== LocalStorage helpers (يعملون دائماً) =====
 function _lsGet(key)      { try { return JSON.parse(localStorage.getItem("ms_"+key)||"[]"); } catch { return []; } }
 function _lsSet(key, val) { localStorage.setItem("ms_"+key, JSON.stringify(val)); }
 function _uid()           { return Math.random().toString(36).slice(2)+Date.now().toString(36); }
 
-// ===== Listeners =====
 const _listeners = {};
-function _notify(col) {
-  (_listeners[col]||[]).forEach(cb => cb(_lsGet(col)));
-}
+function _notify(col) { (_listeners[col]||[]).forEach(cb => cb(_lsGet(col))); }
 
-// ===== بيانات تجريبية حقيقية =====
+// ===== بيانات تجريبية حقيقية عند أول تشغيل =====
 function _seedLocalData() {
   if (localStorage.getItem("ms_seeded")) return;
-  const now = Date.now(), day = 86400000;
-
-  const accounts = [
+  const now = Date.now(), h = 3600000, day = 86400000;
+  _lsSet("accounts", [
     { id:_uid(), name:"أحمد محمد الوادعي",     phone:"967712345678", balance:850000,  status:"active", notes:"عميل منتظم",    createdAt:now-10*day },
     { id:_uid(), name:"خالد سالم العمري",       phone:"967798765432", balance:1200000, status:"active", notes:"VIP",           createdAt:now-8*day  },
     { id:_uid(), name:"محمد علي الشمري",        phone:"967733445566", balance:320000,  status:"late",   notes:"متأخر 7 أيام", createdAt:now-15*day },
     { id:_uid(), name:"عبد الرحمن الزبيدي",     phone:"967755667788", balance:2500000, status:"active", notes:"VIP كبير",      createdAt:now-5*day  },
     { id:_uid(), name:"سالم القحطاني",          phone:"967722334455", balance:650000,  status:"late",   notes:"متأخر 5 أيام", createdAt:now-20*day },
     { id:_uid(), name:"فهد ناصر المالكي",       phone:"967788990011", balance:480000,  status:"active", notes:"",             createdAt:now-3*day  },
-  ];
-
-  const transfers = [
+  ]);
+  _lsSet("transfers", [
     { id:_uid(), beneficiary:"أحمد محمد الوادعي",  beneficiaryPhone:"967712345678", amount:150000, currency:"ر.ي", commission:7500,  total:157500, transferType:"تحويل عادي",  status:"completed", notes:"", createdAt:now-2*day   },
-    { id:_uid(), beneficiary:"خالد سالم العمري",    beneficiaryPhone:"967798765432", amount:500000, currency:"ر.ي", commission:25000, total:525000, transferType:"تحويل VIP",   status:"completed", notes:"", createdAt:now-1*day   },
-    { id:_uid(), beneficiary:"محمد علي الشمري",     beneficiaryPhone:"967733445566", amount:80000,  currency:"ر.ي", commission:4000,  total:84000,  transferType:"تحويل عادي",  status:"pending",   notes:"", createdAt:now-3*3600000 },
-    { id:_uid(), beneficiary:"عبد الرحمن الزبيدي",  beneficiaryPhone:"967755667788", amount:900000, currency:"ر.ي", commission:45000, total:945000, transferType:"تحويل عاجل", status:"completed", notes:"", createdAt:now-5*3600000 },
-    { id:_uid(), beneficiary:"سالم القحطاني",       beneficiaryPhone:"967722334455", amount:200000, currency:"ر.ي", commission:10000, total:210000, transferType:"تحويل عادي",  status:"pending",   notes:"", createdAt:now-30*60000 },
+    { id:_uid(), beneficiary:"خالد سالم العمري",    beneficiaryPhone:"967798765432", amount:500000, currency:"ر.ي", commission:25000, total:525000, transferType:"تحويل VIP",   status:"completed", notes:"", createdAt:now-day     },
+    { id:_uid(), beneficiary:"محمد علي الشمري",     beneficiaryPhone:"967733445566", amount:80000,  currency:"ر.ي", commission:4000,  total:84000,  transferType:"تحويل عادي",  status:"pending",   notes:"", createdAt:now-3*h     },
+    { id:_uid(), beneficiary:"عبد الرحمن الزبيدي",  beneficiaryPhone:"967755667788", amount:900000, currency:"ر.ي", commission:45000, total:945000, transferType:"تحويل عاجل", status:"completed", notes:"", createdAt:now-5*h     },
+    { id:_uid(), beneficiary:"سالم القحطاني",       beneficiaryPhone:"967722334455", amount:200000, currency:"ر.ي", commission:10000, total:210000, transferType:"تحويل عادي",  status:"pending",   notes:"", createdAt:now-30*60000},
     { id:_uid(), beneficiary:"فهد ناصر المالكي",    beneficiaryPhone:"967788990011", amount:350000, currency:"ر.ي", commission:17500, total:367500, transferType:"تحويل عادي",  status:"cancelled", notes:"", createdAt:now-4*day   },
-    { id:_uid(), beneficiary:"أحمد محمد الوادعي",  beneficiaryPhone:"967712345678", amount:220000, currency:"ر.ي", commission:11000, total:231000, transferType:"تحويل عادي",  status:"pending",   notes:"", createdAt:now-10*60000 },
-  ];
-
-  _lsSet("accounts",  accounts);
-  _lsSet("transfers", transfers);
-  _lsSet("wa_logs",   []);
-  localStorage.setItem("ms_seeded", "1");
+    { id:_uid(), beneficiary:"أحمد محمد الوادعي",  beneficiaryPhone:"967712345678", amount:220000, currency:"ر.ي", commission:11000, total:231000, transferType:"تحويل عادي",  status:"pending",   notes:"", createdAt:now-10*60000},
+  ]);
+  _lsSet("wa_logs", []);
+  localStorage.setItem("ms_seeded","1");
 }
+
+// تشغيل البيانات التجريبية فوراً
+_seedLocalData();
+
+// ===== حالة Firebase =====
+let _db = null, _useLocal = true;
+let _fsModule = null;
+
+// ===== تحميل Firebase من esm.sh (ليس Google) =====
+async function _initFirebase() {
+  try {
+    const [appMod, fsMod] = await Promise.all([
+      import("https://esm.sh/firebase@10.12.2/app"),
+      import("https://esm.sh/firebase@10.12.2/firestore")
+    ]);
+    _fsModule = fsMod;
+    const app = appMod.initializeApp({
+      apiKey: "AIzaSyBBLJxtTdr6TiNQJigDNIudkr38DukAZXE",
+      authDomain: "amar77477-d30fd.firebaseapp.com",
+      projectId: "amar77477-d30fd",
+      storageBucket: "amar77477-d30fd.firebasestorage.app",
+      messagingSenderId: "836341455693",
+      appId: "1:836341455693:web:402c70589e2190ef6cb504"
+    });
+    _db = fsMod.getFirestore(app);
+    // اختبار الاتصال
+    await fsMod.getDoc(fsMod.doc(_db, "settings", "main"));
+    _useLocal = false;
+    console.log("✅ Firestore متصل");
+  } catch {
+    _useLocal = true;
+    console.log("📱 وضع LocalStorage — يعمل بدون إنترنت");
+  }
+}
+_initFirebase();
+
+// ===== Firestore helpers =====
+function _col(name)     { return _fsModule.collection(_db, name); }
+function _doc(name, id) { return _fsModule.doc(_db, name, id); }
+function _ts()          { return _fsModule.serverTimestamp(); }
 
 // ===== رقم الأدمن =====
 export function getAdminWA() {
@@ -81,7 +83,7 @@ export function getAdminWA() {
 export function openWA(phone, text) {
   const clean = String(phone||"").replace(/[^0-9]/g,"");
   if (!clean) return false;
-  const num = clean.startsWith("00") ? clean.slice(2) : clean.startsWith("0") ? "967"+clean.slice(1) : clean;
+  const num = clean.startsWith("00")?clean.slice(2):clean.startsWith("0")?"967"+clean.slice(1):clean;
   window.open("https://wa.me/"+num+"?text="+encodeURIComponent(text),"_blank");
   return true;
 }
@@ -110,53 +112,55 @@ export function buildMsg(type, data={}) {
 export async function notifyClient(clientPhone, type, data={}) {
   const msg=buildMsg(type,data), sent=clientPhone?openWA(clientPhone,msg):false;
   const adm=getAdminWA(), cc=String(clientPhone||"").replace(/[^0-9]/g,""), ac=String(adm).replace(/[^0-9]/g,"");
-  if (cc!==ac) setTimeout(()=>openWA(adm,`📋 *نسخة — ${data.name||data.beneficiary||'عميل'}*\n${msg}`),1200);
-  await logWA({type,accountName:data.name||data.beneficiary||'',phone:clientPhone||adm,message:msg});
+  if(cc!==ac) setTimeout(()=>openWA(adm,`📋 *نسخة — ${data.name||data.beneficiary||'عميل'}*\n${msg}`),1200);
+  await logWA({type, accountName:data.name||data.beneficiary||'', phone:clientPhone||adm, message:msg});
   return sent;
 }
 
 // ===== الإعدادات =====
 export async function saveSettings(data) {
   Object.keys(data).forEach(k=>localStorage.setItem("s_"+k, data[k]));
-  if (!_useLocal) { try { await setDoc(doc(db,"settings","main"),data,{merge:true}); } catch {} }
+  if(!_useLocal && _db) {
+    try { await _fsModule.setDoc(_doc("settings","main"), data, {merge:true}); } catch {}
+  }
 }
 export async function loadSettings() {
-  if (!_useLocal) { try { const d=await getDoc(doc(db,"settings","main")); if(d.exists()) return d.data(); } catch {} }
+  if(!_useLocal && _db) {
+    try { const d=await _fsModule.getDoc(_doc("settings","main")); if(d.exists()) return d.data(); } catch {}
+  }
   return {};
 }
 
 // ===== الحوالات =====
 export async function addTransfer(data) {
   const entry={id:_uid(),...data,status:data.status||"pending",createdAt:Date.now()};
-  if (!_useLocal) {
-    try {
-      return await addDoc(collection(db,"transfers"),{...data,status:data.status||"pending",createdAt:serverTimestamp()});
-    } catch { _useLocal=true; }
+  if(!_useLocal && _db) {
+    try { return await _fsModule.addDoc(_col("transfers"),{...data,status:data.status||"pending",createdAt:_ts()}); } catch { _useLocal=true; }
   }
   const list=_lsGet("transfers"); list.unshift(entry); _lsSet("transfers",list); _notify("transfers");
   return entry;
 }
 
 export async function getTransfers(n=500) {
-  if (!_useLocal) {
+  if(!_useLocal && _db) {
     try {
-      const s=await getDocs(query(collection(db,"transfers"),orderBy("createdAt","desc"),limit(n)));
+      const s=await _fsModule.getDocs(_fsModule.query(_col("transfers"),_fsModule.orderBy("createdAt","desc"),_fsModule.limit(n)));
       return s.docs.map(d=>({id:d.id,...d.data()}));
-    } catch { _useLocal=true; _seedLocalData(); }
+    } catch { _useLocal=true; }
   }
   return _lsGet("transfers").slice(0,n);
 }
 
 export function listenTransfers(cb) {
-  if (!_useLocal) {
+  if(!_useLocal && _db) {
     try {
-      const q=query(collection(db,"transfers"),orderBy("createdAt","desc"),limit(200));
-      return onSnapshot(q, s=>cb(s.docs.map(d=>({id:d.id,...d.data()}))), ()=>{
-        _useLocal=true; _seedLocalData();
+      const q=_fsModule.query(_col("transfers"),_fsModule.orderBy("createdAt","desc"),_fsModule.limit(200));
+      return _fsModule.onSnapshot(q, s=>cb(s.docs.map(d=>({id:d.id,...d.data()}))), ()=>{
+        _useLocal=true;
         _listeners["transfers"]=_listeners["transfers"]||[];
         _listeners["transfers"].push(cb); cb(_lsGet("transfers"));
       });
-    } catch { _useLocal=true; _seedLocalData(); }
+    } catch { _useLocal=true; }
   }
   _listeners["transfers"]=_listeners["transfers"]||[];
   _listeners["transfers"].push(cb);
@@ -165,16 +169,16 @@ export function listenTransfers(cb) {
 }
 
 export async function updateTransferStatus(id, status) {
-  if (!_useLocal) {
-    try { await updateDoc(doc(db,"transfers",id),{status,updatedAt:serverTimestamp()}); return; } catch { _useLocal=true; }
+  if(!_useLocal && _db) {
+    try { await _fsModule.updateDoc(_doc("transfers",id),{status,updatedAt:_ts()}); return; } catch { _useLocal=true; }
   }
   _lsSet("transfers",_lsGet("transfers").map(t=>t.id===id?{...t,status,updatedAt:Date.now()}:t));
   _notify("transfers");
 }
 
 export async function deleteTransfer(id) {
-  if (!_useLocal) {
-    try { await deleteDoc(doc(db,"transfers",id)); return; } catch { _useLocal=true; }
+  if(!_useLocal && _db) {
+    try { await _fsModule.deleteDoc(_doc("transfers",id)); return; } catch { _useLocal=true; }
   }
   _lsSet("transfers",_lsGet("transfers").filter(t=>t.id!==id));
   _notify("transfers");
@@ -183,35 +187,33 @@ export async function deleteTransfer(id) {
 // ===== الحسابات =====
 export async function addAccount(data) {
   const entry={id:_uid(),...data,balance:Number(data.balance)||0,status:data.status||"active",createdAt:Date.now()};
-  if (!_useLocal) {
-    try {
-      return await addDoc(collection(db,"accounts"),{...data,balance:Number(data.balance)||0,status:data.status||"active",createdAt:serverTimestamp()});
-    } catch { _useLocal=true; }
+  if(!_useLocal && _db) {
+    try { return await _fsModule.addDoc(_col("accounts"),{...data,balance:Number(data.balance)||0,status:data.status||"active",createdAt:_ts()}); } catch { _useLocal=true; }
   }
   const list=_lsGet("accounts"); list.unshift(entry); _lsSet("accounts",list); _notify("accounts");
   return entry;
 }
 
 export async function getAccounts() {
-  if (!_useLocal) {
+  if(!_useLocal && _db) {
     try {
-      const s=await getDocs(query(collection(db,"accounts"),orderBy("createdAt","desc")));
+      const s=await _fsModule.getDocs(_fsModule.query(_col("accounts"),_fsModule.orderBy("createdAt","desc")));
       return s.docs.map(d=>({id:d.id,...d.data()}));
-    } catch { _useLocal=true; _seedLocalData(); }
+    } catch { _useLocal=true; }
   }
   return _lsGet("accounts");
 }
 
 export function listenAccounts(cb) {
-  if (!_useLocal) {
+  if(!_useLocal && _db) {
     try {
-      const q=query(collection(db,"accounts"),orderBy("createdAt","desc"));
-      return onSnapshot(q, s=>cb(s.docs.map(d=>({id:d.id,...d.data()}))), ()=>{
-        _useLocal=true; _seedLocalData();
+      const q=_fsModule.query(_col("accounts"),_fsModule.orderBy("createdAt","desc"));
+      return _fsModule.onSnapshot(q, s=>cb(s.docs.map(d=>({id:d.id,...d.data()}))), ()=>{
+        _useLocal=true;
         _listeners["accounts"]=_listeners["accounts"]||[];
         _listeners["accounts"].push(cb); cb(_lsGet("accounts"));
       });
-    } catch { _useLocal=true; _seedLocalData(); }
+    } catch { _useLocal=true; }
   }
   _listeners["accounts"]=_listeners["accounts"]||[];
   _listeners["accounts"].push(cb);
@@ -220,16 +222,16 @@ export function listenAccounts(cb) {
 }
 
 export async function updateAccount(id, data) {
-  if (!_useLocal) {
-    try { await updateDoc(doc(db,"accounts",id),{...data,updatedAt:serverTimestamp()}); return; } catch { _useLocal=true; }
+  if(!_useLocal && _db) {
+    try { await _fsModule.updateDoc(_doc("accounts",id),{...data,updatedAt:_ts()}); return; } catch { _useLocal=true; }
   }
   _lsSet("accounts",_lsGet("accounts").map(a=>a.id===id?{...a,...data,updatedAt:Date.now()}:a));
   _notify("accounts");
 }
 
 export async function deleteAccount(id) {
-  if (!_useLocal) {
-    try { await deleteDoc(doc(db,"accounts",id)); return; } catch { _useLocal=true; }
+  if(!_useLocal && _db) {
+    try { await _fsModule.deleteDoc(_doc("accounts",id)); return; } catch { _useLocal=true; }
   }
   _lsSet("accounts",_lsGet("accounts").filter(a=>a.id!==id));
   _notify("accounts");
@@ -238,15 +240,17 @@ export async function deleteAccount(id) {
 // ===== سجل الواتساب =====
 export async function logWA(data) {
   const entry={id:_uid(),...data,sentAt:Date.now()};
-  if (!_useLocal) { try { await addDoc(collection(db,"wa_logs"),{...data,sentAt:serverTimestamp()}); return; } catch { _useLocal=true; } }
+  if(!_useLocal && _db) {
+    try { await _fsModule.addDoc(_col("wa_logs"),{...data,sentAt:_ts()}); return; } catch { _useLocal=true; }
+  }
   const list=_lsGet("wa_logs"); list.unshift(entry); _lsSet("wa_logs",list.slice(0,100)); _notify("wa_logs");
 }
 
 export function listenWALogs(cb) {
-  if (!_useLocal) {
+  if(!_useLocal && _db) {
     try {
-      const q=query(collection(db,"wa_logs"),orderBy("sentAt","desc"),limit(50));
-      return onSnapshot(q, s=>cb(s.docs.map(d=>({id:d.id,...d.data()}))), ()=>{
+      const q=_fsModule.query(_col("wa_logs"),_fsModule.orderBy("sentAt","desc"),_fsModule.limit(50));
+      return _fsModule.onSnapshot(q, s=>cb(s.docs.map(d=>({id:d.id,...d.data()}))), ()=>{
         _useLocal=true;
         _listeners["wa_logs"]=_listeners["wa_logs"]||[];
         _listeners["wa_logs"].push(cb); cb(_lsGet("wa_logs"));
@@ -281,4 +285,4 @@ export async function getStats() {
   };
 }
 
-export { db };
+export { _db as db };
