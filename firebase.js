@@ -11,7 +11,8 @@
     projectId: "amar77477-d30fd",
     storageBucket: "amar77477-d30fd.firebasestorage.app",
     messagingSenderId: "836341455693",
-    appId: "1:836341455693:web:9f6cf6819dcc26ac6cb504"
+    appId: "1:836341455693:web:402c70589e2190ef6cb504",
+    measurementId: "G-EK2L45NWJP"
   };
 
   const app = initializeApp(firebaseConfig);
