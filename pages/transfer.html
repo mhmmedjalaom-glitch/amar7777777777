@@ -1,153 +1,375 @@
-<script type="module">
-      import { getAccounts, addTransfer, logWA, openWA } from "../firebase.js";
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>إنشاء حوالة - نظام محمد سالم</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .account-option {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .account-option:hover {
+      background: #f5f5f5;
+    }
+    .acc-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #8B0000, #660000);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+    .acc-name {
+      font-weight: 700;
+      color: #333;
+    }
+    .acc-phone {
+      font-size: 12px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
 
-      let accounts = [];
+  <div class="sub-header">
+    <div class="sub-header-top">
+      <div class="back-btn">➡️</div>
+      <span class="sub-header-title">💸 إنشاء حوالة جديدة</span>
+      <div style="width:38px"></div>
+    </div>
+    <div class="sub-header-subtitle">حوالة آمنة وسريعة للعملاء</div>
+  </div>
 
-      async function loadAccounts() {
-        try {
-          accounts = await getAccounts();
-          const params = new URLSearchParams(window.location.search);
-          const pid    = params.get('id');
-          const pname  = params.get('name');
-          const pphone = params.get('phone');
-          if (pname) {
-            const found = accounts.find(a => a.id === pid) || { id:pid||'', name:pname, phone:pphone||'', status:'active' };
-            selectAccount({ id:found.id, name:found.name, phone:found.phone||'', status:found.status||'active' });
-          }
-        } catch(e) { console.error('Failed to load accounts:', e); }
-      }
-      loadAccounts();
+  <div class="page-content">
 
-      // ===== بحث واختيار الحساب =====
-      const searchInput = document.getElementById('beneficiarySearch');
-      const dropdown    = document.getElementById('accountDropdown');
-      const selectedBox = document.getElementById('selectedAccount');
+    <form id="transferForm" style="margin-bottom:20px">
 
-      function statusLabel(s) {
-        if (s==='vip')  return '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:1px 8px;border-radius:7px;font-size:11px">👑 VIP</span>';
-        if (s==='late') return '<span style="background:#c62828;color:#fff;padding:1px 8px;border-radius:7px;font-size:11px">⚠️ متأخر</span>';
-        return '<span style="background:#2e7d32;color:#fff;padding:1px 8px;border-radius:7px;font-size:11px">✅ نشط</span>';
-      }
-
-      function showDropdown(query) {
-        const q = query.trim().toLowerCase();
-        const filtered = q ? accounts.filter(a => (a.name||'').toLowerCase().includes(q)||(a.phone||'').includes(q)) : accounts.slice(0,10);
-        if (!filtered.length) {
-          dropdown.innerHTML = '<div style="padding:14px;text-align:center;color:#999;font-family:Tajawal,sans-serif;font-size:13px">لا توجد نتائج</div>';
-          dropdown.style.display = 'block'; return;
-        }
-        dropdown.innerHTML = filtered.map(a => `
-          <div class="account-option" data-id="${a.id}" data-name="${(a.name||'').replace(/"/g,'')}" data-phone="${(a.phone||'').replace(/"/g,'')}" data-status="${a.status||'active'}">
-            <div class="acc-avatar">${(a.name||'ع').substring(0,2)}</div>
-            <div><div class="acc-name">${a.name||'—'}</div><div class="acc-phone">${a.phone||'لا يوجد رقم'}</div></div>
-            <div style="margin-right:auto">${statusLabel(a.status)}</div>
+      <!-- اختيار المستقبل -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">👤 اختر المستقبل *</label>
+        <div style="position:relative">
+          <input id="beneficiarySearch" type="text" placeholder="ابحث عن العميل أو الرقم..."
+            style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none"/>
+          <div id="accountDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #ddd;border-top:none;border-radius:0 0 12px 12px;max-height:200px;overflow-y:auto;z-index:100">
           </div>
-        `).join('');
+        </div>
+      </div>
+
+      <!-- بطاقة العميل المختار -->
+      <div id="selectedAccount" style="display:none;background:#f5f5f5;border:1.5px solid #2e7d32;border-radius:12px;padding:12px;margin-bottom:16px;position:relative">
+        <button type="button" id="clearSel" style="position:absolute;top:8px;left:8px;background:#ff5252;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:16px">×</button>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div id="selAvatar" style="width:50px;height:50px;background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px">--</div>
+          <div style="flex:1">
+            <div id="selName" style="font-weight:700;color:#333">-</div>
+            <div id="selPhone" style="font-size:12px;color:#999">-</div>
+            <div id="selStatus" style="font-size:11px;margin-top:4px"></div>
+          </div>
+        </div>
+        <input id="beneficiary" type="hidden" required />
+        <input id="beneficiaryPhone" type="hidden" />
+        <input id="beneficiaryId" type="hidden" />
+      </div>
+
+      <!-- المبلغ -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">💰 المبلغ *</label>
+        <input id="transferAmount" type="number" min="0" placeholder="أدخل المبلغ" required
+          style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none"/>
+      </div>
+
+      <!-- العملة -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">💵 العملة</label>
+        <select id="currency" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;background:#fff;outline:none">
+          <option value="ر.ي">ر.ي - ريال يمني</option>
+          <option value="$">$ - دولار أمريكي</option>
+          <option value="€">€ - يورو</option>
+          <option value="AED">AED - درهم إماراتي</option>
+        </select>
+      </div>
+
+      <!-- نوع الحوالة -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">🔖 نوع الحوالة</label>
+        <select id="transferType" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;background:#fff;outline:none">
+          <option value="تحويل عادي">تحويل عادي</option>
+          <option value="تحويل عاجل">تحويل عاجل</option>
+          <option value="دفعة">دفعة</option>
+          <option value="سحب">سحب</option>
+        </select>
+      </div>
+
+      <!-- الحالة -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">📊 الحالة</label>
+        <select id="transferStatus" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;background:#fff;outline:none">
+          <option value="completed">✅ مكتملة</option>
+          <option value="pending">⏳ قيد التنفيذ</option>
+          <option value="cancelled">❌ ملغاة</option>
+        </select>
+      </div>
+
+      <!-- الملاحظات -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">📝 ملاحظات</label>
+        <textarea id="notes" placeholder="أضف ملاحظات إضافية..." style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none;min-height:80px;resize:vertical"></textarea>
+      </div>
+
+      <!-- الملخص -->
+      <div style="background:#f9f9f9;border:1.5px solid #e0e0e0;border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #ddd">
+          <span style="color:#666">المبلغ الأصلي:</span>
+          <span id="originalAmount" style="font-weight:700;color:#333">0 ر.ي</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #ddd">
+          <span style="color:#666">العمولة (5%):</span>
+          <span id="commissionAmount" style="font-weight:700;color:#e65100">0 ر.ي</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:8px">
+          <span style="color:#333;font-weight:700">الإجمالي:</span>
+          <span id="totalAmount" style="font-weight:800;color:#8B0000;font-size:16px">0 ر.ي</span>
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif;transition:all 0.3s">
+        ✅ تأكيد إنشاء الحوالة
+      </button>
+
+    </form>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-href="../index.html">
+      <span class="nav-icon">🏠</span><span>الرئيسية</span>
+    </div>
+    <div class="nav-item active" data-href="transfer.html">
+      <span class="nav-icon">💸</span><span>تحويل</span>
+    </div>
+    <div class="nav-item" data-href="vip.html">
+      <span class="nav-icon">👑</span><span>المميزين</span>
+    </div>
+    <div class="nav-item" data-href="reports.html">
+      <span class="nav-icon">📊</span><span>تقارير</span>
+    </div>
+  </nav>
+
+  <script src="../script.js"></script>
+
+  <script type="module">
+    import { getAccounts, addTransfer, logWA, openWA } from "../firebase.js";
+
+    let accounts = [];
+
+    async function loadAccounts() {
+      try {
+        accounts = await getAccounts();
+        const params = new URLSearchParams(window.location.search);
+        const pid = params.get('id');
+        const pname = params.get('name');
+        const pphone = params.get('phone');
+        
+        if (pname) {
+          const found = accounts.find(a => a.id === pid) || { 
+            id: pid || '', 
+            name: pname, 
+            phone: pphone || '', 
+            status: 'active' 
+          };
+          selectAccount({ 
+            id: found.id, 
+            name: found.name, 
+            phone: found.phone || '', 
+            status: found.status || 'active' 
+          });
+        }
+      } catch(e) { 
+        console.error('Failed to load accounts:', e);
+        if (typeof showNotification === 'function') 
+          showNotification('خطأ في تحميل الحسابات', 'error');
+      }
+    }
+    
+    loadAccounts();
+
+    const searchInput = document.getElementById('beneficiarySearch');
+    const dropdown = document.getElementById('accountDropdown');
+    const selectedBox = document.getElementById('selectedAccount');
+
+    function statusLabel(s) {
+      if (s === 'vip') return '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:1px 8px;border-radius:7px;font-size:11px">👑 VIP</span>';
+      if (s === 'late') return '<span style="background:#c62828;color:#fff;padding:1px 8px;border-radius:7px;font-size:11px">⚠️ متأخر</span>';
+      return '<span style="background:#2e7d32;color:#fff;padding:1px 8px;border-radius:7px;font-size:11px">✅ نشط</span>';
+    }
+
+    function showDropdown(query) {
+      const q = query.trim().toLowerCase();
+      const filtered = q ? accounts.filter(a => 
+        (a.name || '').toLowerCase().includes(q) || (a.phone || '').includes(q)
+      ) : accounts.slice(0, 10);
+      
+      if (!filtered.length) {
+        dropdown.innerHTML = '<div style="padding:14px;text-align:center;color:#999;font-family:Tajawal,sans-serif;font-size:13px">لا توجد نتائج</div>';
         dropdown.style.display = 'block';
-        dropdown.querySelectorAll('.account-option').forEach(el => el.addEventListener('click', () => selectAccount(el.dataset)));
+        return;
       }
+      
+      dropdown.innerHTML = filtered.map(a => `
+        <div class="account-option" data-id="${a.id || ''}" data-name="${(a.name || '').replace(/"/g, '')}" data-phone="${(a.phone || '').replace(/"/g, '')}" data-status="${a.status || 'active'}">
+          <div class="acc-avatar">${(a.name || 'ع').substring(0, 2)}</div>
+          <div style="flex:1">
+            <div class="acc-name">${a.name || '—'}</div>
+            <div class="acc-phone">${a.phone || 'لا يوجد رقم'}</div>
+          </div>
+          <div>${statusLabel(a.status)}</div>
+        </div>
+      `).join('');
+      
+      dropdown.style.display = 'block';
+      dropdown.querySelectorAll('.account-option').forEach(el => 
+        el.addEventListener('click', () => selectAccount(el.dataset))
+      );
+    }
 
-      function selectAccount(data) {
-        document.getElementById('beneficiary').value       = data.name;
-        document.getElementById('beneficiaryPhone').value  = data.phone;
-        document.getElementById('beneficiaryId').value     = data.id;
-        document.getElementById('selAvatar').textContent   = (data.name||'').substring(0,2);
-        document.getElementById('selName').textContent     = data.name;
-        document.getElementById('selPhone').textContent    = data.phone || 'لا يوجد رقم';
-        document.getElementById('selStatus').innerHTML     = statusLabel(data.status);
-        searchInput.value = '';
+    function selectAccount(data) {
+      document.getElementById('beneficiary').value = data.name;
+      document.getElementById('beneficiaryPhone').value = data.phone || '';
+      document.getElementById('beneficiaryId').value = data.id || '';
+      document.getElementById('selAvatar').textContent = (data.name || '').substring(0, 2);
+      document.getElementById('selName').textContent = data.name;
+      document.getElementById('selPhone').textContent = data.phone || 'لا يوجد رقم';
+      document.getElementById('selStatus').innerHTML = statusLabel(data.status);
+      searchInput.value = '';
+      dropdown.style.display = 'none';
+      selectedBox.style.display = 'block';
+    }
+
+    searchInput.addEventListener('focus', () => { 
+      if (accounts.length) showDropdown(searchInput.value); 
+    });
+    searchInput.addEventListener('input', () => showDropdown(searchInput.value));
+    
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#beneficiarySearch') && !e.target.closest('#accountDropdown'))
         dropdown.style.display = 'none';
-        selectedBox.style.display = 'block';
+    });
+    
+    document.getElementById('clearSel').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('beneficiary').value = '';
+      document.getElementById('beneficiaryPhone').value = '';
+      document.getElementById('beneficiaryId').value = '';
+      selectedBox.style.display = 'none';
+      searchInput.value = '';
+      searchInput.focus();
+    });
+
+    // تحديث الملخص عند تغيير المبلغ
+    document.getElementById('transferAmount').addEventListener('input', function() {
+      const amount = parseFloat(this.value) || 0;
+      const commission = Math.round(amount * 0.05);
+      const total = amount + commission;
+      document.getElementById('originalAmount').textContent = amount.toLocaleString('ar-SA') + ' ر.ي';
+      document.getElementById('commissionAmount').textContent = commission.toLocaleString('ar-SA') + ' ر.ي';
+      document.getElementById('totalAmount').textContent = total.toLocaleString('ar-SA') + ' ر.ي';
+    });
+
+    // إرسال الحوالة
+    document.getElementById('transferForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+
+      const beneficiary = document.getElementById('beneficiary').value.trim();
+      const beneficiaryPhone = document.getElementById('beneficiaryPhone').value.trim();
+
+      if (!beneficiary) {
+        if (typeof showNotification === 'function') 
+          showNotification('يرجى اختيار المستقبل من القائمة', 'error');
+        return;
       }
 
-      searchInput.addEventListener('focus', () => { if (accounts.length) showDropdown(searchInput.value); });
-      searchInput.addEventListener('input', () => showDropdown(searchInput.value));
-      document.addEventListener('click', e => {
-        if (!e.target.closest('#beneficiarySearch') && !e.target.closest('#accountDropdown'))
-          dropdown.style.display = 'none';
-      });
-      document.getElementById('clearSel').addEventListener('click', () => {
-        document.getElementById('beneficiary').value = '';
-        document.getElementById('beneficiaryPhone').value = '';
-        document.getElementById('beneficiaryId').value = '';
-        selectedBox.style.display = 'none';
-        searchInput.value = '';
-        searchInput.focus();
-      });
+      btn.disabled = true;
+      btn.textContent = '⏳ جاري الحفظ...';
 
-      // ===== إرسال الحوالة + واتساب تلقائي =====
-      document.getElementById('transferForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('submitBtn');
+      const amount = parseFloat(document.getElementById('transferAmount').value) || 0;
+      const currency = document.getElementById('currency').value;
+      const transferType = document.getElementById('transferType').value;
+      const status = document.getElementById('transferStatus').value;
+      const notes = document.getElementById('notes').value.trim();
+      const commission = Math.round(amount * 0.05);
+      const total = amount + commission;
 
-        const beneficiary       = document.getElementById('beneficiary').value.trim();
-        const beneficiaryPhone  = document.getElementById('beneficiaryPhone').value.trim();
+      const msg = `🏦 نظام محمد سالم للحوالات
+━━━━━━━━━━━━━━━━━━
+📬 لديك حوالة جديدة!
 
-        if (!beneficiary) {
-          if (typeof showNotification==='function') showNotification('يرجى اختيار المستلم من القائمة', 'error');
-          return;
+👤 المستقبل: ${beneficiary}
+💰 المبلغ: ${amount.toLocaleString('ar-SA')} ${currency}
+📊 العمولة: ${commission.toLocaleString('ar-SA')} ${currency}
+💳 الإجمالي: ${total.toLocaleString('ar-SA')} ${currency}
+🔖 النوع: ${transferType}
+━━━━━━━━━━━━━━━━━━
+للاستفسار تواصل معنا 📞`;
+
+      try {
+        await addTransfer({ 
+          beneficiary, 
+          beneficiaryPhone, 
+          amount, 
+          currency, 
+          commission, 
+          total, 
+          transferType, 
+          status, 
+          notes 
+        });
+        
+        await logWA({ 
+          type: 'transfer_new', 
+          accountName: beneficiary, 
+          phone: beneficiaryPhone, 
+          message: msg 
+        });
+
+        if (beneficiaryPhone) {
+          openWA(beneficiaryPhone, msg);
         }
 
-        btn.disabled = true;
-        btn.textContent = '⏳ جاري الحفظ...';
+        if (typeof showNotification === 'function')
+          showNotification(`✅ تم إنشاء الحوالة${beneficiaryPhone ? ' وفُتح واتساب' : ''}`, 'success');
 
-        const amount       = parseFloat(document.getElementById('transferAmount').value) || 0;
-        const currency     = document.getElementById('currency').value;
-        const transferType = document.getElementById('transferType').value;
-        const status       = document.getElementById('transferStatus').value;
-        const notes        = document.getElementById('notes').value.trim();
-        const commission   = Math.round(amount * 0.05);
-        const total        = amount + commission;
+        setTimeout(() => {
+          this.reset();
+          document.getElementById('beneficiary').value = '';
+          document.getElementById('beneficiaryPhone').value = '';
+          document.getElementById('beneficiaryId').value = '';
+          document.getElementById('selectedAccount').style.display = 'none';
+          document.getElementById('originalAmount').textContent = '0 ر.ي';
+          document.getElementById('commissionAmount').textContent = '0 ر.ي';
+          document.getElementById('totalAmount').textContent = '0 ر.ي';
+        }, 500);
 
-        const msg = `🏦 نظام محمد سالم للحوالات
-  ━━━━━━━━━━━━━━━━━━
-  📬 لديك حوالة جديدة!
-
-  👤 المستلم: ${beneficiary}
-  💰 المبلغ: ${amount.toLocaleString('ar-SA')} ${currency}
-  📊 العمولة: ${commission.toLocaleString('ar-SA')} ${currency}
-  💳 الإجمالي: ${total.toLocaleString('ar-SA')} ${currency}
-  🔖 النوع: ${transferType}
-  ━━━━━━━━━━━━━━━━━━
-  للاستفسار تواصل معنا 📞`;
-
-        try {
-          await addTransfer({ beneficiary, beneficiaryPhone, amount, currency, commission, total, transferType, status, notes });
-          await logWA({ type:'transfer_new', accountName:beneficiary, phone:beneficiaryPhone, message:msg });
-
-          // واتساب تلقائي — يفتح فوراً
-          if (beneficiaryPhone) {
-            openWA(beneficiaryPhone, msg);
-          }
-
-          if (typeof showNotification==='function')
-            showNotification(`✅ تم الحفظ${beneficiaryPhone ? ' وفُتح واتساب للمستلم' : ' (لا يوجد رقم للمستلم)'}`, 'success');
-
-          // إعادة تعيين النموذج
-          setTimeout(() => {
-            this.reset();
-            document.getElementById('beneficiary').value = '';
-            document.getElementById('beneficiaryPhone').value = '';
-            document.getElementById('beneficiaryId').value = '';
-            document.getElementById('selectedAccount').style.display = 'none';
-            document.getElementById('originalAmount').textContent  = '0 ر.ي';
-            document.getElementById('commissionAmount').textContent = '0 ر.ي';
-            document.getElementById('totalAmount').textContent      = '0 ر.ي';
-          }, 500);
-
-        } catch(err) {
-          console.error(err);
-          if (typeof showNotification==='function') showNotification('خطأ: ' + err.message, 'error');
-        }
-
+      } catch(err) {
+        console.error('Transfer error:', err);
+        if (typeof showNotification === 'function') 
+          showNotification('❌ خطأ: ' + (err.message || 'فشل إنشاء الحوالة'), 'error');
+      } finally {
         btn.disabled = false;
         btn.textContent = '✅ تأكيد إنشاء الحوالة';
-      });
+      }
+    });
 
-      window.closeModal = function() {
-        document.getElementById('waModal').style.display = 'none';
-      };
-    </script>
+  </script>
 
-  </body>
-  </html>
+</body>
+</html>
