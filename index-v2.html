@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="نظام محمد سالم للحوالات - إدارة حوالات وصرافة احترافية مع دعم السحابة والتحكم الصوتي" />
+  <meta name="theme-color" content="#667eea" />
+  
+  <title>نظام محمد سالم - الإصدار 2.0</title>
+  
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' width='100' height='100'/><text x='50' y='50' font-size='60' fill='white' text-anchor='middle' dy='.3em'>💳</text></svg>" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23667eea' width='180' height='180' rx='40'/><text x='90' y='90' font-size='100' fill='white' text-anchor='middle' dy='.3em'>💳</text></svg>" />
+  
+  <link rel="stylesheet" href="style.css" />
+  
+  <style>
+    :root {
+      --primary: #667eea;
+      --secondary: #764ba2;
+      --success: #2ecc71;
+      --warning: #f39c12;
+      --danger: #e74c3c;
+      --info: #3498db;
+      --light: #f5f7fa;
+      --dark: #2c3e50;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      color: #2c3e50;
+      direction: rtl;
+    }
+
+    .container-v2 {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header-v2 {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 30px 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .header-v2 h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      font-weight: 800;
+    }
+
+    .header-v2 p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse 2s infinite;
+    }
+
+    .status-indicator.online {
+      background: #2ecc71;
+    }
+
+    .status-indicator.offline {
+      background: #e74c3c;
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .card-value {
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 15px 0;
+    }
+
+    .card-label {
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #f0f0f0;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      color: #999;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--primary);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .data-table thead {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+    }
+
+    .data-table th {
+      padding: 15px;
+      text-align: right;
+      font-weight: 600;
+    }
+
+    .data-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f9f9f9;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge.success {
+      background: rgba(46, 204, 113, 0.1);
+      color: var(--success);
+    }
+
+    .badge.warning {
+      background: rgba(243, 156, 18, 0.1);
+      color: var(--warning);
+    }
+
+    .badge.danger {
+      background: rgba(231, 76, 60, 0.1);
+      color: var(--danger);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: var(--dark);
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .alert {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .alert.info {
+      background: rgba(52, 152, 219, 0.1);
+      color: var(--info);
+      border-left: 4px solid var(--info);
+    }
+
+    .alert.success {
+      background: rgba(46, 204, 113, 0.1);
+      color: var(--success);
+      border-left: 4px solid var(--success);
+    }
+
+    .alert.warning {
+      background: rgba(243, 156, 18, 0.1);
+      color: var(--warning);
+      border-left: 4px solid var(--warning);
+    }
+
+    .alert.error {
+      background: rgba(231, 76, 60, 0.1);
+      color: var(--danger);
+      border-left: 4px solid var(--danger);
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(102, 126, 234, 0.3);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .sync-status {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      z-index: 100;
+    }
+
+    .sync-status.syncing {
+      background: linear-gradient(135deg, #f0f7ff, #f5f0ff);
+    }
+
+    .sync-status.error {
+      background: rgba(231, 76, 60, 0.1);
+    }
+
+    @media (max-width: 768px) {
+      .header-v2 h1 {
+        font-size: 24px;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .data-table {
+        font-size: 13px;
+      }
+
+      .data-table th, .data-table td {
+        padding: 10px;
+      }
+
+      .tabs {
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container-v2">
+    <!-- Header -->
+    <div class="header-v2">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1>🚀 نظام ��حمد سالم 2.0</h1>
+          <p>إدارة حوالات وصرافة احترافية</p>
+        </div>
+        <div id="connectionStatus" style="display: flex; align-items: center; gap: 8px;">
+          <span class="status-indicator online"></span>
+          <span id="connectionText">متصل</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="dashboard-grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">💰 إجمالي الرصيد</div>
+          <span style="font-size: 20px;">YER</span>
+        </div>
+        <div class="card-value" id="totalBalance">—</div>
+        <div class="card-label">الرصيد الكلي في النظام</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📊 أرباح اليوم</div>
+          <span style="font-size: 20px;">💸</span>
+        </div>
+        <div class="card-value" id="todayProfit">—</div>
+        <div class="card-label">صافي الربح</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">👥 عدد الحسابات</div>
+          <span style="font-size: 20px;">📋</span>
+        </div>
+        <div class="card-value" id="accountsCount">—</div>
+        <div class="card-label">الحسابات النشطة</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">💸 إجمالي الحوالات</div>
+          <span style="font-size: 20px;">📤</span>
+        </div>
+        <div class="card-value" id="transfersCount">—</div>
+        <div class="card-label">عدد الحوالات</div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div id="alertsContainer"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="overview">📊 ملخص</button>
+      <button class="tab-btn" data-tab="transfers">💸 الحوالات</button>
+      <button class="tab-btn" data-tab="accounts">👥 الحسابات</button>
+      <button class="tab-btn" data-tab="profits">📈 الأرباح</button>
+      <button class="tab-btn" data-tab="settings">⚙️ الإعدادات</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="tabContent"></div>
+
+    <!-- Sync Status -->
+    <div class="sync-status" id="syncStatus" style="display: none;">
+      <div class="spinner"></div>
+      <span id="syncText">جاري المزامنة...</span>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // تسجيل Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(reg => console.log('✅ Service Worker مسجل'))
+        .catch(err => console.warn('❌ خطأ في تسجيل Service Worker:', err));
+    }
+
+    // معالجة حالة الاتصال
+    window.addEventListener('online', () => {
+      document.getElementById('connectionStatus').innerHTML = '<span class="status-indicator online"></span><span id="connectionText">متصل</span>';
+      showAlert('✅ عاد الإنترنت - جاري المزامنة...', 'success');
+    });
+
+    window.addEventListener('offline', () => {
+      document.getElementById('connectionStatus').innerHTML = '<span class="status-indicator offline"></span><span id="connectionText">بدون إنترنت</span>';
+      showAlert('📵 انقطع الإنترنت - الوضع المحلي مفعّل', 'warning');
+    });
+
+    function showAlert(message, type = 'info') {
+      const container = document.getElementById('alertsContainer');
+      const alert = document.createElement('div');
+      alert.className = `alert ${type}`;
+      alert.innerHTML = `<span>${message}</span>`;
+      container.appendChild(alert);
+      setTimeout(() => alert.remove(), 5000);
+    }
+
+    // معالجة الـ Tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        console.log('تم الضغط على الـ Tab:', btn.dataset.tab);
+      });
+    });
+  </script>
+
+  <!-- Import Main Modules -->
+  <script type="module">
+    import { supabase } from './supabase-advanced.js';
+    import { offlineSync } from './offline-sync.js';
+    import { initVoiceControl } from './voice-control.js';
+    import { exportManager } from './export-utils.js';
+
+    // تهيئة التحكم الصوتي
+    const voiceController = initVoiceControl((command) => {
+      console.log('🎤 أمر صوتي:', command);
+      handleVoiceCommand(command);
+    });
+
+    // معالجة الأوامر الصوتية
+    async function handleVoiceCommand(command) {
+      switch(command.action) {
+        case 'showBalance':
+          voiceController.speak(`الرصيد الكلي: ${document.getElementById('totalBalance').textContent} ريال`);
+          break;
+        case 'showProfits':
+          const profit = document.getElementById('todayProfit').textContent;
+          voiceController.speak(`أرباح اليوم: ${profit} ريال`);
+          break;
+        case 'openTransferForm':
+          voiceController.speak('فتح نموذج الحوالة الجديدة');
+          window.location.href = '/pages/transfer.html';
+          break;
+        default:
+          voiceController.speak('تم تنفيذ الأمر');
+      }
+    }
+
+    // تحميل البيانات الأولية
+    async function loadDashboard() {
+      try {
+        const [accounts, transfers, profits] = await Promise.all([
+          supabase.getAccounts(),
+          supabase.getTransfers({ limit: 100 }),
+          supabase.getProfits({ limit: 100 })
+        ]);
+
+        // تحديث البيانات
+        const totalBalance = accounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+        const totalProfit = profits.reduce((sum, p) => sum + (Number(p.profit) || 0), 0);
+
+        document.getElementById('totalBalance').textContent = totalBalance.toLocaleString('ar-SA');
+        document.getElementById('todayProfit').textContent = totalProfit.toLocaleString('ar-SA');
+        document.getElementById('accountsCount').textContent = accounts.length;
+        document.getElementById('transfersCount').textContent = transfers.length;
+
+        console.log('✅ تم تحميل البيانات');
+      } catch (e) {
+        console.error('❌ خطأ في تحميل البيانات:', e);
+        document.getElementById('alertsContainer').innerHTML += `
+          <div class="alert error">❌ خطأ: لم يتم تحميل البيانات</div>
+        `;
+      }
+    }
+
+    // مراقبة حالة المزامنة
+    offlineSync.onSyncEvent('syncStart', () => {
+      document.getElementById('syncStatus').style.display = 'flex';
+      document.getElementById('syncText').textContent = 'جاري المزامنة...';
+    });
+
+    offlineSync.onSyncEvent('syncComplete', () => {
+      document.getElementById('syncStatus').style.display = 'none';
+      console.log('✅ انتهت المزامنة');
+    });
+
+    // الاستماع للتغييرات الحية
+    supabase.subscribeToAccounts((payload) => {
+      console.log('📡 تحديث الحسابات:', payload);
+      loadDashboard();
+    });
+
+    supabase.subscribeToTransfers((payload) => {
+      console.log('📡 تحديث الحوالات:', payload);
+      loadDashboard();
+    });
+
+    // تحميل البيانات عند فتح الصفحة
+    loadDashboard();
+
+    // تحديث البيانات كل 30 ثانية
+    setInterval(loadDashboard, 30000);
+
+    // جعل الدوال عامة للاستخدام من وحدات أخرى
+    window.supabase = supabase;
+    window.offlineSync = offlineSync;
+    window.voiceController = voiceController;
+    window.exportManager = exportManager;
+  </script>
+</body>
+</html>
