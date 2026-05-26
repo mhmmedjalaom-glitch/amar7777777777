@@ -9,7 +9,10 @@ function _lsSet(key, val) { localStorage.setItem("ms_"+key, JSON.stringify(val))
 function _uid()           { return Math.random().toString(36).slice(2)+Date.now().toString(36); }
 
 const _listeners = {};
-function _notify(col) { (_listeners[col]||[]).forEach(cb => cb(_lsGet(col))); }
+function _notify(col) { 
+  console.log(`📢 إخطار: تم تحديث ${col} - العدد: ${_lsGet(col).length}`);
+  (_listeners[col]||[]).forEach(cb => cb(_lsGet(col))); 
+}
 
 function _seedLocalData() {
   if (localStorage.getItem("ms_seeded")) return;
@@ -23,15 +26,16 @@ function _seedLocalData() {
     { id:_uid(), name:"فهد ناصر المالكي",     phone:"967788990011", balance:480000,  balanceSAR:0, status:"active", notes:"",             createdAt:now-3*day  },
   ]);
   _lsSet("transfers", [
-    { id:_uid(), transferCode:"حو-260524-A1B2", beneficiary:"أحمد محمد الوادعي", beneficiaryPhone:"967712345678", amount:150000, currency:"ر.ي", commission:7500,  total:157500, transferType:"تحويل عادي", paymentMethod:"cash",    status:"completed", notes:"", createdAt:now-2*day   },
-    { id:_uid(), transferCode:"حو-260523-C3D4", beneficiary:"خالد سالم العمري",  beneficiaryPhone:"967798765432", amount:500000, currency:"ر.ي", commission:25000, total:525000, transferType:"تحويل VIP",  paymentMethod:"balance", status:"completed", notes:"", createdAt:now-day    },
-    { id:_uid(), transferCode:"حو-260524-E5F6", beneficiary:"محمد علي الشمري",   beneficiaryPhone:"967733445566", amount:80000,  currency:"ر.ي", commission:4000,  total:84000,  transferType:"تحويل عادي", paymentMethod:"debt",    status:"pending",   notes:"", createdAt:now-3*h    },
-    { id:_uid(), transferCode:"حو-260524-G7H8", beneficiary:"عبد الرحمن عقلان",  beneficiaryPhone:"967755667788", amount:900000, currency:"ر.ي", commission:45000, total:945000, transferType:"تحويل عاجل", paymentMethod:"cash",    status:"completed", notes:"", createdAt:now-5*h    },
-    { id:_uid(), transferCode:"حو-260524-I9J0", beneficiary:"سالم القحطاني",     beneficiaryPhone:"967722334455", amount:200000, currency:"ر.ي", commission:10000, total:210000, transferType:"تحويل عادي", paymentMethod:"debt",    status:"pending",   notes:"", createdAt:now-30*60000},
+    { id:_uid(), transferCode:"حو-260524-A1B2", beneficiary:"أحمد محمد الوادعي", beneficiaryPhone:"967712345678", amount:150000, currency:"ر.ي", commission:7500,  total:157500, status:"completed", createdAt:now-1*day },
+    { id:_uid(), transferCode:"حو-260523-C3D4", beneficiary:"خالد سالم العمري",  beneficiaryPhone:"967798765432", amount:500000, currency:"ر.ي", commission:25000, total:525000, status:"completed", createdAt:now-2*day },
+    { id:_uid(), transferCode:"حو-260524-E5F6", beneficiary:"محمد علي الشمري",   beneficiaryPhone:"967733445566", amount:80000,  currency:"ر.ي", commission:4000,  total:84000,  status:"pending", createdAt:now-3*day },
+    { id:_uid(), transferCode:"حو-260524-G7H8", beneficiary:"عبد الرحمن عقلان",  beneficiaryPhone:"967755667788", amount:900000, currency:"ر.ي", commission:45000, total:945000, status:"pending", createdAt:now-4*day },
+    { id:_uid(), transferCode:"حو-260524-I9J0", beneficiary:"سالم القحطاني",     beneficiaryPhone:"967722334455", amount:200000, currency:"ر.ي", commission:10000, total:210000, status:"completed", createdAt:now-5*day },
   ]);
   _lsSet("vouchers", []);
   _lsSet("wa_logs", []);
   localStorage.setItem("ms_seeded","1");
+  console.log("✅ تم تحضير البيانات الأولية");
 }
 _seedLocalData();
 
@@ -53,7 +57,9 @@ async function _initSupabase() {
     const { error } = await _supa.from("accounts").select("id").limit(1);
     if (error && error.code !== "PGRST116" && error.message !== "JSON object requested, multiple (or no) rows returned") throw error;
     _useLocal = false;
-    console.log("✅ Supabase متصل — يعمل بدون VPN في اليمن 🇾🇪");
+    console.log("✅ Supabase متصل — ��اري تحميل البيانات 🇾🇪");
+    // ✅ تحميل البيانات من Supabase عند الاتصال
+    await _syncFromSupabase();
   } catch(e) {
     _useLocal = true;
     console.log("📱 وضع LocalStorage (احتياطي):", e.message);
@@ -63,6 +69,42 @@ async function _initSupabase() {
   _initResolvers = [];
 }
 _initSupabase();
+
+// ===== مزامنة البيانات من Supabase عند الفتح =====
+async function _syncFromSupabase() {
+  try {
+    const [accRes, trfRes, vchRes] = await Promise.all([
+      _supa.from("accounts").select("*").order("created_at", { ascending: false }),
+      _supa.from("transfers").select("*").order("created_at", { ascending: false }),
+      _supa.from("vouchers").select("*").order("created_at", { ascending: false })
+    ]);
+
+    if (accRes.data && !accRes.error) {
+      const accounts = accRes.data.map(_fromDB_accounts);
+      _lsSet("accounts", accounts);
+      console.log(`✅ تم تحميل ${accounts.length} حساب من Supabase`);
+    }
+
+    if (trfRes.data && !trfRes.error) {
+      const transfers = trfRes.data.map(_fromDB_transfers);
+      _lsSet("transfers", transfers);
+      console.log(`✅ تم تحميل ${transfers.length} حوالة من Supabase`);
+    }
+
+    if (vchRes.data && !vchRes.error) {
+      const vouchers = vchRes.data.map(_fromDB_vouchers);
+      _lsSet("vouchers", vouchers);
+      console.log(`✅ تم تحميل ${vouchers.length} سند من Supabase`);
+    }
+
+    // ✅ إخطار المستمعين بالبيانات الجديدة
+    _notify("accounts");
+    _notify("transfers");
+    _notify("vouchers");
+  } catch (e) {
+    console.warn("❌ خطأ في مزامنة البيانات:", e.message);
+  }
+}
 
 // ===== تحويل البيانات: DB → JS =====
 function _fromDB_accounts(r) {
@@ -143,15 +185,15 @@ export function buildMsg(type, data={}) {
   const hd=`🏦 *نظام محمد سالم للحوالات*\n━━━━━━━━━━━━━━━━━━`,
         ft=`━━━━━━━━━━━━━━━━━━\n📞 للاستفسار تواصل معنا مباشرة`;
   const msgs={
-    transfer_new:       `${hd}\n\n📬 *تم إنشاء حوالة جديدة*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}\n📊 العمولة: ${comm} ${cur}${pmLine}${code}\n🔖 النوع: ${data.transferType||'تحويل عادي'}\n⏳ الحالة: قيد التنفيذ\n\n${ft}`,
-    transfer_completed: `${hd}\n\n✅ *تم إتمام الحوالة بنجاح*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}${code}\n🕐 وقت الإتمام: ${new Date().toLocaleString('ar-SA')}\n\nشكراً لثقتكم بنا 🙏\n\n${ft}`,
+    transfer_new:       `${hd}\n\n📬 *تم إنشاء حوالة جديدة*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}\n📊 العمولة: ${comm} ${cur}${pmLine}\n\n${ft}`,
+    transfer_completed: `${hd}\n\n✅ *تم إتمام الحوالة بنجاح*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}${code}\n🕐 وقت الإتمام: ${new Date().toLocaleString('ar-SA')}\n\n${ft}`,
     transfer_cancelled: `${hd}\n\n❌ *تم إلغاء الحوالة*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}${code}\n\nللاستفسار تواصل معنا.\n\n${ft}`,
     transfer_reminder:  `${hd}\n\n🔔 *تذكير بحوالة معلقة*\n\n👤 المستفيد: ${name}\n💰 المبلغ: ${amount} ${cur}${code}\n\n${ft}`,
     account_welcome:    `${hd}\n\n👋 *أهلاً وسهلاً ${name}*\n\nتم تسجيلك في نظام محمد سالم.\n💰 الرصيد: ${bal} ${cur}\n\n${ft}`,
     account_statement:  `${hd}\n\n📊 *كشف حسابك*\n\n👤 ${name}\n💰 الرصيد (ر.ي): ${bal}\n📅 ${new Date().toLocaleDateString('ar-SA')}\n\n${ft}`,
     late_alert:         `${hd}\n\n⚠️ *تنبيه: رصيد متأخر*\n\n${name}، لديك رصيد متأخر:\n💰 ${bal} ${cur}\n\nيرجى التواصل لترتيب السداد.\n\n${ft}`,
-    voucher_receipt:    `${hd}\n\n🧾 *سند قبض*\n\n👤 الاسم: ${name}\n💰 المبلغ المستلم: ${amount} ${cur}\n📝 السبب: ${data.reason||'—'}\n📅 التاريخ: ${new Date().toLocaleDateString('ar-SA')}\n\nتم التوثيق في النظام ✓\n\n${ft}`,
-    voucher_payment:    `${hd}\n\n🧾 *سند صرف*\n\n👤 الاسم: ${name}\n💰 المبلغ المصروف: ${amount} ${cur}\n📝 السبب: ${data.reason||'—'}\n📅 التاريخ: ${new Date().toLocaleDateString('ar-SA')}\n\nتم التوثيق في النظام ✓\n\n${ft}`,
+    voucher_receipt:    `${hd}\n\n🧾 *سند قبض*\n\n👤 الاسم: ${name}\n💰 المبلغ المستلم: ${amount} ${cur}\n📝 السبب: ${data.reason||'—'}\n📅 التاريخ: ${new Date().toLocaleDateString('ar-SA')}\n\n${ft}`,
+    voucher_payment:    `${hd}\n\n🧾 *سند صرف*\n\n👤 الاسم: ${name}\n💰 المبلغ المصروف: ${amount} ${cur}\n📝 السبب: ${data.reason||'—'}\n📅 التاريخ: ${new Date().toLocaleDateString('ar-SA')}\n\n${ft}`,
   };
   return msgs[type]||`${hd}\n\n📋 عملية جديدة في حسابك\n\n${ft}`;
 }
@@ -194,72 +236,123 @@ export async function loadSettings() {
 export async function addTransfer(data) {
   const code = data.transferCode || generateTransferCode();
   const entry = { id:_uid(), ...data, transferCode:code, status:data.status||"pending", createdAt:Date.now() };
+  
+  // ✅ خطوة 1: حفظ محلي أولاً - فوري جداً
+  const list = _lsGet("transfers"); 
+  list.unshift(entry); 
+  _lsSet("transfers", list);
+  console.log("💾 تم حفظ الحوالة محليًا:", entry.transferCode);
+  _notify("transfers");
+  
+  // ✅ خطوة 2: رفع للقاعدة بشكل غير متزامن (بدون انتظار)
   await _waitInit();
   if (!_useLocal && _supa) {
-    try {
-      const { data: row, error } = await _supa.from("transfers").insert(_toDB_transfers({...data, transferCode:code, id:entry.id})).select().single();
-      if (error) throw error;
-      if (data.paymentMethod === 'balance' && data.beneficiaryId) {
-        const { data: acc } = await _supa.from("accounts").select("balance").eq("id", data.beneficiaryId).single();
-        if (acc) await _supa.from("accounts").update({ balance: Math.max(0,(acc.balance||0) - (Number(data.total)||0)) }).eq("id", data.beneficiaryId);
+    // رفع بدون انتظار - تشغيل في الخلفية
+    (async () => {
+      try {
+        const { data: row, error } = await _supa.from("transfers").insert(_toDB_transfers({...data, transferCode:code, id:entry.id})).select().single();
+        if (error) throw error;
+        console.log("☁️ تم رفع الحوالة إلى Supabase:", entry.transferCode);
+        if (data.paymentMethod === 'balance' && data.beneficiaryId) {
+          const { data: acc } = await _supa.from("accounts").select("balance").eq("id", data.beneficiaryId).single();
+          if (acc) await _supa.from("accounts").update({ balance: Math.max(0,(acc.balance||0) - (Number(data.total)||0)) }).eq("id", data.beneficiaryId);
+        }
+      } catch(e) { 
+        console.warn("⚠️ فشل الرفع للقاعدة:", e.message); 
+        _useLocal=true; 
       }
-      return _fromDB_transfers(row);
-    } catch(e) { console.warn("addTransfer fallback:", e.message); _useLocal=true; }
+    })();
   }
+  
   if (data.paymentMethod === 'balance' && data.beneficiaryId) {
     _lsSet("accounts", _lsGet("accounts").map(a => a.id === data.beneficiaryId
       ? {...a, balance: Math.max(0,(Number(a.balance)||0) - (Number(data.total)||0))} : a));
     _notify("accounts");
   }
-  const list = _lsGet("transfers"); list.unshift(entry); _lsSet("transfers", list); _notify("transfers");
   return entry;
 }
 
 export async function getTransfers(n=500) {
   await _waitInit();
+  
+  // ✅ جلب من المحلي أولاً
+  let transfers = _lsGet("transfers").slice(0, n);
+  console.log(`📊 جلب ${transfers.length} حوالة محلية`);
+  
+  // ✅ محاولة التحديث من Supabase في الخلفية (بدون انتظار)
   if (!_useLocal && _supa) {
-    try {
-      const { data, error } = await _supa.from("transfers").select("*").order("created_at", { ascending: false }).limit(n);
-      if (error) throw error;
-      return data.map(_fromDB_transfers);
-    } catch(e) { console.warn("getTransfers fallback:", e.message); _useLocal=true; }
+    (async () => {
+      try {
+        const { data, error } = await _supa.from("transfers").select("*").order("created_at", { ascending: false }).limit(n);
+        if (error) throw error;
+        const newTransfers = data.map(_fromDB_transfers);
+        console.log(`☁️ تم تحديث من Supabase: ${newTransfers.length} حوالة`);
+        _lsSet("transfers", newTransfers);
+        _notify("transfers");
+      } catch(e) { 
+        console.warn("⚠️ فشل جلب من Supabase:", e.message); 
+        _useLocal=true; 
+      }
+    })();
   }
-  return _lsGet("transfers").slice(0, n);
+  
+  return transfers;
 }
 
 export function listenTransfers(cb) {
   let active = true;
   const poll = async () => {
     if (!active) return;
-    cb(await getTransfers(200));
-    setTimeout(poll, 5000);
+    const transfers = await getTransfers(200);
+    cb(transfers);
+    setTimeout(poll, 3000);
   };
   poll();
   return () => { active = false; };
 }
 
 export async function updateTransferStatus(id, status) {
-  await _waitInit();
-  if (!_useLocal && _supa) {
-    try {
-      const { error } = await _supa.from("transfers").update({ status }).eq("id", id);
-      if (error) throw error; return;
-    } catch(e) { console.warn("updateTransferStatus fallback:", e.message); _useLocal=true; }
-  }
+  // ✅ تحديث محلي أولاً
   _lsSet("transfers", _lsGet("transfers").map(t => t.id===id ? {...t, status, updatedAt:Date.now()} : t));
   _notify("transfers");
+  console.log("💾 تم تحديث الحوالة محليًا:", id);
+  
+  // ✅ رفع للقاعدة في الخلفية
+  await _waitInit();
+  if (!_useLocal && _supa) {
+    (async () => {
+      try {
+        const { error } = await _supa.from("transfers").update({ status }).eq("id", id);
+        if (error) throw error;
+        console.log("☁️ تم تحديث الحوالة في Supabase:", id);
+      } catch(e) { 
+        console.warn("⚠️ فشل التحديث:", e.message); 
+        _useLocal=true; 
+      }
+    })();
+  }
 }
 
 export async function deleteTransfer(id) {
-  await _waitInit();
-  if (!_useLocal && _supa) {
-    try {
-      const { error } = await _supa.from("transfers").delete().eq("id", id);
-      if (error) throw error; return;
-    } catch(e) { console.warn("deleteTransfer fallback:", e.message); _useLocal=true; }
-  }
+  // ✅ حذف محلي أولاً
   _lsSet("transfers", _lsGet("transfers").filter(t => t.id !== id));
   _notify("transfers");
+  console.log("💾 تم حذف الحوالة محليًا:", id);
+  
+  // ✅ حذف من القاعدة في الخلفية
+  await _waitInit();
+  if (!_useLocal && _supa) {
+    (async () => {
+      try {
+        const { error } = await _supa.from("transfers").delete().eq("id", id);
+        if (error) throw error;
+        console.log("☁️ تم حذف الحوالة من Supabase:", id);
+      } catch(e) { 
+        console.warn("⚠️ فشل الحذف:", e.message); 
+        _useLocal=true; 
+      }
+    })();
+  }
 }
 
 export async function findTransferByCode(code) {
@@ -270,91 +363,156 @@ export async function findTransferByCode(code) {
 // ===== الحسابات =====
 export async function addAccount(data) {
   const entry = { id:_uid(), ...data, balance:Number(data.balance)||0, balanceSAR:Number(data.balanceSAR)||0, status:data.status||"active", createdAt:Date.now() };
+  
+  // ✅ خطوة 1: حفظ محلي أولاً - فوري جداً
+  const list = _lsGet("accounts"); 
+  list.unshift(entry); 
+  _lsSet("accounts", list);
+  console.log("💾 تم حفظ الحساب محليًا:", entry.name);
+  _notify("accounts");
+  
+  // ✅ خطوة 2: رفع للقاعدة في الخلفية (بدون انتظار)
   await _waitInit();
   if (!_useLocal && _supa) {
-    try {
-      const { data: row, error } = await _supa.from("accounts").insert(_toDB_accounts({...data, id:entry.id})).select().single();
-      if (error) throw error;
-      return _fromDB_accounts(row);
-    } catch(e) { console.warn("addAccount fallback:", e.message); _useLocal=true; }
+    (async () => {
+      try {
+        const { data: row, error } = await _supa.from("accounts").insert(_toDB_accounts({...data, id:entry.id})).select().single();
+        if (error) throw error;
+        console.log("☁️ تم رفع الحساب إلى Supabase:", entry.name);
+      } catch(e) { 
+        console.warn("⚠️ فشل الرفع:", e.message); 
+        _useLocal=true; 
+      }
+    })();
   }
-  const list = _lsGet("accounts"); list.unshift(entry); _lsSet("accounts", list); _notify("accounts");
+  
   return entry;
 }
 
 export async function getAccounts() {
   await _waitInit();
+  
+  // ✅ جلب من المحلي أولاً
+  let accounts = _lsGet("accounts");
+  console.log(`📊 جلب ${accounts.length} حساب محلي`);
+  
+  // ✅ محاولة التحديث من Supabase في الخلفية (بدون انتظار)
   if (!_useLocal && _supa) {
-    try {
-      const { data, error } = await _supa.from("accounts").select("*").order("created_at", { ascending: false });
-      if (error) throw error;
-      return data.map(_fromDB_accounts);
-    } catch(e) { console.warn("getAccounts fallback:", e.message); _useLocal=true; }
+    (async () => {
+      try {
+        const { data, error } = await _supa.from("accounts").select("*").order("created_at", { ascending: false });
+        if (error) throw error;
+        const newAccounts = data.map(_fromDB_accounts);
+        console.log(`☁️ تم تحديث من Supabase: ${newAccounts.length} حساب`);
+        _lsSet("accounts", newAccounts);
+        _notify("accounts");
+      } catch(e) { 
+        console.warn("⚠️ فشل جلب من Supabase:", e.message); 
+        _useLocal=true; 
+      }
+    })();
   }
-  return _lsGet("accounts");
+  
+  return accounts;
 }
 
 export function listenAccounts(cb) {
   let active = true;
   const poll = async () => {
     if (!active) return;
-    cb(await getAccounts());
-    setTimeout(poll, 5000);
+    const accounts = await getAccounts();
+    cb(accounts);
+    setTimeout(poll, 3000);
   };
   poll();
   return () => { active = false; };
 }
 
 export async function updateAccount(id, data) {
-  await _waitInit();
-  if (!_useLocal && _supa) {
-    try {
-      const dbData = _toDB_accounts(data);
-      delete dbData.id;
-      const { error } = await _supa.from("accounts").update(dbData).eq("id", id);
-      if (error) throw error; return;
-    } catch(e) { console.warn("updateAccount fallback:", e.message); _useLocal=true; }
-  }
+  // ✅ تحديث محلي أولاً
   _lsSet("accounts", _lsGet("accounts").map(a => a.id===id ? {...a, ...data, updatedAt:Date.now()} : a));
   _notify("accounts");
+  console.log("💾 تم تحديث الحساب محليًا:", id);
+  
+  // ✅ رفع للقاعدة في الخلفية
+  await _waitInit();
+  if (!_useLocal && _supa) {
+    (async () => {
+      try {
+        const dbData = _toDB_accounts(data);
+        delete dbData.id;
+        const { error } = await _supa.from("accounts").update(dbData).eq("id", id);
+        if (error) throw error;
+        console.log("☁️ تم تحديث الحساب في Supabase:", id);
+      } catch(e) { 
+        console.warn("⚠️ فشل التحديث:", e.message); 
+        _useLocal=true; 
+      }
+    })();
+  }
 }
 
 export async function deleteAccount(id) {
-  await _waitInit();
-  if (!_useLocal && _supa) {
-    try {
-      const { error } = await _supa.from("accounts").delete().eq("id", id);
-      if (error) throw error; return;
-    } catch(e) { console.warn("deleteAccount fallback:", e.message); _useLocal=true; }
-  }
+  // ✅ حذف محلي أولاً
   _lsSet("accounts", _lsGet("accounts").filter(a => a.id !== id));
   _notify("accounts");
+  console.log("💾 تم حذف الحساب محليًا:", id);
+  
+  // ✅ حذف من القاعدة في الخلفية
+  await _waitInit();
+  if (!_useLocal && _supa) {
+    (async () => {
+      try {
+        const { error } = await _supa.from("accounts").delete().eq("id", id);
+        if (error) throw error;
+        console.log("☁️ تم حذف الحساب من Supabase:", id);
+      } catch(e) { 
+        console.warn("⚠️ فشل الحذف:", e.message); 
+        _useLocal=true; 
+      }
+    })();
+  }
 }
 
 // ===== سندات القبض والصرف =====
 export async function addVoucher(data) {
   const entry = { id:_uid(), ...data, createdAt:Date.now() };
+  
+  // ✅ حفظ محلي أولاً
+  const list = _lsGet("vouchers"); 
+  list.unshift(entry); 
+  _lsSet("vouchers", list);
+  _notify("vouchers");
+  console.log("💾 تم حفظ السند محليًا");
+  
+  // ✅ رفع للقاعدة في الخلفية
   await _waitInit();
   if (!_useLocal && _supa) {
-    try {
-      const { data: row, error } = await _supa.from("vouchers").insert(_toDB_vouchers({...data, id:entry.id})).select().single();
-      if (error) throw error;
-      if (data.accountId) {
-        const { data: acc } = await _supa.from("accounts").select("balance, balance_sar").eq("id", data.accountId).single();
-        if (acc) {
-          if (data.currency === 'SAR') {
-            const newSAR = data.type==='receipt' ? (acc.balance_sar||0)+(Number(data.amount)||0) : (acc.balance_sar||0)-(Number(data.amount)||0);
-            await _supa.from("accounts").update({ balance_sar: newSAR }).eq("id", data.accountId);
-          } else {
-            const newBal = data.type==='receipt' ? (acc.balance||0)+(Number(data.amount)||0) : (acc.balance||0)-(Number(data.amount)||0);
-            await _supa.from("accounts").update({ balance: newBal }).eq("id", data.accountId);
+    (async () => {
+      try {
+        const { data: row, error } = await _supa.from("vouchers").insert(_toDB_vouchers({...data, id:entry.id})).select().single();
+        if (error) throw error;
+        console.log("☁️ تم رفع السند إلى Supabase");
+        
+        if (data.accountId) {
+          const { data: acc } = await _supa.from("accounts").select("balance, balance_sar").eq("id", data.accountId).single();
+          if (acc) {
+            if (data.currency === 'SAR') {
+              const newSAR = data.type==='receipt' ? (acc.balance_sar||0)+(Number(data.amount)||0) : (acc.balance_sar||0)-(Number(data.amount)||0);
+              await _supa.from("accounts").update({ balance_sar: newSAR }).eq("id", data.accountId);
+            } else {
+              const newBal = data.type==='receipt' ? (acc.balance||0)+(Number(data.amount)||0) : (acc.balance||0)-(Number(data.amount)||0);
+              await _supa.from("accounts").update({ balance: newBal }).eq("id", data.accountId);
+            }
           }
         }
+      } catch(e) { 
+        console.warn("⚠️ فشل الرفع:", e.message); 
+        _useLocal=true; 
       }
-      return _fromDB_vouchers(row);
-    } catch(e) { console.warn("addVoucher fallback:", e.message); _useLocal=true; }
+    })();
   }
-  const list = _lsGet("vouchers"); list.unshift(entry); _lsSet("vouchers", list); _notify("vouchers");
+  
   if (data.accountId) {
     _lsSet("accounts", _lsGet("accounts").map(a => {
       if (a.id !== data.accountId) return a;
@@ -373,16 +531,30 @@ export async function addVoucher(data) {
 
 export async function getVouchers(accountId) {
   await _waitInit();
+  
+  // ✅ جلب من المحلي أولاً
+  let all = _lsGet("vouchers");
+  console.log(`📊 جلب ${all.length} سند محلي`);
+  
+  // ✅ محاولة التحديث من Supabase في الخلفية
   if (!_useLocal && _supa) {
-    try {
-      let query = _supa.from("vouchers").select("*").order("created_at", { ascending: false }).limit(200);
-      if (accountId) query = query.eq("account_id", accountId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data.map(_fromDB_vouchers);
-    } catch(e) { console.warn("getVouchers fallback:", e.message); _useLocal=true; }
+    (async () => {
+      try {
+        let query = _supa.from("vouchers").select("*").order("created_at", { ascending: false }).limit(200);
+        if (accountId) query = query.eq("account_id", accountId);
+        const { data, error } = await query;
+        if (error) throw error;
+        const newVouchers = data.map(_fromDB_vouchers);
+        console.log(`☁️ تم تحديث من Supabase: ${newVouchers.length} سند`);
+        _lsSet("vouchers", newVouchers);
+        _notify("vouchers");
+      } catch(e) { 
+        console.warn("⚠️ فشل جلب من Supabase:", e.message); 
+        _useLocal=true; 
+      }
+    })();
   }
-  const all = _lsGet("vouchers");
+  
   return accountId ? all.filter(v => v.accountId === accountId) : all;
 }
 
@@ -391,7 +563,7 @@ export function listenVouchers(cb) {
   const poll = async () => {
     if (!active) return;
     cb(await getVouchers());
-    setTimeout(poll, 5000);
+    setTimeout(poll, 3000);
   };
   poll();
   return () => { active = false; };
@@ -419,18 +591,28 @@ export function convertCurrency(amount, from, to, rates) {
 
 // ===== سجل الواتساب =====
 export async function logWA(data) {
+  // ✅ حفظ محلي أولاً
+  const entry = { id:_uid(), ...data, sentAt:Date.now() };
+  const list = _lsGet("wa_logs"); 
+  list.unshift(entry); 
+  _lsSet("wa_logs", list.slice(0,100));
+  console.log("💾 تم حفظ سجل واتساب محليًا");
+  
+  // ✅ رفع للقاعدة في الخلفية
   await _waitInit();
   if (!_useLocal && _supa) {
-    try {
-      await _supa.from("wa_logs").insert({
-        id: _uid(), type: data.type||"", account_name: data.accountName||"",
-        phone: data.phone||"", message: (data.message||"").slice(0,500)
-      });
-      return;
-    } catch(e) { console.warn("logWA fallback:", e.message); }
+    (async () => {
+      try {
+        await _supa.from("wa_logs").insert({
+          id: _uid(), type: data.type||"", account_name: data.accountName||"",
+          phone: data.phone||"", message: (data.message||"").slice(0,500)
+        });
+        console.log("☁️ تم رفع سجل واتساب إلى Supabase");
+      } catch(e) { 
+        console.warn("⚠️ فشل رفع السجل:", e.message); 
+      }
+    })();
   }
-  const entry = { id:_uid(), ...data, sentAt:Date.now() };
-  const list = _lsGet("wa_logs"); list.unshift(entry); _lsSet("wa_logs", list.slice(0,100));
 }
 
 export function listenWALogs(cb) {
@@ -438,12 +620,24 @@ export function listenWALogs(cb) {
   const poll = async () => {
     if (!active) return;
     await _waitInit();
+    
+    // ✅ جلب من المحلي أولاً
+    let localLogs = _lsGet("wa_logs");
+    cb(localLogs);
+    
+    // ✅ محاولة التحديث من Supabase في الخلفية
     if (!_useLocal && _supa) {
-      try {
-        const { data } = await _supa.from("wa_logs").select("*").order("sent_at", { ascending: false }).limit(50);
-        if (data) { cb(data.map(r=>({id:r.id,type:r.type,accountName:r.account_name,phone:r.phone,message:r.message,sentAt:new Date(r.sent_at).getTime()}))); }
-      } catch {}
-    } else { cb(_lsGet("wa_logs")); }
+      (async () => {
+        try {
+          const { data } = await _supa.from("wa_logs").select("*").order("sent_at", { ascending: false }).limit(50);
+          if (data) { 
+            const logs = data.map(r=>({id:r.id,type:r.type,accountName:r.account_name,phone:r.phone,message:r.message,sentAt:new Date(r.sent_at).getTime()}));
+            cb(logs);
+          }
+        } catch {}
+      })();
+    }
+    
     setTimeout(poll, 8000);
   };
   poll();
@@ -459,7 +653,8 @@ export async function getStats() {
     const ct = typeof t.createdAt==='number' ? t.createdAt : new Date(t.createdAt||0).getTime();
     return ct >= ts;
   });
-  return {
+  
+  const stats = {
     totalBalance:    accounts.reduce((s,a) => s+(Number(a.balance)||0), 0),
     totalBalanceSAR: accounts.reduce((s,a) => s+(Number(a.balanceSAR)||0), 0),
     todayCompleted:  todayT.filter(t => t.status==="completed").length,
@@ -471,4 +666,7 @@ export async function getStats() {
     allTransfers:    transfers.length,
     allCompleted:    transfers.filter(t => t.status==="completed").length,
   };
+  
+  console.log("📊 الإحصاءات المحدّثة:", stats);
+  return stats;
 }
