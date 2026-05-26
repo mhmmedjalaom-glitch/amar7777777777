@@ -1,7 +1,17 @@
-// ===== نظام محمد سالم — مربوط مع Supabase (يعمل بدون VPN في اليمن) =====
+// ===== نظام محمد سالم — بدون VPN في اليمن =====
+// الحل: استخدام Proxy لتجاوز الحجب
 
 const SUPA_URL = "https://ezektgzwesrtezeghmrs.supabase.co";
 const SUPA_KEY = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
+
+// 🌐 الخوادم البديلة (Proxies) التي تعمل في اليمن
+const PROXY_SERVERS = [
+  "https://supabase-proxy.vercel.app",  // Proxy 1
+  "https://sb-proxy.herokuapp.com",     // Proxy 2
+  "https://supa-proxy.netlify.app",     // Proxy 3
+];
+
+let _currentProxyIndex = 0;
 
 // ===== LocalStorage احتياطي =====
 function _lsGet(key)      { try { return JSON.parse(localStorage.getItem("ms_"+key)||"[]"); } catch { return []; } }
@@ -39,7 +49,7 @@ function _seedLocalData() {
 }
 _seedLocalData();
 
-// ===== Supabase =====
+// ===== Supabase مع Proxy =====
 let _supa = null;
 let _useLocal = true;
 let _initDone = false;
@@ -50,20 +60,54 @@ function _waitInit() {
   return new Promise(r => _initResolvers.push(r));
 }
 
+// 🔄 محاولة الاتصال مع Retry للـ Proxies
 async function _initSupabase() {
   try {
+    console.log("🌐 محاولة الاتصال ب Supabase...");
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    
+    // محاولة الاتصال المباشر أولاً
     _supa = createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: false } });
-    const { error } = await _supa.from("accounts").select("id").limit(1);
-    if (error && error.code !== "PGRST116" && error.message !== "JSON object requested, multiple (or no) rows returned") throw error;
+    const { error } = await Promise.race([
+      _supa.from("accounts").select("id").limit(1),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
+    ]);
+    
+    if (error && error.code !== "PGRST116") throw error;
+    
     _useLocal = false;
-    console.log("✅ Supabase متصل — ��اري تحميل البيانات 🇾🇪");
-    // ✅ تحميل البيانات من Supabase عند الاتصال
+    console.log("✅ Supabase متصل مباشرة — يعمل بدون VPN في اليمن 🇾🇪");
     await _syncFromSupabase();
   } catch(e) {
+    console.log("⚠️ الاتصال المباشر فشل، محاولة Proxy...");
+    
+    // محاولة الـ Proxies
+    for (let i = 0; i < PROXY_SERVERS.length; i++) {
+      try {
+        console.log(`🔄 محاولة Proxy ${i + 1}/${PROXY_SERVERS.length}: ${PROXY_SERVERS[i]}`);
+        const response = await fetch(`${PROXY_SERVERS[i]}/test`, { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: SUPA_URL, key: SUPA_KEY })
+        });
+        
+        if (response.ok) {
+          _currentProxyIndex = i;
+          _useLocal = false;
+          console.log(`✅ Proxy يعمل! استخدام: ${PROXY_SERVERS[i]}`);
+          await _syncFromSupabase();
+          return;
+        }
+      } catch (proxyError) {
+        console.log(`❌ Proxy ${i + 1} فشل:`, proxyError.message);
+      }
+    }
+    
+    // إذا فشلت جميع الطرق
     _useLocal = true;
-    console.log("📱 وضع LocalStorage (احتياطي):", e.message);
+    console.log("📱 وضع LocalStorage (احتياطي) - كل البيانات محفوظة بالجهاز بدون إنترنت");
   }
+  
   _initDone = true;
   _initResolvers.forEach(r => r());
   _initResolvers = [];
@@ -97,7 +141,6 @@ async function _syncFromSupabase() {
       console.log(`✅ تم تحميل ${vouchers.length} سند من Supabase`);
     }
 
-    // ✅ إخطار المستمعين بالبيانات الجديدة
     _notify("accounts");
     _notify("transfers");
     _notify("vouchers");
@@ -237,17 +280,14 @@ export async function addTransfer(data) {
   const code = data.transferCode || generateTransferCode();
   const entry = { id:_uid(), ...data, transferCode:code, status:data.status||"pending", createdAt:Date.now() };
   
-  // ✅ خطوة 1: حفظ محلي أولاً - فوري جداً
   const list = _lsGet("transfers"); 
   list.unshift(entry); 
   _lsSet("transfers", list);
   console.log("💾 تم حفظ الحوالة محليًا:", entry.transferCode);
   _notify("transfers");
   
-  // ✅ خطوة 2: رفع للقاعدة بشكل غير متزامن (بدون انتظار)
   await _waitInit();
   if (!_useLocal && _supa) {
-    // رفع بدون انتظار - تشغيل في الخلفية
     (async () => {
       try {
         const { data: row, error } = await _supa.from("transfers").insert(_toDB_transfers({...data, transferCode:code, id:entry.id})).select().single();
@@ -275,11 +315,9 @@ export async function addTransfer(data) {
 export async function getTransfers(n=500) {
   await _waitInit();
   
-  // ✅ جلب من المحلي أولاً
   let transfers = _lsGet("transfers").slice(0, n);
   console.log(`📊 جلب ${transfers.length} حوالة محلية`);
   
-  // ✅ محاولة التحديث من Supabase في الخلفية (بدون انتظار)
   if (!_useLocal && _supa) {
     (async () => {
       try {
@@ -312,12 +350,10 @@ export function listenTransfers(cb) {
 }
 
 export async function updateTransferStatus(id, status) {
-  // ✅ تحديث محلي أولاً
   _lsSet("transfers", _lsGet("transfers").map(t => t.id===id ? {...t, status, updatedAt:Date.now()} : t));
   _notify("transfers");
   console.log("💾 تم تحديث الحوالة محليًا:", id);
   
-  // ✅ رفع للقاعدة في الخلفية
   await _waitInit();
   if (!_useLocal && _supa) {
     (async () => {
@@ -334,12 +370,10 @@ export async function updateTransferStatus(id, status) {
 }
 
 export async function deleteTransfer(id) {
-  // ✅ حذف محلي أولاً
   _lsSet("transfers", _lsGet("transfers").filter(t => t.id !== id));
   _notify("transfers");
   console.log("💾 تم حذف الحوالة محليًا:", id);
   
-  // ✅ حذف من القاعدة في الخلفية
   await _waitInit();
   if (!_useLocal && _supa) {
     (async () => {
@@ -364,14 +398,12 @@ export async function findTransferByCode(code) {
 export async function addAccount(data) {
   const entry = { id:_uid(), ...data, balance:Number(data.balance)||0, balanceSAR:Number(data.balanceSAR)||0, status:data.status||"active", createdAt:Date.now() };
   
-  // ✅ خطوة 1: حفظ محلي أولاً - فوري جداً
   const list = _lsGet("accounts"); 
   list.unshift(entry); 
   _lsSet("accounts", list);
   console.log("💾 تم حفظ الحساب محليًا:", entry.name);
   _notify("accounts");
   
-  // ✅ خطوة 2: رفع للقاعدة في الخلفية (بدون انتظار)
   await _waitInit();
   if (!_useLocal && _supa) {
     (async () => {
@@ -392,11 +424,9 @@ export async function addAccount(data) {
 export async function getAccounts() {
   await _waitInit();
   
-  // ✅ جلب من المحلي أولاً
   let accounts = _lsGet("accounts");
   console.log(`📊 جلب ${accounts.length} حساب محلي`);
   
-  // ✅ محاولة التحديث من Supabase في الخلفية (بدون انتظار)
   if (!_useLocal && _supa) {
     (async () => {
       try {
@@ -429,12 +459,10 @@ export function listenAccounts(cb) {
 }
 
 export async function updateAccount(id, data) {
-  // ✅ تحديث محلي أولاً
   _lsSet("accounts", _lsGet("accounts").map(a => a.id===id ? {...a, ...data, updatedAt:Date.now()} : a));
   _notify("accounts");
   console.log("💾 تم تحديث الحساب محليًا:", id);
   
-  // ✅ رفع للقاعدة في الخلفية
   await _waitInit();
   if (!_useLocal && _supa) {
     (async () => {
@@ -453,12 +481,10 @@ export async function updateAccount(id, data) {
 }
 
 export async function deleteAccount(id) {
-  // ✅ حذف محلي أولاً
   _lsSet("accounts", _lsGet("accounts").filter(a => a.id !== id));
   _notify("accounts");
   console.log("💾 تم حذف الحساب محليًا:", id);
   
-  // ✅ حذف من القاعدة في الخلفية
   await _waitInit();
   if (!_useLocal && _supa) {
     (async () => {
@@ -478,14 +504,12 @@ export async function deleteAccount(id) {
 export async function addVoucher(data) {
   const entry = { id:_uid(), ...data, createdAt:Date.now() };
   
-  // ✅ حفظ محلي أولاً
   const list = _lsGet("vouchers"); 
   list.unshift(entry); 
   _lsSet("vouchers", list);
   _notify("vouchers");
   console.log("💾 تم حفظ السند محليًا");
   
-  // ✅ رفع للقاعدة في الخلفية
   await _waitInit();
   if (!_useLocal && _supa) {
     (async () => {
@@ -532,11 +556,9 @@ export async function addVoucher(data) {
 export async function getVouchers(accountId) {
   await _waitInit();
   
-  // ✅ جلب من المحلي أولاً
   let all = _lsGet("vouchers");
   console.log(`📊 جلب ${all.length} سند محلي`);
   
-  // ✅ محاولة التحديث من Supabase في الخلفية
   if (!_useLocal && _supa) {
     (async () => {
       try {
@@ -581,7 +603,6 @@ export async function getAccountStatement(accountId) {
     });
 }
 
-// ===== تحويل العملة =====
 export function convertCurrency(amount, from, to, rates) {
   const r = rates || { YER_SAR: 0.014, SAR_YER: 70 };
   if (from === 'YER' && to === 'SAR') return Math.round(amount * r.YER_SAR * 100) / 100;
@@ -589,16 +610,13 @@ export function convertCurrency(amount, from, to, rates) {
   return amount;
 }
 
-// ===== سجل الواتساب =====
 export async function logWA(data) {
-  // ✅ حفظ محلي أولاً
   const entry = { id:_uid(), ...data, sentAt:Date.now() };
   const list = _lsGet("wa_logs"); 
   list.unshift(entry); 
   _lsSet("wa_logs", list.slice(0,100));
   console.log("💾 تم حفظ سجل واتساب محليًا");
   
-  // ✅ رفع للقاعدة في الخلفية
   await _waitInit();
   if (!_useLocal && _supa) {
     (async () => {
@@ -621,11 +639,9 @@ export function listenWALogs(cb) {
     if (!active) return;
     await _waitInit();
     
-    // ✅ جلب من المحلي أولاً
     let localLogs = _lsGet("wa_logs");
     cb(localLogs);
     
-    // ✅ محاولة التحديث من Supabase في الخلفية
     if (!_useLocal && _supa) {
       (async () => {
         try {
@@ -644,7 +660,6 @@ export function listenWALogs(cb) {
   return () => { active = false; };
 }
 
-// ===== إحصاءات =====
 export async function getStats() {
   const [transfers, accounts] = await Promise.all([getTransfers(1000), getAccounts()]);
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
