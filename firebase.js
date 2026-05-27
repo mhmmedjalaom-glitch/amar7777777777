@@ -332,7 +332,7 @@ export async function getAccountStatement(accountId) {
   const acc = _lsGet("accounts").find(a=>a.id===accountId);
   const vouchers = _lsGet("vouchers").filter(v=>v.accountId===accountId);
   const transfers = _lsGet("transfers").filter(t=>t.beneficiaryId===accountId||(acc&&t.beneficiaryPhone===acc.phone));
-  const all = [ ...vouchers.map(v=>({...v,_type:'voucher'})), ...transfers.map(t=>({...t,_type:'transfer'})) ];
+  const all = [ ...vouchers.map(v=>({...v,entryType:'voucher'})), ...transfers.map(t=>({...t,entryType:'transfer'})) ];
   all.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   return all;
 }
