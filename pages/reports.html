@@ -100,6 +100,47 @@
     </div>
   </nav>
 
+
+  <script>
+  // ⚡ عرض التقارير فوراً من localStorage
+  (function(){
+    function ls(k){try{return JSON.parse(localStorage.getItem("ms_"+k)||"[]")}catch{return[]}}
+    function fmt(n){return Number(n||0).toLocaleString('ar-SA')}
+    function setEl(id,v){var e=document.getElementById(id);if(e)e.textContent=v}
+    
+    var ts=ls("transfers");
+    var now=Date.now(), day=86400000, days=30;
+    var filtered=ts.filter(function(t){return (Date.now()-(t.createdAt||0)) < days*day});
+    var completed=filtered.filter(function(t){return t.status==="completed"});
+    var profit=completed.reduce(function(s,t){return s+(Number(t.commission)||0)},0);
+    var amount=completed.reduce(function(s,t){return s+(Number(t.amount)||0)},0);
+    
+    setEl('statTotalTransfers', filtered.length);
+    setEl('statCompleted',      completed.length);
+    setEl('statProfit',         fmt(profit)+' ر.ي');
+    setEl('statAmount',         fmt(amount)+' ر.ي');
+    setEl('profitGrowth',       filtered.length>0?'إجمالي '+filtered.length+' حوالة في آخر 30 يوم':'لا توجد حوالات في الفترة المحددة');
+    setEl('reportSubtitle',     'آخر 30 يوم · '+new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long'}));
+    
+    var list=document.getElementById('profitList');
+    if(list){
+      var recent=completed.sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0)}).slice(0,10);
+      if(!recent.length){
+        list.innerHTML='<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد عمليات مكتملة</p>';
+      } else {
+        list.innerHTML=recent.map(function(t){
+          var d=t.createdAt?new Date(t.createdAt):null;
+          var ds=d?d.toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'}):'—';
+          return '<div class="op-item">'+
+            '<div class="op-avatar" style="background:linear-gradient(135deg,#2e7d32,#1b5e20)">💰</div>'+
+            '<div class="op-info"><div class="op-name">'+(t.beneficiary||'—')+'</div><div class="op-date">'+ds+'</div></div>'+
+            '<div style="text-align:left"><div class="op-amount" style="color:#2e7d32">+'+fmt(t.commission||0)+'</div><div class="op-currency">ر.ي عمولة</div></div>'+
+          '</div>';
+        }).join('');
+      }
+    }
+  })();
+  </script>
   <script src="../script.js"></script>
 
   <script type="module">
