@@ -35,7 +35,7 @@
     <div class="filter-chips">
       <div class="chip active" data-filter="all">الكل</div>
       <div class="chip" data-filter="completed">مكتملة</div>
-      <div class="chip" data-filter="pending">قيد التنفيذ</div>
+      <div class="chip" data-filter="sent">📤 مرسلة</div>
       <div class="chip" data-filter="cancelled">ملغاة</div>
     </div>
 
@@ -44,9 +44,9 @@
         <div id="cntCompleted" style="font-size:18px;font-weight:800;color:#2e7d32">—</div>
         <div style="font-size:10px;color:#388e3c;font-family:Tajawal,sans-serif">مكتملة</div>
       </div>
-      <div style="flex:1;background:#fff3e0;border-radius:10px;padding:10px;text-align:center">
-        <div id="cntPending" style="font-size:18px;font-weight:800;color:#e65100">—</div>
-        <div style="font-size:10px;color:#bf360c;font-family:Tajawal,sans-serif">قيد التنفيذ</div>
+      <div style="flex:1;background:#e3f2fd;border-radius:10px;padding:10px;text-align:center">
+        <div id="cntPending" style="font-size:18px;font-weight:800;color:#1565c0">—</div>
+        <div style="font-size:10px;color:#1565c0;font-family:Tajawal,sans-serif">مرسلة</div>
       </div>
       <div style="flex:1;background:#ffebee;border-radius:10px;padding:10px;text-align:center">
         <div id="cntCancelled" style="font-size:18px;font-weight:800;color:#c62828">—</div>
@@ -81,28 +81,28 @@
     function ls(k){try{return JSON.parse(localStorage.getItem("ms_"+k)||"[]")}catch{return[]}}
     var ts=ls("transfers");
     function setEl(id,v){var e=document.getElementById(id);if(e)e.textContent=v}
+    var sentCount=ts.filter(function(t){return t.status==='sent'||t.status==='pending'}).length;
     setEl('cntCompleted',ts.filter(function(t){return t.status==='completed'}).length);
-    setEl('cntPending',ts.filter(function(t){return t.status==='pending'}).length);
+    setEl('cntPending',sentCount);
     setEl('cntCancelled',ts.filter(function(t){return t.status==='cancelled'}).length);
     setEl('cntTotal',ts.length);
-    var pending=ts.filter(function(t){return t.status==='pending'}).length;
     var alertEl=document.getElementById('alertText');
-    if(alertEl) alertEl.textContent=pending>0?pending+' حوالة قيد التنفيذ تحتاج مراجعة':'لا توجد حوالات معلقة ✓';
+    if(alertEl) alertEl.textContent=sentCount>0?sentCount+' حوالة مرسلة تحتاج إتمام':'لا توجد حوالات معلقة ✓';
     var list=document.getElementById('transferList');
     if(!list) return;
     if(!ts.length){
       list.innerHTML='<p style="text-align:center;color:#999;padding:32px;font-family:Tajawal">لا توجد حوالات — أضف من صفحة التحويل</p>';
       return;
     }
-    var sbg={completed:'#2e7d32',pending:'#f57c00',cancelled:'#c62828'};
-    var stx={completed:'✅ مكتملة',pending:'⏳ قيد التنفيذ',cancelled:'❌ ملغاة'};
-    var bc={completed:'#2e7d32',cancelled:'#c62828',pending:'#f57c00'};
+    var sbg={completed:'#2e7d32',sent:'#1565c0',pending:'#1565c0',cancelled:'#c62828'};
+    var stx={completed:'✅ مكتملة',sent:'📤 مرسلة',pending:'📤 مرسلة',cancelled:'❌ ملغاة'};
+    var bc={completed:'#2e7d32',sent:'#1565c0',pending:'#1565c0',cancelled:'#c62828'};
     list.innerHTML=ts.map(function(t){
       var d=t.createdAt?new Date(t.createdAt):null;
       var ds=d?d.toLocaleString('ar-SA',{hour12:true,year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
       var ph=(t.beneficiaryPhone||'').replace(/'/g,'');
       var nm=(t.beneficiary||'—').replace(/'/g,'');
-      var ip=t.status==='pending';
+      var isActive=t.status==='sent'||t.status==='pending';
       return '<div class="op-item" style="border-right:4px solid '+(bc[t.status]||'#888')+'">'+
         '<div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:18px">💸</div>'+
         '<div class="op-info" style="flex:1;min-width:0">'+
@@ -110,8 +110,8 @@
           '<div class="op-date">'+ds+'</div>'+
           '<div style="margin-top:4px"><span style="background:'+(sbg[t.status]||'#888')+';color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">'+(stx[t.status]||t.status)+'</span></div>'+
           '<div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">'+
-            (ip?'<button onclick="doComplete(''+t.id+'',''+ph+'',''+nm+'','+(t.amount||0)+',''+(t.currency||'ر.ي')+'')" style="background:#2e7d32;color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:Cairo;font-weight:700">✓ مكتملة + واتساب</button>':'')+
-            (ip?'<button onclick="doCancel(''+t.id+'',''+ph+'',''+nm+'','+(t.amount||0)+',''+(t.currency||'ر.ي')+'')" style="background:#e65100;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:Cairo">✗ إلغاء</button>':'')+
+            (isActive?'<button onclick="doComplete(''+t.id+'',''+ph+'',''+nm+'','+(t.amount||0)+',''+(t.currency||'ر.ي')+'')" style="background:#2e7d32;color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:Cairo;font-weight:700">✓ مكتملة + واتساب</button>':'')+
+            (isActive?'<button onclick="doCancel(''+t.id+'',''+ph+'',''+nm+'','+(t.amount||0)+',''+(t.currency||'ر.ي')+'')" style="background:#e65100;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:Cairo">✗ إلغاء</button>':'')+
             (ph?'<button onclick="doRemind(''+ph+'',''+nm+'','+(t.amount||0)+',''+(t.currency||'ر.ي')+'')" style="background:#25D366;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:Cairo">💬 تذكير</button>':'')+
             '<button onclick="doDelete(''+t.id+'')" style="background:#c62828;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:Cairo">🗑 حذف</button>'+
           '</div>'+
@@ -148,23 +148,24 @@
     const m = {
       completed: '<span style="background:#2e7d32;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">✅ مكتملة</span>',
       pending:   '<span style="background:#f57c00;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">⏳ قيد التنفيذ</span>',
-      cancelled: '<span style="background:#c62828;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">❌ ملغاة</span>'
+      cancelled: '<span style="background:#c62828;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">❌ ملغاة</span>',
+      sent:      '<span style="background:#1565c0;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">📤 مرسلة</span>'
     };
-    return m[s] || `<span style="background:#888;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">${s}</span>`;
+    return m[s] || `<span style="background:#1565c0;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">📤 مرسلة</span>`;
   }
 
   function render() {
     const list = document.getElementById('transferList');
     if (!list) return;
 
-    const pending = allTransfers.filter(t => t.status === 'pending').length;
+    const sentCount = allTransfers.filter(t => t.status === 'sent' || t.status === 'pending').length;
     document.getElementById('cntCompleted').textContent = allTransfers.filter(t => t.status === 'completed').length;
-    document.getElementById('cntPending').textContent   = pending;
+    document.getElementById('cntPending').textContent   = sentCount;
     document.getElementById('cntCancelled').textContent = allTransfers.filter(t => t.status === 'cancelled').length;
     document.getElementById('cntTotal').textContent     = allTransfers.length;
 
     const alertText = document.getElementById('alertText');
-    if (alertText) alertText.textContent = pending > 0 ? `${pending} حوالة قيد التنفيذ تحتاج مراجعة` : 'لا توجد حوالات معلقة ✓';
+    if (alertText) alertText.textContent = sentCount > 0 ? `${sentCount} حوالة مرسلة تحتاج إتمام` : 'لا توجد حوالات معلقة ✓';
 
     let filtered = allTransfers;
     if (currentFilter !== 'all') filtered = filtered.filter(t => t.status === currentFilter);
@@ -178,12 +179,12 @@
       return;
     }
 
-    const borderColor = s => s === 'completed' ? '#2e7d32' : s === 'cancelled' ? '#c62828' : '#f57c00';
+    const borderColor = s => s === 'completed' ? '#2e7d32' : s === 'cancelled' ? '#c62828' : s === 'sent' || s === 'pending' ? '#1565c0' : '#888';
 
     list.innerHTML = filtered.map(t => {
       const phone = (t.beneficiaryPhone || '').replace(/'/g,'');
       const name  = (t.beneficiary || '—').replace(/'/g,'');
-      const isPending = t.status === 'pending';
+      const isActive = t.status === 'sent' || t.status === 'pending';
       return `
         <div class="op-item" style="border-right:4px solid ${borderColor(t.status)}">
           <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:18px">💸</div>
@@ -193,8 +194,8 @@
             <div style="margin-top:4px">${statusBadge(t.status)} <span style="font-size:11px;color:#888;margin-right:6px">${t.transferType||''}</span></div>
             ${t.notes ? `<div style="font-size:11px;color:#888;margin-top:3px;font-family:Tajawal">📝 ${t.notes}</div>` : ''}
             <div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">
-              ${isPending ? `<button onclick="doComplete('${t.id}','${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#2e7d32;color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:Cairo;font-weight:700">✓ مكتملة + واتساب</button>` : ''}
-              ${isPending ? `<button onclick="doCancel('${t.id}','${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#e65100;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:Cairo">✗ إلغاء</button>` : ''}
+              ${isActive ? `<button onclick="doComplete('${t.id}','${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#2e7d32;color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:Cairo;font-weight:700">✓ مكتملة + واتساب</button>` : ''}
+              ${isActive ? `<button onclick="doCancel('${t.id}','${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#e65100;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:Cairo">✗ إلغاء</button>` : ''}
               ${phone ? `<button onclick="doRemind('${phone}','${name}',${t.amount||0},'${t.currency||'ر.ي'}')" style="background:#25D366;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:Cairo">💬 تذكير</button>` : ''}
               <button onclick="doDelete('${t.id}')" style="background:#c62828;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:Cairo">🗑 حذف</button>
             </div>
