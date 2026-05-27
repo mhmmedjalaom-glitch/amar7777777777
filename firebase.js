@@ -1,17 +1,7 @@
-// ===== نظام محمد سالم — بدون VPN في اليمن =====
-// الحل: استخدام Proxy لتجاوز الحجب
+// ===== نظام محمد سالم — يعمل في اليمن بدون VPN =====
 
-const SUPA_URL = "https://ezektgzwesrtezeghmrs.supabase.co";
+const SUPA_URL_DEFAULT = "https://ezektgzwesrtezeghmrs.supabase.co";
 const SUPA_KEY = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
-
-// 🌐 الخوادم البديلة (Proxies) التي تعمل في اليمن
-const PROXY_SERVERS = [
-  "https://supabase-proxy.vercel.app",  // Proxy 1
-  "https://sb-proxy.herokuapp.com",     // Proxy 2
-  "https://supa-proxy.netlify.app",     // Proxy 3
-];
-
-let _currentProxyIndex = 0;
 
 // ===== LocalStorage احتياطي =====
 function _lsGet(key)      { try { return JSON.parse(localStorage.getItem("ms_"+key)||"[]"); } catch { return []; } }
@@ -60,54 +50,49 @@ function _waitInit() {
   return new Promise(r => _initResolvers.push(r));
 }
 
-// 🔄 محاولة الاتصال مع Retry للـ Proxies
+// 🔄 الاتصال بـ Supabase — يدعم البروكسي لليمن
 async function _initSupabase() {
+  // قراءة رابط البروكسي من الإعدادات (إن وجد)
+  const proxyUrl = (localStorage.getItem("s_proxy_url") || "").trim().replace(/\/$/, "");
+  
+  // قائمة الروابط للمحاولة: البروكسي أولاً إن كان محدداً، ثم المباشر
+  const urlsToTry = [];
+  if (proxyUrl) urlsToTry.push(proxyUrl);
+  urlsToTry.push(SUPA_URL_DEFAULT);
+
   try {
-    console.log("🌐 محاولة الاتصال ب Supabase...");
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     
-    // محاولة الاتصال المباشر أولاً
-    _supa = createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: false } });
-    const { error } = await Promise.race([
-      _supa.from("accounts").select("id").limit(1),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
-    ]);
-    
-    if (error && error.code !== "PGRST116") throw error;
-    
-    _useLocal = false;
-    console.log("✅ Supabase متصل مباشرة — يعمل بدون VPN في اليمن 🇾🇪");
-    await _syncFromSupabase();
-  } catch(e) {
-    console.log("⚠️ الاتصال المباشر فشل، محاولة Proxy...");
-    
-    // محاولة الـ Proxies
-    for (let i = 0; i < PROXY_SERVERS.length; i++) {
+    for (const baseUrl of urlsToTry) {
       try {
-        console.log(`🔄 محاولة Proxy ${i + 1}/${PROXY_SERVERS.length}: ${PROXY_SERVERS[i]}`);
-        const response = await fetch(`${PROXY_SERVERS[i]}/test`, { 
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: SUPA_URL, key: SUPA_KEY })
-        });
+        console.log(`🌐 محاولة الاتصال: ${baseUrl}`);
+        const client = createClient(baseUrl, SUPA_KEY, { auth: { persistSession: false } });
         
-        if (response.ok) {
-          _currentProxyIndex = i;
-          _useLocal = false;
-          console.log(`✅ Proxy يعمل! استخدام: ${PROXY_SERVERS[i]}`);
-          await _syncFromSupabase();
-          return;
-        }
-      } catch (proxyError) {
-        console.log(`❌ Proxy ${i + 1} فشل:`, proxyError.message);
+        // timeout أطول (15 ثانية) لتحمّل بطء الإنترنت في اليمن
+        const { error } = await Promise.race([
+          client.from("accounts").select("id").limit(1),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 15000))
+        ]);
+        
+        if (error && error.code !== "PGRST116") throw error;
+        
+        _supa = client;
+        _useLocal = false;
+        console.log(`✅ Supabase متصل — ${baseUrl === proxyUrl ? "عبر البروكسي 🇾🇪" : "مباشر"}`);
+        await _syncFromSupabase();
+        break;
+      } catch(e) {
+        console.log(`⚠️ فشل: ${baseUrl} — ${e.message}`);
       }
     }
-    
-    // إذا فشلت جميع الطرق
-    _useLocal = true;
-    console.log("📱 وضع LocalStorage (احتياطي) - كل البيانات محفوظة بالجهاز بدون إنترنت");
+  } catch(e) {
+    console.log("⚠️ خطأ في تحميل مكتبة Supabase:", e.message);
   }
-  
+
+  if (_useLocal) {
+    console.log("📱 وضع LocalStorage — كل البيانات محفوظة بالجهاز بدون إنترنت");
+  }
+
   _initDone = true;
   _initResolvers.forEach(r => r());
   _initResolvers = [];
