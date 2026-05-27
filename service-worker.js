@@ -1,9 +1,9 @@
 // ===== Service Worker - تطبيق ذكي وعمل بدون إنترنت =====
 // PWA Service Worker - Offline Support & Smart Caching
 
-const CACHE_NAME = 'mhamad-salem-v2-cache';
-const API_CACHE = 'api-cache-v2';
-const ASSETS_CACHE = 'assets-cache-v2';
+const CACHE_NAME = 'mhamad-salem-v3-cache';
+const API_CACHE = 'api-cache-v3';
+const ASSETS_CACHE = 'assets-cache-v3';
 
 const urlsToCache = [
   '/',
