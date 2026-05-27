@@ -387,3 +387,23 @@ export async function getStats() {
 
 export async function getAllTransfers() { return _lsGet("transfers"); }
 export async function getAllAccounts()  { return _lsGet("accounts");  }
+
+// ===== كشف الحساب =====
+export async function getAccountStatement(accountId) {
+  const vouchers = _lsGet("vouchers").filter(v => v.accountId === accountId);
+  const transfers = _lsGet("transfers").filter(t => t.beneficiaryId === accountId || t.beneficiaryPhone === (_lsGet("accounts").find(a=>a.id===accountId)||{}).phone);
+  const all = [
+    ...vouchers.map(v => ({...v, _type:'voucher'})),
+    ...transfers.map(t => ({...t, _type:'transfer'}))
+  ];
+  all.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+  return all;
+}
+
+// ===== سجل الواتساب — مستمع =====
+export function listenWALogs(cb) {
+  if (!_listeners["wa_logs"]) _listeners["wa_logs"] = [];
+  _listeners["wa_logs"].push(cb);
+  cb(_lsGet("wa_logs"));
+  return () => { _listeners["wa_logs"] = (_listeners["wa_logs"]||[]).filter(x=>x!==cb); };
+}
