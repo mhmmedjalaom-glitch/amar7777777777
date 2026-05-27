@@ -15,7 +15,7 @@ function _notify(col) {
 }
 
 function _seedLocalData() {
-  if (localStorage.getItem("ms_seeded")) return;
+  if (localStorage.getItem("ms_seeded_v2")) return;
   const now = Date.now(), day = 86400000;
   _lsSet("accounts", [
     { id:_uid(), name:"أحمد محمد الوادعي",   phone:"967712345678", balance:850000,  balanceSAR:0, status:"active", notes:"عميل منتظم",    createdAt:now-10*day },
@@ -34,7 +34,7 @@ function _seedLocalData() {
   ]);
   _lsSet("vouchers", []);
   _lsSet("wa_logs", []);
-  localStorage.setItem("ms_seeded","1");
+  localStorage.setItem("ms_seeded_v2","1");
 }
 _seedLocalData();
 
