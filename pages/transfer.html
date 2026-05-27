@@ -106,22 +106,12 @@
         <div id="pmNote" style="font-size:11px;color:#666;font-family:Tajawal;margin-top:4px;padding:6px 10px;background:#f9f9f9;border-radius:8px">💵 السداد نقداً عند إرسال الحوالة</div>
       </div>
 
-      <!-- نوع الحوالة -->
-      <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">🔖 نوع الحوالة</label>
-        <select id="transferType" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;background:#fff;outline:none">
-          <option value="تحويل عادي">تحويل عادي</option>
-          <option value="تحويل عاجل">تحويل عاجل</option>
-          <option value="دفعة">دفعة</option>
-          <option value="سحب">سحب</option>
-        </select>
-      </div>
+      <input type="hidden" id="transferType" value="تحويل عادي" />
 
       <!-- الحالة -->
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">📊 حالة الحوالة</label>
         <select id="transferStatus" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;background:#fff;outline:none">
-          <option value="pending">⏳ معلقة - قيد التنفيذ</option>
           <option value="sent">📤 مرسلة</option>
           <option value="completed">✅ مستلمة - مكتملة</option>
           <option value="cancelled">❌ ملغاة</option>
