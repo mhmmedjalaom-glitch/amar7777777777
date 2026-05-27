@@ -74,6 +74,43 @@
     </div>
   </nav>
 
+
+  <script>
+  // ⚡ عرض VIP فوراً
+  (function(){
+    function ls(k){try{return JSON.parse(localStorage.getItem("ms_"+k)||"[]")}catch{return[]}}
+    var accounts=ls("accounts");
+    var vip=accounts.filter(function(a){return a.status==='vip'||a.status==='VIP'});
+    var totalBal=vip.reduce(function(s,a){return s+(Number(a.balance)||0)},0);
+    var setEl=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v};
+    setEl('vipTotalBalance',totalBal.toLocaleString('ar-SA'));
+    setEl('vipActiveCount',vip.filter(function(a){return Number(a.balance||0)>0}).length);
+    setEl('vipNeedingCount',vip.filter(function(a){return Number(a.balance||0)<=0}).length);
+    setEl('vipClientCount',vip.length+' عميل');
+    var list=document.getElementById('vipList');
+    if(!list) return;
+    if(!vip.length){
+      list.innerHTML='<p style="text-align:center;color:#999;padding:30px;font-family:Tajawal">لا يوجد عملاء VIP. أنشئ حساباً وحدده كـ VIP.</p>';
+      return;
+    }
+    list.innerHTML=vip.map(function(a){
+      var ini=(a.name||'VIP').substring(0,2);
+      var sp=(a.phone||'').replace(/'/g,'');
+      var sn=(a.name||'').replace(/'/g,'');
+      return '<div class="op-item">'+
+        '<div class="op-avatar" style="background:linear-gradient(135deg,#D4AF37,#c9a227);cursor:pointer;font-size:14px" onclick="window.sendVIPMsg(''+sp+'',''+sn+'')">'+ini+'</div>'+
+        '<div class="op-info">'+
+          '<div class="op-name">'+a.name+' <span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:1px 7px;border-radius:8px;font-size:10px">👑 VIP</span></div>'+
+          '<div class="op-date">'+(a.phone||'لا يوجد رقم')+'</div>'+
+        '</div>'+
+        '<div style="text-align:left">'+
+          '<div style="font-size:16px;font-weight:800;color:#8B0000">'+Number(a.balance||0).toLocaleString('ar-SA')+'</div>'+
+          '<div style="font-size:11px;color:#999">ر.ي</div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  })();
+  </script>
   <script src="../script.js"></script>
 
   <script type="module">
