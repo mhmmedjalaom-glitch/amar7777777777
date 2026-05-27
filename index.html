@@ -153,6 +153,72 @@
     </div>
   </nav>
 
+
+  <script>
+  // ⚡ عرض فوري من localStorage — يعمل قبل تحميل أي module
+  (function(){
+    function ls(k){try{return JSON.parse(localStorage.getItem("ms_"+k)||"[]")}catch{return[]}}
+    function fmt(n){return Number(n||0).toLocaleString('ar-SA')}
+    function setEl(id,val){var el=document.getElementById(id);if(el)el.textContent=val}
+    
+    // --- بيانات أولية إذا لم توجد ---
+    if(!localStorage.getItem("ms_seeded_v2")){
+      var now=Date.now(),day=86400000;
+      var uid=function(){return Math.random().toString(36).slice(2)+Date.now().toString(36)};
+      localStorage.setItem("ms_accounts",JSON.stringify([
+        {id:uid(),name:"أحمد محمد الوادعي",phone:"967712345678",balance:850000,balanceSAR:0,status:"active",notes:"عميل منتظم",createdAt:now-10*day},
+        {id:uid(),name:"خالد سالم العمري",phone:"967798765432",balance:1200000,balanceSAR:0,status:"active",notes:"VIP",createdAt:now-8*day},
+        {id:uid(),name:"محمد علي الشمري",phone:"967733445566",balance:320000,balanceSAR:0,status:"late",notes:"متأخر 7 أيام",createdAt:now-15*day},
+        {id:uid(),name:"عبد الرحمن عقلان",phone:"967755667788",balance:2500000,balanceSAR:0,status:"vip",notes:"VIP كبير",createdAt:now-5*day},
+        {id:uid(),name:"سالم القحطاني",phone:"967722334455",balance:650000,balanceSAR:0,status:"late",notes:"متأخر 5 أيام",createdAt:now-20*day},
+        {id:uid(),name:"فهد ناصر المالكي",phone:"967788990011",balance:480000,balanceSAR:0,status:"active",notes:"",createdAt:now-3*day}
+      ]));
+      localStorage.setItem("ms_transfers",JSON.stringify([
+        {id:uid(),transferCode:"حو-260524-A1B2",beneficiary:"أحمد محمد الوادعي",beneficiaryPhone:"967712345678",amount:150000,currency:"ر.ي",commission:7500,total:157500,status:"completed",createdAt:now-1*day},
+        {id:uid(),transferCode:"حو-260523-C3D4",beneficiary:"خالد سالم العمري",beneficiaryPhone:"967798765432",amount:500000,currency:"ر.ي",commission:25000,total:525000,status:"completed",createdAt:now-2*day},
+        {id:uid(),transferCode:"حو-260524-E5F6",beneficiary:"محمد علي الشمري",beneficiaryPhone:"967733445566",amount:80000,currency:"ر.ي",commission:4000,total:84000,status:"pending",createdAt:now-3*day},
+        {id:uid(),transferCode:"حو-260524-G7H8",beneficiary:"عبد الرحمن عقلان",beneficiaryPhone:"967755667788",amount:900000,currency:"ر.ي",commission:45000,total:945000,status:"pending",createdAt:now-4*day},
+        {id:uid(),transferCode:"حو-260524-I9J0",beneficiary:"سالم القحطاني",beneficiaryPhone:"967722334455",amount:200000,currency:"ر.ي",commission:10000,total:210000,status:"completed",createdAt:now-5*day}
+      ]));
+      localStorage.setItem("ms_seeded_v2","1");
+    }
+    
+    var transfers = ls("transfers");
+    var accounts  = ls("accounts");
+    var completed = transfers.filter(function(t){return t.status==="completed"}).length;
+    var pending   = transfers.filter(function(t){return t.status==="pending"}).length;
+    var profit    = transfers.filter(function(t){return t.status==="completed"}).reduce(function(s,t){return s+(Number(t.commission)||0)},0);
+    var lateCount = accounts.filter(function(a){return a.status==="late"}).length;
+    
+    setEl('statCompleted',completed);
+    setEl('statPending',pending);
+    setEl('statProfit',fmt(profit));
+    setEl('statLate',accounts.length);
+    setEl('allTransfersCount',transfers.length);
+    setEl('totalBalance',fmt(accounts.reduce(function(s,a){return s+(Number(a.balance)||0)},0)));
+    
+    var lateEl=document.getElementById('lateAlertText');
+    if(lateEl) lateEl.textContent = lateCount>0
+      ? 'يوجد '+lateCount+' عميل متأخر بالسداد — يرجى المتابعة.'
+      : accounts.length+' حساب مسجل · لا يوجد متأخرون حالياً ✓';
+    
+    var listEl=document.getElementById('opList');
+    if(listEl){
+      if(!transfers.length){
+        listEl.innerHTML='<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد حوالات مسجلة بعد</p>';
+      } else {
+        var sbg={completed:'#2e7d32',pending:'#f57c00',cancelled:'#c62828',sent:'#1565c0'};
+        var stx={completed:'مكتملة ✅',pending:'قيد التنفيذ ⏳',cancelled:'ملغاة ❌',sent:'مرسلة 📤'};
+        listEl.innerHTML=transfers.slice(0,10).map(function(t){
+          var d=t.createdAt?new Date(t.createdAt):null;
+          var ds=d?d.toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'}):'—';
+          var ini=(t.beneficiary||'—').trim().slice(0,2);
+          return '<div class="op-item"><div class="op-avatar">'+ini+'</div><div class="op-info"><div class="op-name">'+(t.beneficiary||'—')+'</div><div class="op-date">'+ds+' · <span style="background:'+(sbg[t.status]||'#666')+';color:#fff;padding:2px 8px;border-radius:8px;font-size:10px">'+(stx[t.status]||t.status)+'</span></div></div><div style="text-align:left"><div class="op-amount">'+fmt(t.amount)+'</div><div class="op-currency">'+(t.currency||'ر.ي')+'</div></div></div>';
+        }).join('');
+      }
+    }
+  })();
+  </script>
   <script src="script.js"></script>
 
   <script type="module">
