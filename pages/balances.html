@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>أصحاب الرصيد - نظام محمد سالم</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .bal-card { background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.07);display:flex;align-items:center;gap:12px;border-right:5px solid #8B0000; }
+    .bal-avatar { width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#8B0000,#660000);display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:800;flex-shrink:0; }
+    .bal-info { flex:1;min-width:0; }
+    .bal-name { font-size:14px;font-weight:800;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .bal-phone { font-size:11px;color:#888;font-family:Tajawal,sans-serif;margin-top:1px; }
+    .bal-amount { text-align:left;min-width:90px; }
+    .bal-yer { font-size:16px;font-weight:800;color:#8B0000; }
+    .bal-sar { font-size:11px;color:#1565c0;font-weight:700;margin-top:2px; }
+    .bal-actions { display:flex;gap:5px;margin-top:6px;flex-wrap:wrap; }
+    .bal-actions button { border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo; }
+    .btn-receipt { background:#1565c0;color:#fff; }
+    .btn-payment { background:#e65100;color:#fff; }
+    .btn-statement { background:#37474f;color:#fff; }
+    .btn-wa { background:#25D366;color:#fff; }
+    .total-bar { background:linear-gradient(135deg,#8B0000,#5a0000);color:#fff;border-radius:16px;padding:16px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center; }
+    .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:flex-end;justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;direction:rtl;font-family:Cairo,sans-serif;max-height:90vh;overflow-y:auto; }
+    .modal-title { font-size:16px;font-weight:800;margin-bottom:18px;color:#1a1a1a; }
+    .modal-close { float:left;font-size:26px;cursor:pointer;color:#999;line-height:1;background:none;border:none; }
+    .field-group { margin-bottom:12px; }
+    .field-label { font-size:13px;font-weight:700;color:#444;display:block;margin-bottom:6px; }
+    .field-input { width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none; }
+    .stmt-item { padding:10px 0;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:10px; }
+    .stmt-badge { padding:2px 8px;border-radius:7px;font-size:10px;font-weight:700; }
+    .empty-state { text-align:center;padding:48px 20px;color:#999;font-family:Tajawal,sans-serif; }
+    .empty-icon { font-size:48px;margin-bottom:12px; }
+  </style>
+</head>
+<body>
+
+  <div class="sub-header">
+    <div class="sub-header-top">
+      <img src="../logo.svg" alt="شعار" style="width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.7);flex-shrink:0;margin-left:4px" />
+      <div class="back-btn">➡️</div>
+      <span class="sub-header-title">أصحاب الرصيد</span>
+      <div style="width:38px"></div>
+    </div>
+    <div class="sub-header-subtitle">الحسابات التي لديها رصيد حالي</div>
+  </div>
+
+  <div class="page-content">
+
+    <div class="total-bar">
+      <div>
+        <div style="font-size:12px;opacity:0.8;font-family:Tajawal">إجمالي الأرصدة (ر.ي)</div>
+        <div id="totalYER" style="font-size:22px;font-weight:800">—</div>
+      </div>
+      <div style="text-align:left">
+        <div style="font-size:12px;opacity:0.8;font-family:Tajawal">إجمالي الأرصدة (ر.س)</div>
+        <div id="totalSAR" style="font-size:22px;font-weight:800;color:#D4AF37">—</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <div style="flex:1;background:#fce4ec;border-radius:10px;padding:10px;text-align:center">
+        <div id="cntHolders" style="font-size:18px;font-weight:800;color:#8B0000">—</div>
+        <div style="font-size:10px;color:#b71c1c;font-family:Tajawal">عدد الحسابات</div>
+      </div>
+      <div style="flex:1;background:#e8f5e9;border-radius:10px;padding:10px;text-align:center">
+        <div id="cntActive" style="font-size:18px;font-weight:800;color:#2e7d32">—</div>
+        <div style="font-size:10px;color:#388e3c;font-family:Tajawal">نشط</div>
+      </div>
+      <div style="flex:1;background:#ffebee;border-radius:10px;padding:10px;text-align:center">
+        <div id="cntLate" style="font-size:18px;font-weight:800;color:#c62828">—</div>
+        <div style="font-size:10px;color:#b71c1c;font-family:Tajawal">متأخر</div>
+      </div>
+      <div style="flex:1;background:#f3e5f5;border-radius:10px;padding:10px;text-align:center">
+        <div id="cntVIP" style="font-size:18px;font-weight:800;color:#6a1b9a">—</div>
+        <div style="font-size:10px;color:#6a1b9a;font-family:Tajawal">VIP</div>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="بحث بالاسم أو الرقم..." />
+    </div>
+
+    <div class="filter-chips" style="margin-bottom:14px">
+      <div class="chip active" data-filter="all">الكل</div>
+      <div class="chip" data-filter="yer">رصيد ر.ي</div>
+      <div class="chip" data-filter="sar">رصيد ر.س</div>
+      <div class="chip" data-filter="late">متأخر</div>
+      <div class="chip" data-filter="vip">VIP</div>
+    </div>
+
+    <div id="balanceList">
+      <p style="text-align:center;color:#999;padding:32px;font-family:Tajawal">جاري التحميل...</p>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-href="../index.html"><span class="nav-icon">🏠</span><span>الرئيسية</span></div>
+    <div class="nav-item" data-href="transfer.html"><span class="nav-icon">💸</span><span>تحويل</span></div>
+    <div class="nav-item" data-href="accounts.html"><span class="nav-icon">👥</span><span>الحسابات</span></div>
+    <div class="nav-item" data-href="logs.html"><span class="nav-icon">📋</span><span>السجلات</span></div>
+  </nav>
+
+  <!-- Modal: سند قبض -->
+  <div id="receiptModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <h3 class="modal-title" style="margin:0">📥 سند قبض</h3>
+        <button class="modal-close" onclick="document.getElementById('receiptModal').classList.remove('open')">×</button>
+      </div>
+      <div style="background:#e3f2fd;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#1565c0;font-family:Tajawal">
+        💡 سيُضاف المبلغ لرصيد العميل تلقائياً
+      </div>
+      <div class="field-group">
+        <label class="field-label">العميل</label>
+        <div id="receiptClientName" style="padding:12px;background:#f5f5f5;border-radius:10px;font-weight:700;color:#333"></div>
+        <input id="receiptClientId" type="hidden"/>
+        <input id="receiptClientPhone" type="hidden"/>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="flex:2">
+          <label class="field-label">المبلغ *</label>
+          <input id="receiptAmount" type="number" placeholder="0" min="0" class="field-input"/>
+        </div>
+        <div style="flex:1">
+          <label class="field-label">العملة</label>
+          <select id="receiptCurrency" class="field-input" style="background:#fff">
+            <option value="YER">ر.ي</option>
+            <option value="SAR">ر.س</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">السبب / الملاحظة</label>
+        <input id="receiptReason" type="text" placeholder="سبب القبض..." class="field-input"/>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button id="btnReceiptSave" style="flex:1;padding:13px;background:#1565c0;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ</button>
+        <button id="btnReceiptSaveWA" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ + واتساب</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: سند صرف -->
+  <div id="paymentModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <h3 class="modal-title" style="margin:0">📤 سند صرف</h3>
+        <button class="modal-close" onclick="document.getElementById('paymentModal').classList.remove('open')">×</button>
+      </div>
+      <div style="background:#fff3e0;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#e65100;font-family:Tajawal">
+        💡 سيُخصم المبلغ من رصيد العميل تلقائياً
+      </div>
+      <div class="field-group">
+        <label class="field-label">العميل</label>
+        <div id="paymentClientName" style="padding:12px;background:#f5f5f5;border-radius:10px;font-weight:700;color:#333"></div>
+        <input id="paymentClientId" type="hidden"/>
+        <input id="paymentClientPhone" type="hidden"/>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="flex:2">
+          <label class="field-label">المبلغ *</label>
+          <input id="paymentAmount" type="number" placeholder="0" min="0" class="field-input"/>
+        </div>
+        <div style="flex:1">
+          <label class="field-label">العملة</label>
+          <select id="paymentCurrency" class="field-input" style="background:#fff">
+            <option value="YER">ر.ي</option>
+            <option value="SAR">ر.س</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">السبب / الملاحظة</label>
+        <input id="paymentReason" type="text" placeholder="سبب الصرف..." class="field-input"/>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button id="btnPaymentSave" style="flex:1;padding:13px;background:#e65100;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ</button>
+        <button id="btnPaymentSaveWA" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ + واتساب</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: كشف الحساب -->
+  <div id="statementModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <h3 class="modal-title" style="margin:0">📋 كشف الحساب</h3>
+        <button class="modal-close" onclick="document.getElementById('statementModal').classList.remove('open')">×</button>
+      </div>
+      <div id="statementHeader" style="background:#f5f5f5;border-radius:12px;padding:12px;margin-bottom:14px"></div>
+      <div id="statementList" style="max-height:50vh;overflow-y:auto">
+        <p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">جاري التحميل...</p>
+      </div>
+      <button id="btnShareStatement" style="width:100%;margin-top:12px;padding:12px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">
+        💬 مشاركة كشف الحساب عبر واتساب
+      </button>
+    </div>
+  </div>
+
+
+  <script>
+  // ⚡ عرض فوري من localStorage
+  (function(){
+    function ls(k){try{return JSON.parse(localStorage.getItem("ms_"+k)||"[]")}catch{return[]}}
+    function fmt(n){return Number(n||0).toLocaleString('ar-SA')}
+    function setEl(id,v){var el=document.getElementById(id);if(el)el.textContent=v}
+
+    var accounts = ls("accounts");
+    // فقط الحسابات التي عندها رصيد
+    var holders = accounts.filter(function(a){ return Number(a.balance||0) > 0 || Number(a.balanceSAR||0) > 0; });
+    // ترتيب تنازلي حسب الرصيد
+    holders.sort(function(a,b){ return Number(b.balance||0) - Number(a.balance||0); });
+
+    var totalYER = holders.reduce(function(s,a){ return s + Number(a.balance||0); }, 0);
+    var totalSAR = holders.reduce(function(s,a){ return s + Number(a.balanceSAR||0); }, 0);
+
+    setEl('totalYER', fmt(totalYER));
+    setEl('totalSAR', totalSAR > 0 ? fmt(totalSAR) : '—');
+    setEl('cntHolders', holders.length);
+    setEl('cntActive',  holders.filter(function(a){ return a.status==='active'; }).length);
+    setEl('cntLate',    holders.filter(function(a){ return a.status==='late'; }).length);
+    setEl('cntVIP',     holders.filter(function(a){ return a.status==='vip'; }).length);
+
+    var list = document.getElementById('balanceList');
+    if (!list) return;
+    if (!holders.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><div style="font-size:15px;font-weight:700;color:#555;margin-bottom:6px">لا توجد حسابات برصيد</div><div style="font-size:13px">عند إضافة رصيد لأي حساب سيظهر هنا</div></div>';
+      return;
+    }
+
+    function statusBadge(s) {
+      if(s==='vip')  return '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:2px 8px;border-radius:7px;font-size:10px">👑 VIP</span>';
+      if(s==='late') return '<span style="background:#c62828;color:#fff;padding:2px 8px;border-radius:7px;font-size:10px">⚠️ متأخر</span>';
+      return '<span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:7px;font-size:10px">✅ نشط</span>';
+    }
+
+    list.innerHTML = holders.map(function(a) {
+      var ini = (a.name||'ع').substring(0,2);
+      var yer = Number(a.balance||0);
+      var sar = Number(a.balanceSAR||0);
+      var ph  = (a.phone||'').replace(/'/g,'');
+      var nm  = (a.name||'').replace(/'/g,'');
+      var sarLine = sar > 0 ? '<div class="bal-sar">' + fmt(sar) + ' ر.س</div>' : '';
+      return '<div class="bal-card">'+
+        '<div class="bal-avatar">'+ini+'</div>'+
+        '<div class="bal-info">'+
+          '<div class="bal-name">'+(a.name||'—')+'</div>'+
+          '<div class="bal-phone">'+(a.phone||'لا يوجد رقم')+' · '+statusBadge(a.status)+'</div>'+
+          '<div class="bal-actions">'+
+            '<button class="btn-receipt"  onclick="openReceipt(\''+a.id+'\',\''+nm+'\',\''+ph+'\')">📥 قبض</button>'+
+            '<button class="btn-payment"  onclick="openPayment(\''+a.id+'\',\''+nm+'\',\''+ph+'\')">📤 صرف</button>'+
+            '<button class="btn-statement" onclick="openStatement(\''+a.id+'\',\''+nm+'\',\''+ph+'\','+yer+','+sar+')">📋 كشف</button>'+
+            (ph?'<button class="btn-wa" onclick="sendWA(\''+ph+'\',\''+nm+'\','+yer+')">💬</button>':'')+
+          '</div>'+
+        '</div>'+
+        '<div class="bal-amount">'+
+          '<div class="bal-yer">'+fmt(yer)+'</div>'+
+          '<div style="font-size:10px;color:#999">ر.ي</div>'+sarLine+
+        '</div>'+
+      '</div>';
+    }).join('');
+  })();
+  </script>
+  <script src="../script.js"></script>
+
+  <script type="module">
+  import { listenAccounts, addVoucher, getAccountStatement, notifyClient, buildMsg, openWA, logWA } from "../firebase.js";
+
+  let allHolders = [], currentFilter = 'all', currentSearch = '';
+  let activeStatementAccount = null;
+
+  function fmt(n) { return Number(n||0).toLocaleString('ar-SA'); }
+
+  function statusBadge(s) {
+    if (s==='vip')  return '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:2px 8px;border-radius:7px;font-size:10px">👑 VIP</span>';
+    if (s==='late') return '<span style="background:#c62828;color:#fff;padding:2px 8px;border-radius:7px;font-size:10px">⚠️ متأخر</span>';
+    return '<span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:7px;font-size:10px">✅ نشط</span>';
+  }
+
+  function updateStats(holders) {
+    const totalYER = holders.reduce((s,a) => s + Number(a.balance||0), 0);
+    const totalSAR = holders.reduce((s,a) => s + Number(a.balanceSAR||0), 0);
+    document.getElementById('totalYER').textContent   = fmt(totalYER);
+    document.getElementById('totalSAR').textContent   = totalSAR > 0 ? fmt(totalSAR) : '—';
+    document.getElementById('cntHolders').textContent = holders.length;
+    document.getElementById('cntActive').textContent  = holders.filter(a => a.status === 'active').length;
+    document.getElementById('cntLate').textContent    = holders.filter(a => a.status === 'late').length;
+    document.getElementById('cntVIP').textContent     = holders.filter(a => a.status === 'vip').length;
+  }
+
+  function render() {
+    const list = document.getElementById('balanceList');
+    if (!list) return;
+
+    // فقط أصحاب الرصيد مرتبين تنازلياً
+    let holders = allHolders
+      .filter(a => Number(a.balance||0) > 0 || Number(a.balanceSAR||0) > 0)
+      .sort((a,b) => Number(b.balance||0) - Number(a.balance||0));
+
+    updateStats(holders);
+
+    // تطبيق الفلتر
+    if (currentFilter === 'yer')  holders = holders.filter(a => Number(a.balance||0) > 0);
+    if (currentFilter === 'sar')  holders = holders.filter(a => Number(a.balanceSAR||0) > 0);
+    if (currentFilter === 'late') holders = holders.filter(a => a.status === 'late');
+    if (currentFilter === 'vip')  holders = holders.filter(a => a.status === 'vip');
+
+    // تطبيق البحث
+    if (currentSearch) {
+      const q = currentSearch.toLowerCase();
+      holders = holders.filter(a =>
+        (a.name||'').toLowerCase().includes(q) || (a.phone||'').includes(q)
+      );
+    }
+
+    if (!holders.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><div style="font-size:15px;font-weight:700;color:#555;margin-bottom:6px">لا توجد نتائج</div></div>';
+      return;
+    }
+
+    list.innerHTML = holders.map(a => {
+      const ini = (a.name||'ع').substring(0,2);
+      const yer = Number(a.balance||0);
+      const sar = Number(a.balanceSAR||0);
+      const ph  = (a.phone||'').replace(/'/g,'');
+      const nm  = (a.name||'').replace(/'/g,'');
+      const sarLine = sar > 0 ? `<div class="bal-sar">${fmt(sar)} ر.س</div>` : '';
+      return `
+        <div class="bal-card">
+          <div class="bal-avatar">${ini}</div>
+          <div class="bal-info">
+            <div class="bal-name">${a.name||'—'}</div>
+            <div class="bal-phone">${a.phone||'لا يوجد رقم'} · ${statusBadge(a.status)}</div>
+            <div class="bal-actions">
+              <button class="btn-receipt"   onclick="openReceipt('${a.id}','${nm}','${ph}')">📥 قبض</button>
+              <button class="btn-payment"   onclick="openPayment('${a.id}','${nm}','${ph}')">📤 صرف</button>
+              <button class="btn-statement" onclick="openStatement('${a.id}','${nm}','${ph}',${yer},${sar})">📋 كشف</button>
+              ${ph ? `<button class="btn-wa" onclick="sendWA('${ph}','${nm}',${yer})">💬</button>` : ''}
+            </div>
+          </div>
+          <div class="bal-amount">
+            <div class="bal-yer">${fmt(yer)}</div>
+            <div style="font-size:10px;color:#999">ر.ي</div>
+            ${sarLine}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ===== Actions =====
+  window.openReceipt = function(id, name, phone) {
+    document.getElementById('receiptClientId').value = id;
+    document.getElementById('receiptClientPhone').value = phone;
+    document.getElementById('receiptClientName').textContent = name;
+    document.getElementById('receiptAmount').value = '';
+    document.getElementById('receiptReason').value = '';
+    document.getElementById('receiptModal').classList.add('open');
+  };
+
+  window.openPayment = function(id, name, phone) {
+    document.getElementById('paymentClientId').value = id;
+    document.getElementById('paymentClientPhone').value = phone;
+    document.getElementById('paymentClientName').textContent = name;
+    document.getElementById('paymentAmount').value = '';
+    document.getElementById('paymentReason').value = '';
+    document.getElementById('paymentModal').classList.add('open');
+  };
+
+  window.openStatement = async function(id, name, phone, balance, balanceSAR) {
+    activeStatementAccount = { id, name, phone, balance, balanceSAR };
+    document.getElementById('statementHeader').innerHTML = `
+      <div style="font-weight:800;font-size:15px;color:#1a1a1a;margin-bottom:8px">👤 ${name}</div>
+      <div style="display:flex;gap:16px">
+        <div><span style="color:#666;font-size:12px">الرصيد (ر.ي)</span><br><span style="color:#8B0000;font-weight:800;font-size:16px">${fmt(balance)}</span></div>
+        <div><span style="color:#666;font-size:12px">الرصيد (ر.س)</span><br><span style="color:#1565c0;font-weight:800;font-size:16px">${fmt(balanceSAR)}</span></div>
+      </div>`;
+    document.getElementById('statementModal').classList.add('open');
+    document.getElementById('statementList').innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">جاري التحميل...</p>';
+    try {
+      const entries = await getAccountStatement(id);
+      if (!entries.length) {
+        document.getElementById('statementList').innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد عمليات مسجلة</p>';
+        return;
+      }
+      const statusColors = { completed:'#2e7d32', pending:'#1565c0', sent:'#1565c0', cancelled:'#c62828' };
+      const statusTx    = { completed:'مكتملة ✅', pending:'مرسلة 📤', sent:'مرسلة 📤', cancelled:'ملغاة ❌' };
+      document.getElementById('statementList').innerHTML = entries.map(e => {
+        const d = e.createdAt?.toDate ? e.createdAt.toDate() : new Date(e.createdAt||0);
+        const ds = d.toLocaleDateString('ar-SA') + ' ' + d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+        if (e.entryType === 'transfer') {
+          return `<div class="stmt-item">
+            <div style="width:36px;height:36px;border-radius:50%;background:#e3f2fd;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">💸</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:13px">${e.transferCode||'حوالة'}</div>
+              <div style="font-size:11px;color:#999">${ds}</div>
+              <span class="stmt-badge" style="background:${statusColors[e.status]||'#888'};color:#fff">${statusTx[e.status]||e.status}</span>
+            </div>
+            <div style="text-align:left"><div style="font-weight:800;color:#8B0000">${fmt(e.amount)}</div><div style="font-size:11px;color:#999">${e.currency||'ر.ي'}</div></div>
+          </div>`;
+        } else {
+          const isR = e.type === 'receipt';
+          return `<div class="stmt-item">
+            <div style="width:36px;height:36px;border-radius:50%;background:${isR?'#e8f5e9':'#fff3e0'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${isR?'📥':'📤'}</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:13px">${isR?'سند قبض':'سند صرف'}</div>
+              <div style="font-size:11px;color:#999">${ds}</div>
+              <div style="font-size:11px;color:#666">${e.reason||'—'}</div>
+            </div>
+            <div style="text-align:left"><div style="font-weight:800;color:${isR?'#2e7d32':'#c62828'}">${isR?'+':'−'}${fmt(e.amount)}</div><div style="font-size:11px;color:#999">${e.currency==='SAR'?'ر.س':'ر.ي'}</div></div>
+          </div>`;
+        }
+      }).join('');
+    } catch {
+      document.getElementById('statementList').innerHTML = '<p style="text-align:center;color:#c62828;padding:20px;font-family:Tajawal">خطأ في تحميل البيانات</p>';
+    }
+  };
+
+  window.sendWA = async function(phone, name, balance) {
+    if (!phone) { if(typeof showNotification==='function') showNotification('لا يوجد رقم واتساب','error'); return; }
+    const msg = buildMsg('account_statement', { name, balance, currency:'ر.ي' });
+    openWA(phone, msg);
+    await logWA({ type:'account_statement', accountName:name, phone, message:msg });
+    if (typeof showNotification==='function') showNotification('تم فتح واتساب ✓','success');
+  };
+
+  document.getElementById('btnShareStatement').addEventListener('click', () => {
+    if (!activeStatementAccount) return;
+    const {name, phone, balance, balanceSAR} = activeStatementAccount;
+    const msg = buildMsg('account_statement', {name, balance, currency:'ر.ي'}) + (Number(balanceSAR)>0?`\n💵 الرصيد (ر.س): ${fmt(balanceSAR)}`:'');
+    if (phone) { openWA(phone, msg); if(typeof showNotification==='function') showNotification('تم فتح واتساب ✓','success'); }
+    else if(typeof showNotification==='function') showNotification('لا يوجد رقم للعميل','error');
+  });
+
+  // حفظ السند
+  async function saveVoucher(type, sendWAFlag) {
+    const isR = type === 'receipt';
+    const p   = isR ? 'receipt' : 'payment';
+    const id      = document.getElementById(p+'ClientId').value;
+    const name    = document.getElementById(p+'ClientName').textContent;
+    const phone   = document.getElementById(p+'ClientPhone').value;
+    const amount  = parseFloat(document.getElementById(p+'Amount').value) || 0;
+    const currency = document.getElementById(p+'Currency').value;
+    const reason  = document.getElementById(p+'Reason').value.trim();
+    if (!amount) { if(typeof showNotification==='function') showNotification('يرجى إدخال المبلغ','error'); return; }
+    try {
+      await addVoucher({ accountId:id, accountName:name, type, amount, currency, reason, phone });
+      if(typeof showNotification==='function') showNotification(`✅ تم حفظ سند ${isR?'القبض':'الصرف'}`,'success');
+      if (sendWAFlag && phone) await notifyClient(phone, isR?'voucher_receipt':'voucher_payment', {name, amount, currency:currency==='SAR'?'ر.س':'ر.ي', reason});
+      document.getElementById(p+'Modal').classList.remove('open');
+    } catch(err) {
+      if(typeof showNotification==='function') showNotification('❌ خطأ: '+(err.message||''),'error');
+    }
+  }
+
+  document.getElementById('btnReceiptSave').addEventListener('click',    () => saveVoucher('receipt',  false));
+  document.getElementById('btnReceiptSaveWA').addEventListener('click',  () => saveVoucher('receipt',  true));
+  document.getElementById('btnPaymentSave').addEventListener('click',    () => saveVoucher('payment',  false));
+  document.getElementById('btnPaymentSaveWA').addEventListener('click',  () => saveVoucher('payment',  true));
+
+  // إغلاق الـ modals
+  document.querySelectorAll('.modal-overlay').forEach(m =>
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); })
+  );
+
+  // بحث وفلاتر
+  document.getElementById('searchInput').addEventListener('input', function() { currentSearch = this.value; render(); });
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', function() {
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    currentFilter = this.dataset.filter || 'all';
+    render();
+  }));
+
+  listenAccounts(accounts => { allHolders = accounts || []; render(); });
+  </script>
+</body>
+</html>
