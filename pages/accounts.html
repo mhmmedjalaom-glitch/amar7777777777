@@ -220,6 +220,58 @@
     </div>
   </div>
 
+
+  <script>
+  // ⚡ عرض فوري من localStorage
+  (function(){
+    function ls(k){try{return JSON.parse(localStorage.getItem("ms_"+k)||"[]")}catch{return[]}}
+    function fmt(n){return Number(n||0).toLocaleString('ar-SA')}
+    function setEl(id,val){var el=document.getElementById(id);if(el)el.textContent=val}
+    
+    var accounts=ls("accounts");
+    setEl('statTotal',accounts.length);
+    setEl('statActive',accounts.filter(function(a){return a.status!=='late'}).length);
+    setEl('statLate',accounts.filter(function(a){return a.status==='late'}).length);
+    
+    var list=document.getElementById('accountsList');
+    if(!list) return;
+    if(!accounts.length){
+      list.innerHTML='<p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">لا توجد حسابات مسجلة بعد</p>';
+      return;
+    }
+    function statusLabel(s){
+      if(s==='vip') return '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">👑 VIP</span>';
+      if(s==='late') return '<span style="background:#c62828;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">⚠️ متأخر</span>';
+      return '<span style="background:#2e7d32;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">✅ نشط</span>';
+    }
+    list.innerHTML=accounts.map(function(a){
+      var ini=(a.name||'ع').substring(0,2);
+      var balYER=fmt(a.balance||0);
+      var balSAR=Number(a.balanceSAR||0);
+      var sp=(a.phone||'').replace(/'/g,'');
+      var sn=(a.name||'').replace(/'/g,'');
+      var sarLine=balSAR>0?'<div style="font-size:10px;color:#1565c0;font-weight:700">'+balSAR.toLocaleString('ar-SA')+' ر.س</div>':'';
+      return '<div class="op-item">'+
+        '<div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:14px;cursor:pointer" onclick="openStatement(''+a.id+'',''+sn+'',''+sp+'',''+a.balance+'',''+a.balanceSAR+'')">'+ini+'</div>'+
+        '<div class="op-info" style="flex:1">'+
+          '<div class="op-name">'+(a.name||'—')+'</div>'+
+          '<div class="op-date">'+(a.phone||'لا يوجد رقم')+' · '+statusLabel(a.status)+'</div>'+
+          '<div class="acc-action-btns">'+
+            '<button class="btn-transfer" onclick="goToTransfer(''+a.id+'',''+sn+'',''+sp+'')">💸 حوالة</button>'+
+            '<button class="btn-receipt" onclick="openReceipt(''+a.id+'',''+sn+'',''+sp+'')">🧾+ قبض</button>'+
+            '<button class="btn-payment" onclick="openPayment(''+a.id+'',''+sn+'',''+sp+'')">🧾- صرف</button>'+
+            '<button class="btn-statement" onclick="openStatement(''+a.id+'',''+sn+'',''+sp+'',''+a.balance+'',''+a.balanceSAR+'')">📋 كشف</button>'+
+            '<button class="btn-wa" onclick="sendWAAccount(''+sp+'',''+sn+'',''+a.balance+'')">💬</button>'+
+          '</div>'+
+        '</div>'+
+        '<div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;gap:2px">'+
+          '<div style="font-size:15px;font-weight:800;color:#8B0000">'+balYER+'</div>'+
+          '<div style="font-size:11px;color:#999">ر.ي</div>'+sarLine+
+        '</div>'+
+      '</div>';
+    }).join('');
+  })();
+  </script>
   <script src="../script.js"></script>
 
   <script type="module">
