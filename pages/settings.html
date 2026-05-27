@@ -125,6 +125,29 @@
       </div>
     </div>
 
+    <!-- إعدادات الاتصال - لليمن -->
+    <div class="settings-card" id="connectionCard">
+      <div style="padding:12px 0 4px;font-size:12px;font-weight:700;color:#999;font-family:Tajawal,sans-serif;letter-spacing:0.5px">الاتصال والمزامنة 🇾🇪</div>
+      <div style="padding:12px 0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:10px;height:10px;border-radius:50%;background:#ccc" id="connDot"></div>
+          <span id="connStatus" style="font-size:13px;color:#666;font-family:Tajawal">جاري الفحص...</span>
+        </div>
+        <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:6px">🌐 رابط البروكسي (Cloudflare Worker)</label>
+        <input id="proxyUrlInput" type="url" placeholder="https://my-proxy.username.workers.dev"
+          style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:13px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none;direction:ltr;margin-bottom:8px"/>
+        <div style="font-size:11px;color:#888;font-family:Tajawal;margin-bottom:10px;line-height:1.6">
+          للاتصال بالقاعدة من اليمن بدون VPN: افتح <strong>worker.js</strong> الموجود في المشروع واتبع التعليمات لنشره على Cloudflare مجاناً، ثم الصق الرابط هنا.
+        </div>
+        <button id="saveProxyBtn" style="width:100%;padding:12px;background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">
+          💾 حفظ رابط البروكسي
+        </button>
+        <button id="clearProxyBtn" style="width:100%;padding:10px;background:#f5f5f5;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:Cairo;margin-top:6px">
+          🗑️ حذف البروكسي (استخدام مباشر)
+        </button>
+      </div>
+    </div>
+
     <!-- Danger Zone -->
     <div class="danger-zone">
       <div class="danger-title">⚠️ منطقة الخطورة</div>
@@ -182,15 +205,72 @@
     const s = await loadSettings();
     const waNum = s.waNumber || '967733231636';
     localStorage.setItem('setting_waNumber', waNum);
-    const waDesc = document.querySelector('.settings-item-desc');
-    if(waDesc && waDesc.closest('.settings-item')?.onclick?.toString().includes('whatsapp')) {
-      waDesc.textContent = '+' + waNum;
-    }
     document.getElementById('waNumInput').value = waNum;
+
+    // تحميل رابط البروكسي المحفوظ
+    const savedProxy = localStorage.getItem('s_proxy_url') || '';
+    document.getElementById('proxyUrlInput').value = savedProxy;
+
+    // فحص حالة الاتصال
+    checkConnection();
   }
   init();
 
-  // ربط زر الواتساب في الإعدادات لفتح المودال
+  // فحص الاتصال بـ Supabase
+  async function checkConnection() {
+    const dot = document.getElementById('connDot');
+    const status = document.getElementById('connStatus');
+    const proxy = (localStorage.getItem('s_proxy_url') || '').trim();
+    const direct = 'https://ezektgzwesrtezeghmrs.supabase.co';
+    const urlToTest = proxy || direct;
+    const SUPA_KEY = 'sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum';
+
+    dot.style.background = '#f57c00';
+    status.textContent = 'جاري فحص الاتصال...';
+    try {
+      const res = await Promise.race([
+        fetch(`${urlToTest}/rest/v1/accounts?select=id&limit=1`, {
+          headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY }
+        }),
+        new Promise((_, r) => setTimeout(() => r(new Error('Timeout')), 12000))
+      ]);
+      if (res.ok || res.status === 200 || res.status === 406) {
+        dot.style.background = '#2e7d32';
+        status.textContent = proxy
+          ? '✅ متصل عبر البروكسي — يعمل في اليمن 🇾🇪'
+          : '✅ متصل مباشرةً بـ Supabase';
+      } else {
+        throw new Error('HTTP ' + res.status);
+      }
+    } catch(e) {
+      dot.style.background = '#c62828';
+      status.textContent = proxy
+        ? '❌ البروكسي لا يعمل — تحقق من الرابط'
+        : '❌ لا يوجد اتصال — جرّب إضافة بروكسي';
+    }
+  }
+
+  // حفظ رابط البروكسي
+  document.getElementById('saveProxyBtn').onclick = async function() {
+    const val = document.getElementById('proxyUrlInput').value.trim().replace(/\/$/, '');
+    if (!val) { showNotification('يرجى إدخال رابط البروكسي', 'error'); return; }
+    if (!val.startsWith('http')) { showNotification('الرابط يجب أن يبدأ بـ https://', 'error'); return; }
+    localStorage.setItem('s_proxy_url', val);
+    await saveSettings({ proxy_url: val });
+    showNotification('✅ تم حفظ البروكسي — أعد تحميل التطبيق', 'success');
+    setTimeout(checkConnection, 500);
+  };
+
+  // حذف البروكسي
+  document.getElementById('clearProxyBtn').onclick = async function() {
+    localStorage.removeItem('s_proxy_url');
+    document.getElementById('proxyUrlInput').value = '';
+    await saveSettings({ proxy_url: '' });
+    showNotification('تم حذف البروكسي — سيتصل مباشرةً', 'info');
+    setTimeout(checkConnection, 500);
+  };
+
+  // ربط زر الواتساب
   document.querySelectorAll('.settings-item').forEach(item => {
     if(item.textContent.includes('واتساب') || item.textContent.includes('WhatsApp')) {
       item.onclick = () => { document.getElementById('waModal').style.display='flex'; };
