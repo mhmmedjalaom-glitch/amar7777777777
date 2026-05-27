@@ -38,25 +38,41 @@ function _seedLocalData() {
 }
 _seedLocalData();
 
-// ===== Supabase — يعمل في الخلفية فقط =====
+// ===== Supabase — في الخلفية فقط =====
 let _supa = null;
 let _supaReady = false;
 
+// تحويل: Supabase → JS  (بنية الجداول الحقيقية)
 function _fromDB_accounts(r) {
   if (!r) return null;
-  return { id:r.id, name:r.name, phone:r.phone, balance:r.balance||0,
-    balanceSAR:r.balance_sar||0, status:r.status||"active", notes:r.notes||"",
+  return { id:r.id, name:r.name, phone:r.phone||"", balance:Number(r.balance)||0,
+    balanceSAR:Number(r.balance_sar)||0, status:r.status||"active", notes:r.notes||"",
     createdAt:r.created_at ? new Date(r.created_at).getTime() : Date.now() };
 }
 function _fromDB_transfers(r) {
   if (!r) return null;
-  return { id:r.id, transferCode:r.transfer_code, beneficiary:r.beneficiary,
-    beneficiaryPhone:r.beneficiary_phone, beneficiaryId:r.beneficiary_id,
-    amount:r.amount||0, currency:r.currency||"ر.ي", commission:r.commission||0,
-    total:r.total||0, transferType:r.transfer_type||"تحويل عادي",
-    paymentMethod:r.payment_method||"cash", status:r.status||"pending",
-    notes:r.notes||"", createdAt:r.created_at ? new Date(r.created_at).getTime() : Date.now() };
+  // استخراج كود الحوالة والعمولة من حقل notes
+  const noteParts = (r.notes||"").split("|");
+  const code = noteParts[0]?.trim() || generateTransferCode();
+  const commStr = noteParts[1]?.trim() || "";
+  const commission = parseInt(commStr.replace(/[^0-9]/g,""))||0;
+  return { id:r.id,
+    transferCode: code,
+    beneficiary: r.receiver_name||"",
+    beneficiaryPhone: r.receiver_phone||"",
+    senderName: r.sender_name||"",
+    amount: Number(r.amount)||0,
+    currency: r.currency||"ر.ي",
+    commission: commission,
+    total: (Number(r.amount)||0) + commission,
+    status: r.status||"pending",
+    notes: "",
+    transferType: "تحويل عادي",
+    paymentMethod: "cash",
+    createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now() };
 }
+
+// تحويل: JS → Supabase
 function _toDB_accounts(d) {
   const r = { name:d.name, phone:d.phone||"", balance:Number(d.balance)||0,
     balance_sar:Number(d.balanceSAR)||0, status:d.status||"active", notes:d.notes||"" };
@@ -64,17 +80,16 @@ function _toDB_accounts(d) {
   return r;
 }
 function _toDB_transfers(d) {
-  const r = { transfer_code:d.transferCode, beneficiary:d.beneficiary,
-    beneficiary_phone:d.beneficiaryPhone||"", beneficiary_id:d.beneficiaryId||null,
-    amount:Number(d.amount)||0, currency:d.currency||"ر.ي", commission:Number(d.commission)||0,
-    total:Number(d.total)||0, transfer_type:d.transferType||"تحويل عادي",
-    payment_method:d.paymentMethod||"cash", status:d.status||"pending", notes:d.notes||"" };
-  if (d.id) r.id = d.id;
-  return r;
-}
-function _toDB_vouchers(d) {
-  const r = { account_id:d.accountId||null, type:d.type, amount:Number(d.amount)||0,
-    currency:d.currency||"YER", reason:d.reason||"" };
+  const r = {
+    sender_name: d.senderName || "محمد سالم",
+    receiver_name: d.beneficiary || "",
+    sender_phone: d.senderPhone || localStorage.getItem("s_waNumber") || "967733231636",
+    receiver_phone: d.beneficiaryPhone || "",
+    amount: Number(d.amount)||0,
+    currency: d.currency||"ر.ي",
+    status: d.status||"pending",
+    notes: `${d.transferCode||""} | عمولة: ${d.commission||0}`
+  };
   if (d.id) r.id = d.id;
   return r;
 }
@@ -95,42 +110,41 @@ function _toDB_vouchers(d) {
 
     _supa = client;
     _supaReady = true;
-    console.log("☁️ Supabase متصل — مزامنة في الخلفية");
+    console.log("☁️ Supabase متصل");
 
-    // مزامنة: إذا السحابة فارغة → ارفع المحلي. إذا السحابة بها بيانات → نزّل
+    // مزامنة أولية
     const [accRes, trfRes] = await Promise.all([
       client.from("accounts").select("*").order("created_at",{ascending:false}),
       client.from("transfers").select("*").order("created_at",{ascending:false})
     ]);
-    if (!accRes.error) {
-      if (accRes.data && accRes.data.length > 0) {
-        _lsSet("accounts", accRes.data.map(_fromDB_accounts));
-        _notify("accounts");
-      } else {
-        const local = _lsGet("accounts");
-        if (local.length > 0) {
-          await client.from("accounts").upsert(local.map(_toDB_accounts), {onConflict:"id"});
-        }
+    if (!accRes.error && accRes.data && accRes.data.length > 0) {
+      _lsSet("accounts", accRes.data.map(_fromDB_accounts));
+      _notify("accounts");
+      console.log(`⬇️ ${accRes.data.length} حساب من Supabase`);
+    } else if (!accRes.error && (!accRes.data || accRes.data.length === 0)) {
+      const local = _lsGet("accounts");
+      if (local.length > 0) {
+        await client.from("accounts").upsert(local.map(_toDB_accounts), {onConflict:"id"});
+        console.log(`⬆️ رفع ${local.length} حساب`);
       }
     }
-    if (!trfRes.error) {
-      if (trfRes.data && trfRes.data.length > 0) {
-        _lsSet("transfers", trfRes.data.map(_fromDB_transfers));
-        _notify("transfers");
-      } else {
-        const local = _lsGet("transfers");
-        if (local.length > 0) {
-          await client.from("transfers").upsert(local.map(_toDB_transfers), {onConflict:"id"});
-        }
+    if (!trfRes.error && trfRes.data && trfRes.data.length > 0) {
+      _lsSet("transfers", trfRes.data.map(_fromDB_transfers));
+      _notify("transfers");
+      console.log(`⬇️ ${trfRes.data.length} حوالة من Supabase`);
+    } else if (!trfRes.error && (!trfRes.data || trfRes.data.length === 0)) {
+      const local = _lsGet("transfers");
+      if (local.length > 0) {
+        await client.from("transfers").upsert(local.map(_toDB_transfers), {onConflict:"id"});
+        console.log(`⬆️ رفع ${local.length} حوالة`);
       }
     }
   } catch(e) {
-    console.log("📱 وضع محلي — Supabase غير متاح:", e.message);
-    _supaReady = false;
+    console.log("📱 وضع محلي:", e.message);
   }
 })();
 
-// حفظ في Supabase بشكل صامت (لا يوقف أي شيء)
+// حفظ في الخلفية بصمت
 async function _bgSave(table, row) {
   if (!_supaReady || !_supa) return;
   try { await _supa.from(table).upsert([row], {onConflict:"id"}); } catch {}
@@ -157,7 +171,6 @@ export function generateTransferCode() {
 export function getAdminWA() {
   return localStorage.getItem("s_waNumber") || "967733231636";
 }
-
 export function openWA(phone, text) {
   const clean = String(phone||"").replace(/[^0-9]/g,"");
   if (!clean) return false;
@@ -226,13 +239,11 @@ export async function addTransfer(data) {
   list.unshift(entry);
   _lsSet("transfers", list);
   _notify("transfers");
-
   if (data.paymentMethod === 'balance' && data.beneficiaryId) {
     _lsSet("accounts", _lsGet("accounts").map(a => a.id===data.beneficiaryId
       ? {...a, balance:Math.max(0,(Number(a.balance)||0)-(Number(data.total)||0))} : a));
     _notify("accounts");
   }
-
   _bgSave("transfers", _toDB_transfers({...data, transferCode:code, id:entry.id}));
   return entry;
 }
@@ -299,30 +310,25 @@ export async function deleteAccount(id) {
   _bgDelete("accounts", id);
 }
 
-// ===== سندات القبض والصرف =====
+// ===== السندات =====
 export async function addVoucher(data) {
   const entry = { id:_uid(), ...data, createdAt:Date.now() };
   const list = _lsGet("vouchers");
   list.unshift(entry);
   _lsSet("vouchers", list);
   _notify("vouchers");
-
   if (data.accountId) {
     _lsSet("accounts", _lsGet("accounts").map(a => {
       if (a.id !== data.accountId) return a;
       if (data.currency === 'SAR') {
-        const newSAR = data.type==='receipt' ? (a.balanceSAR||0)+(Number(data.amount)||0) : (a.balanceSAR||0)-(Number(data.amount)||0);
-        return {...a, balanceSAR:newSAR};
+        const v = data.type==='receipt'?(a.balanceSAR||0)+(Number(data.amount)||0):(a.balanceSAR||0)-(Number(data.amount)||0);
+        return {...a, balanceSAR:v};
       } else {
-        const newBal = data.type==='receipt' ? (a.balance||0)+(Number(data.amount)||0) : (a.balance||0)-(Number(data.amount)||0);
-        return {...a, balance:Math.max(0,newBal)};
+        const v = data.type==='receipt'?(a.balance||0)+(Number(data.amount)||0):(a.balance||0)-(Number(data.amount)||0);
+        return {...a, balance:Math.max(0,v)};
       }
     }));
     _notify("accounts");
-  }
-
-  if (_supaReady && _supa) {
-    try { await _supa.from("vouchers").insert([_toDB_vouchers({...data, id:entry.id})]); } catch {}
   }
   return entry;
 }
@@ -338,10 +344,10 @@ export async function deleteVoucher(id) {
     _lsSet("accounts", _lsGet("accounts").map(a => {
       if (a.id!==v.accountId) return a;
       if (v.currency==='SAR') {
-        const r = v.type==='receipt' ? (a.balanceSAR||0)-(Number(v.amount)||0) : (a.balanceSAR||0)+(Number(v.amount)||0);
+        const r = v.type==='receipt'?(a.balanceSAR||0)-(Number(v.amount)||0):(a.balanceSAR||0)+(Number(v.amount)||0);
         return {...a, balanceSAR:Math.max(0,r)};
       } else {
-        const r = v.type==='receipt' ? (a.balance||0)-(Number(v.amount)||0) : (a.balance||0)+(Number(v.amount)||0);
+        const r = v.type==='receipt'?(a.balance||0)-(Number(v.amount)||0):(a.balance||0)+(Number(v.amount)||0);
         return {...a, balance:Math.max(0,r)};
       }
     }));
@@ -349,7 +355,6 @@ export async function deleteVoucher(id) {
   }
   _lsSet("vouchers", _lsGet("vouchers").filter(x=>x.id!==id));
   _notify("vouchers");
-  _bgDelete("vouchers", id);
 }
 
 // ===== سجل الواتساب =====
@@ -359,10 +364,6 @@ export async function logWA(data) {
   list.unshift(entry);
   if (list.length > 200) list.length = 200;
   _lsSet("wa_logs", list);
-  if (_supaReady && _supa) {
-    try { await _supa.from("wa_logs").insert([{ type:data.type, account_name:data.accountName,
-      phone:data.phone, message:data.message, status:'sent' }]); } catch {}
-  }
 }
 
 // ===== الإحصاءات =====
@@ -371,17 +372,14 @@ export async function getStats() {
   const accounts  = _lsGet("accounts");
   const today = new Date(); today.setHours(0,0,0,0);
   const todayTs = today.getTime();
-
-  const todayTrf  = transfers.filter(t => t.createdAt >= todayTs);
-  const allTrf    = transfers;
-
+  const todayTrf = transfers.filter(t => t.createdAt >= todayTs);
   return {
     completed:     todayTrf.filter(t=>t.status==="completed").length,
     pending:       todayTrf.filter(t=>t.status==="pending").length,
     profit:        todayTrf.filter(t=>t.status==="completed").reduce((s,t)=>s+(Number(t.commission)||0),0),
-    allCompleted:  allTrf.filter(t=>t.status==="completed").length,
-    allPending:    allTrf.filter(t=>t.status==="pending").length,
-    allProfit:     allTrf.filter(t=>t.status==="completed").reduce((s,t)=>s+(Number(t.commission)||0),0),
+    allCompleted:  transfers.filter(t=>t.status==="completed").length,
+    allPending:    transfers.filter(t=>t.status==="pending").length,
+    allProfit:     transfers.filter(t=>t.status==="completed").reduce((s,t)=>s+(Number(t.commission)||0),0),
     totalAccounts: accounts.length,
     lateAccounts:  accounts.filter(a=>a.status==="late").length,
   };
