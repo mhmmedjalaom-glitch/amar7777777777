@@ -80,7 +80,7 @@
       <div class="stat-card green">
         <div class="stat-icon">✅</div>
         <div class="stat-value" id="statCompleted">—</div>
-        <div class="stat-label">حوالة مكتملة</div>
+        <div class="stat-label">مكتملة (الكل)</div>
       </div>
       <div class="stat-card blue">
         <div class="stat-icon">🔄</div>
@@ -90,18 +90,22 @@
       <div class="stat-card orange">
         <div class="stat-icon">💰</div>
         <div class="stat-value" id="statProfit">—</div>
-        <div class="stat-label">أرباح اليوم ر.ي</div>
+        <div class="stat-label">إجمالي الأرباح ر.ي</div>
       </div>
       <div class="stat-card red">
-        <div class="stat-icon">⏰</div>
+        <div class="stat-icon">👥</div>
         <div class="stat-value" id="statLate">—</div>
-        <div class="stat-label">تنبيهات متأخرة</div>
+        <div class="stat-label">إجمالي الحسابات</div>
       </div>
     </div>
 
     <div class="section-header">
       <span class="section-title">📈 تحليل الأرباح الأسبوعي</span>
       <a class="section-link" href="pages/reports.html">عرض الكل</a>
+    </div>
+    <div id="totalTransfersBar" style="background:linear-gradient(135deg,#8B0000,#660000);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="color:rgba(255,255,255,0.85);font-size:13px;font-family:Tajawal">إجمالي الحوالات المسجلة</span>
+      <span id="allTransfersCount" style="color:#fff;font-weight:800;font-size:20px;font-family:Cairo">—</span>
     </div>
     <div class="chart-container">
       <div class="chart-bars">
@@ -166,14 +170,16 @@
       try {
         const s = await getStats();
         document.getElementById('totalBalance').textContent = fmt(s.totalBalance);
-        document.getElementById('statCompleted').textContent = s.todayCompleted;
-        document.getElementById('statPending').textContent   = s.todayPending;
-        document.getElementById('statProfit').textContent    = fmt(s.todayProfit);
-        document.getElementById('statLate').textContent      = s.lateAccounts;
+        document.getElementById('statCompleted').textContent = s.allCompleted;
+        document.getElementById('statPending').textContent   = s.allPending;
+        document.getElementById('statProfit').textContent    = fmt(s.allProfit);
+        document.getElementById('statLate').textContent      = s.totalAccounts;
+        const el = document.getElementById('allTransfersCount');
+        if (el) el.textContent = s.allTransfers;
         const lateText = document.getElementById('lateAlertText');
         if (lateText) lateText.textContent = s.lateAccounts > 0
-          ? `يوجد ${s.lateAccounts} عميل تجاوزوا فترة الـ 5 أيام.`
-          : 'لا يوجد عملاء متأخرون حالياً. ✓';
+          ? `يوجد ${s.lateAccounts} عميل متأخر بالسداد — يرجى المتابعة.`
+          : `${s.totalAccounts} حساب مسجل · لا يوجد متأخرون حالياً ✓`;
       } catch (e) { console.error('stats error', e); }
     }
 
@@ -181,23 +187,22 @@
       refreshStats();
       const listEl = document.getElementById('opList');
       if (!listEl) return;
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      const todayT = transfers.filter(t => { const d = toDate(t.createdAt); return d && d >= today; }).slice(0, 5);
-      if (!todayT.length) {
-        listEl.innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد حوالات اليوم</p>';
+      const recent = transfers.slice(0, 10);
+      if (!recent.length) {
+        listEl.innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد حوالات مسجلة بعد</p>';
         return;
       }
-      const statusBg = { completed:'#2e7d32', pending:'#f57c00', cancelled:'#c62828' };
-      const statusTx = { completed:'مكتملة ✅', pending:'قيد التنفيذ ⏳', cancelled:'ملغاة ❌' };
-      listEl.innerHTML = todayT.map(t => {
+      const statusBg = { completed:'#2e7d32', pending:'#f57c00', cancelled:'#c62828', sent:'#1565c0' };
+      const statusTx = { completed:'مكتملة ✅', pending:'قيد التنفيذ ⏳', cancelled:'ملغاة ❌', sent:'مرسلة 📤' };
+      listEl.innerHTML = recent.map(t => {
         const d = toDate(t.createdAt);
-        const timeStr = d ? d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'}) : '—';
+        const dateStr = d ? d.toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'}) : '—';
         const initials = (t.beneficiary||'—').trim().slice(0,2);
         return `<div class="op-item">
           <div class="op-avatar">${initials}</div>
           <div class="op-info">
             <div class="op-name">${t.beneficiary||'—'}</div>
-            <div class="op-date">${timeStr} · <span style="background:${statusBg[t.status]||'#666'};color:#fff;padding:2px 8px;border-radius:8px;font-size:10px">${statusTx[t.status]||t.status}</span></div>
+            <div class="op-date">${dateStr} · <span style="background:${statusBg[t.status]||'#666'};color:#fff;padding:2px 8px;border-radius:8px;font-size:10px">${statusTx[t.status]||t.status}</span></div>
           </div>
           <div style="text-align:left">
             <div class="op-amount">${fmt(t.amount)}</div>
