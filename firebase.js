@@ -123,19 +123,19 @@ async function _syncFromSupabase() {
       _supa.from("vouchers").select("*").order("created_at", { ascending: false })
     ]);
 
-    if (accRes.data && !accRes.error) {
+    if (accRes.data && !accRes.error && accRes.data.length > 0) {
       const accounts = accRes.data.map(_fromDB_accounts);
       _lsSet("accounts", accounts);
       console.log(`✅ تم تحميل ${accounts.length} حساب من Supabase`);
     }
 
-    if (trfRes.data && !trfRes.error) {
+    if (trfRes.data && !trfRes.error && trfRes.data.length > 0) {
       const transfers = trfRes.data.map(_fromDB_transfers);
       _lsSet("transfers", transfers);
       console.log(`✅ تم تحميل ${transfers.length} حوالة من Supabase`);
     }
 
-    if (vchRes.data && !vchRes.error) {
+    if (vchRes.data && !vchRes.error && vchRes.data.length > 0) {
       const vouchers = vchRes.data.map(_fromDB_vouchers);
       _lsSet("vouchers", vouchers);
       console.log(`✅ تم تحميل ${vouchers.length} سند من Supabase`);
@@ -325,8 +325,10 @@ export async function getTransfers(n=500) {
         if (error) throw error;
         const newTransfers = data.map(_fromDB_transfers);
         console.log(`☁️ تم تحديث من Supabase: ${newTransfers.length} حوالة`);
-        _lsSet("transfers", newTransfers);
-        _notify("transfers");
+        if (newTransfers.length > 0) {
+          _lsSet("transfers", newTransfers);
+          _notify("transfers");
+        }
       } catch(e) { 
         console.warn("⚠️ فشل جلب من Supabase:", e.message); 
         _useLocal=true; 
@@ -434,8 +436,10 @@ export async function getAccounts() {
         if (error) throw error;
         const newAccounts = data.map(_fromDB_accounts);
         console.log(`☁️ تم تحديث من Supabase: ${newAccounts.length} حساب`);
-        _lsSet("accounts", newAccounts);
-        _notify("accounts");
+        if (newAccounts.length > 0) {
+          _lsSet("accounts", newAccounts);
+          _notify("accounts");
+        }
       } catch(e) { 
         console.warn("⚠️ فشل جلب من Supabase:", e.message); 
         _useLocal=true; 
