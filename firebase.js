@@ -114,7 +114,7 @@ async function _initSupabase() {
 }
 _initSupabase();
 
-// ===== مزامنة البيانات من Supabase عند الفتح =====
+// ===== مزامنة ثنائية الاتجاه: جهاز ↔ Supabase =====
 async function _syncFromSupabase() {
   try {
     const [accRes, trfRes, vchRes] = await Promise.all([
@@ -123,27 +123,52 @@ async function _syncFromSupabase() {
       _supa.from("vouchers").select("*").order("created_at", { ascending: false })
     ]);
 
-    if (accRes.data && !accRes.error && accRes.data.length > 0) {
-      const accounts = accRes.data.map(_fromDB_accounts);
-      _lsSet("accounts", accounts);
-      console.log(`✅ تم تحميل ${accounts.length} حساب من Supabase`);
+    // الحسابات
+    if (!accRes.error) {
+      if (accRes.data && accRes.data.length > 0) {
+        _lsSet("accounts", accRes.data.map(_fromDB_accounts));
+        console.log(`⬇️ تحميل ${accRes.data.length} حساب من Supabase`);
+      } else {
+        const local = _lsGet("accounts");
+        if (local.length > 0) {
+          await _supa.from("accounts").upsert(local.map(a => _toDB_accounts(a)), { onConflict: "id" });
+          console.log(`⬆️ رفع ${local.length} حساب محلي إلى Supabase`);
+        }
+      }
     }
 
-    if (trfRes.data && !trfRes.error && trfRes.data.length > 0) {
-      const transfers = trfRes.data.map(_fromDB_transfers);
-      _lsSet("transfers", transfers);
-      console.log(`✅ تم تحميل ${transfers.length} حوالة من Supabase`);
+    // الحوالات
+    if (!trfRes.error) {
+      if (trfRes.data && trfRes.data.length > 0) {
+        _lsSet("transfers", trfRes.data.map(_fromDB_transfers));
+        console.log(`⬇️ تحميل ${trfRes.data.length} حوالة من Supabase`);
+      } else {
+        const local = _lsGet("transfers");
+        if (local.length > 0) {
+          await _supa.from("transfers").upsert(local.map(t => _toDB_transfers(t)), { onConflict: "id" });
+          console.log(`⬆️ رفع ${local.length} حوالة محلية إلى Supabase`);
+        }
+      }
     }
 
-    if (vchRes.data && !vchRes.error && vchRes.data.length > 0) {
-      const vouchers = vchRes.data.map(_fromDB_vouchers);
-      _lsSet("vouchers", vouchers);
-      console.log(`✅ تم تحميل ${vouchers.length} سند من Supabase`);
+    // السندات
+    if (!vchRes.error) {
+      if (vchRes.data && vchRes.data.length > 0) {
+        _lsSet("vouchers", vchRes.data.map(_fromDB_vouchers));
+        console.log(`⬇️ تحميل ${vchRes.data.length} سند من Supabase`);
+      } else {
+        const local = _lsGet("vouchers");
+        if (local.length > 0) {
+          await _supa.from("vouchers").upsert(local.map(v => _toDB_vouchers(v)), { onConflict: "id" });
+          console.log(`⬆️ رفع ${local.length} سند محلي إلى Supabase`);
+        }
+      }
     }
 
     _notify("accounts");
     _notify("transfers");
     _notify("vouchers");
+    console.log("✅ اكتملت المزامنة مع Supabase");
   } catch (e) {
     console.warn("❌ خطأ في مزامنة البيانات:", e.message);
   }
@@ -684,6 +709,8 @@ export async function getStats() {
     activeAccounts:  accounts.filter(a => a.status!=="late").length,
     allTransfers:    transfers.length,
     allCompleted:    transfers.filter(t => t.status==="completed").length,
+    allPending:      transfers.filter(t => t.status==="pending").length,
+    allProfit:       transfers.reduce((s,t) => s+(Number(t.commission)||0), 0),
   };
   
   console.log("📊 الإحصاءات المحدّثة:", stats);
