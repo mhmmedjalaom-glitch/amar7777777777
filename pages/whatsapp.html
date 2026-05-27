@@ -141,6 +141,32 @@
     </div>
   </nav>
 
+
+  <script>
+  // ⚡ عرض سجل الواتساب فوراً
+  (function(){
+    function ls(k){try{return JSON.parse(localStorage.getItem("ms_"+k)||"[]")}catch{return[]}}
+    var accounts=ls("accounts");
+    var sentEl=document.querySelectorAll('.info-value')[2];
+    if(sentEl) sentEl.textContent=accounts.length+' حساب مرتبط';
+    var logs=ls("wa_logs");
+    var opList=document.querySelector('.op-list');
+    if(!opList) return;
+    if(!logs.length){opList.innerHTML='<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد رسائل مرسلة بعد</p>';return;}
+    var types={transfer_new:'حوالة جديدة',late_alert:'تنبيه متأخر',statement:'كشف حساب',test:'رسالة اختبار',daily_report:'تقرير يومي',account_message:'رسالة حساب',vip_message:'رسالة VIP'};
+    opList.innerHTML=logs.slice(0,20).map(function(l){
+      var d=l.sentAt?new Date(l.sentAt).toLocaleString('ar-SA'):'';
+      return '<div class="op-item">'+
+        '<div class="op-avatar" style="background:linear-gradient(135deg,#25D366,#128C7E)">💬</div>'+
+        '<div class="op-info">'+
+          '<div class="op-name">'+(l.accountName||'')+'</div>'+
+          '<div class="op-date">'+(types[l.type]||l.type)+' · '+d+'</div>'+
+        '</div>'+
+        '<span class="badge badge-green">✓ تم</span>'+
+      '</div>';
+    }).join('');
+  })();
+  </script>
   <script src="../script.js"></script>
 
   <script type="module">
