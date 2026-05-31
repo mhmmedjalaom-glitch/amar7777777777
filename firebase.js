@@ -5,7 +5,7 @@
 
 const SUPA_URL = "https://ezektgzwesrtezeghmrs.supabase.co";
 const SUPA_KEY = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
-const TIMEOUT  = 5000; // 5 ثواني فقط ثم يستمر بدون سوباس
+const TIMEOUT  = 15000; // 15 ثانية — وقت كافٍ لليمن
 
 // ===== LocalStorage =====
 function _lsGet(k)      { try { return JSON.parse(localStorage.getItem("ms_"+k)||"[]"); } catch { return []; } }
@@ -246,7 +246,7 @@ export async function addTransfer(data) {
       ? {...a, balance:Math.max(0,(Number(a.balance)||0)-(Number(data.total)||0))} : a));
     _notify("accounts");
   }
-  if (_supaOk) _sbUpsert("transfers", [_toDB_trf({...data, transferCode:code, id:entry.id})]);
+  _sbUpsert("transfers", [_toDB_trf({...data, transferCode:code, id:entry.id})]);
   return entry;
 }
 export async function getTransfers(n=500) { return _lsGet("transfers").slice(0,n); }
@@ -258,12 +258,12 @@ export function listenTransfers(cb) {
 export async function updateTransferStatus(id, status) {
   _lsSet("transfers", _lsGet("transfers").map(t=>t.id===id?{...t,status,updatedAt:Date.now()}:t));
   _notify("transfers");
-  if (_supaOk) _sbUpdate("transfers", id, {status});
+  _sbUpdate("transfers", id, {status});
 }
 export async function deleteTransfer(id) {
   _lsSet("transfers", _lsGet("transfers").filter(t=>t.id!==id));
   _notify("transfers");
-  if (_supaOk) _sbDelete("transfers", id);
+  _sbDelete("transfers", id);
 }
 export async function findTransferByCode(code) {
   return _lsGet("transfers").find(t=>t.transferCode===code)||null;
@@ -274,7 +274,7 @@ export async function addAccount(data) {
   const entry = { id:_uid(), ...data, balance:Number(data.balance)||0, balanceSAR:Number(data.balanceSAR)||0, status:data.status||"active", createdAt:Date.now() };
   const list = _lsGet("accounts"); list.unshift(entry); _lsSet("accounts", list);
   _notify("accounts");
-  if (_supaOk) _sbUpsert("accounts", [_toDB_acc({...data, id:entry.id})]);
+  _sbUpsert("accounts", [_toDB_acc({...data, id:entry.id})]);
   return entry;
 }
 export async function getAccounts() { return _lsGet("accounts"); }
@@ -286,12 +286,12 @@ export function listenAccounts(cb) {
 export async function updateAccount(id, data) {
   _lsSet("accounts", _lsGet("accounts").map(a=>a.id===id?{...a,...data,updatedAt:Date.now()}:a));
   _notify("accounts");
-  if (_supaOk) { const d=_toDB_acc(data); delete d.id; _sbUpdate("accounts", id, d); }
+  { const d=_toDB_acc(data); delete d.id; _sbUpdate("accounts", id, d); }
 }
 export async function deleteAccount(id) {
   _lsSet("accounts", _lsGet("accounts").filter(a=>a.id!==id));
   _notify("accounts");
-  if (_supaOk) _sbDelete("accounts", id);
+  _sbDelete("accounts", id);
 }
 
 // ===== السندات =====
@@ -306,7 +306,11 @@ export async function addVoucher(data) {
       else { const v=data.type==='receipt'?(a.balance||0)+(Number(data.amount)||0):(a.balance||0)-(Number(data.amount)||0); return {...a,balance:Math.max(0,v)}; }
     }));
     _notify("accounts");
+    const updAcc = _lsGet("accounts").find(a=>a.id===data.accountId);
+    if (updAcc) _sbUpdate("accounts", updAcc.id, _toDB_acc(updAcc));
   }
+  // حفظ السند في Supabase
+  _sbUpsert("vouchers", [{ id:entry.id, account_id:entry.accountId||null, type:entry.type||'receipt', amount:Number(entry.amount)||0, currency:entry.currency||'YER', reason:entry.reason||entry.notes||'', created_at:new Date(entry.createdAt).toISOString() }]);
   return entry;
 }
 export async function getVouchers(accountId) {
