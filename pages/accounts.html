@@ -233,10 +233,8 @@
         <label class="field-label">السبب / الملاحظة</label>
         <input id="receiptReason" type="text" placeholder="سبب القبض..." class="field-input"/>
       </div>
-      <div style="display:flex;gap:10px">
-        <button id="btnReceiptSave" style="flex:1;padding:13px;background:#1565c0;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ</button>
-        <button id="btnReceiptSaveWA" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ + واتساب</button>
-      </div>
+      <button id="btnReceiptSave" style="width:100%;padding:14px;background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Cairo">💾 حفظ</button>
+      <input id="btnReceiptSaveWA" type="hidden"/>
     </div>
   </div>
 
@@ -273,10 +271,8 @@
         <label class="field-label">السبب / الملاحظة</label>
         <input id="paymentReason" type="text" placeholder="سبب الصرف..." class="field-input"/>
       </div>
-      <div style="display:flex;gap:10px">
-        <button id="btnPaymentSave" style="flex:1;padding:13px;background:#e65100;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ</button>
-        <button id="btnPaymentSaveWA" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">💾 حفظ + واتساب</button>
-      </div>
+      <button id="btnPaymentSave" style="width:100%;padding:14px;background:linear-gradient(135deg,#e65100,#bf360c);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Cairo">💾 حفظ</button>
+      <input id="btnPaymentSaveWA" type="hidden"/>
     </div>
   </div>
 
@@ -663,7 +659,7 @@
   };
 
   // ===== حفظ السندات =====
-  async function saveVoucher(type, sendWA) {
+  async function saveVoucher(type) {
     const isReceipt = type === 'receipt';
     const prefix = isReceipt ? 'receipt' : 'payment';
     const id       = document.getElementById(prefix+'ClientId').value;
@@ -677,21 +673,21 @@
     try {
       const voucherReason = rType === 'debt' ? `تسديد دين — ${reason||''}`.trim() : reason;
       await addVoucher({ accountId:id, accountName:name, type, amount, currency, reason:voucherReason, phone, voucherSubType: rType });
-      showNotification(`✅ تم حفظ سند ${isReceipt?(rType==='debt'?'تسديد الدين':'القبض'):'الصرف'}`, 'success');
-      if (sendWA && phone) {
-        const msgType = isReceipt ? 'voucher_receipt' : 'voucher_payment';
-        await notifyClient(phone, msgType, { name, amount, currency: currency==='SAR'?'ر.س':'ر.ي', reason:voucherReason });
-      }
       document.getElementById(prefix+'Modal').classList.remove('open');
+      // بناء رسالة الإشعار
+      const curLabel = currency === 'SAR' ? 'ر.س' : 'ر.ي';
+      const typeLabel = isReceipt ? (rType === 'debt' ? 'تسديد دين 📋' : 'سند قبض 📥') : 'سند صرف 📤';
+      const msg = `*نظام محمد سالم للحوالات*\n\n🧾 ${typeLabel}\n👤 العميل: ${name}\n💰 المبلغ: ${Number(amount).toLocaleString('ar-SA')} ${curLabel}\n📝 السبب: ${voucherReason||'—'}\n\nشكراً لتعاملكم معنا 🌟`;
+      showSendChoice(phone, msg, null);
     } catch(err) {
       showNotification('❌ خطأ: ' + (err.message||''), 'error');
     }
   }
 
-  document.getElementById('btnReceiptSave').addEventListener('click',    () => saveVoucher('receipt', false));
-  document.getElementById('btnReceiptSaveWA').addEventListener('click',  () => saveVoucher('receipt', true));
-  document.getElementById('btnPaymentSave').addEventListener('click',    () => saveVoucher('payment', false));
-  document.getElementById('btnPaymentSaveWA').addEventListener('click',  () => saveVoucher('payment', true));
+  document.getElementById('btnReceiptSave').addEventListener('click',   () => saveVoucher('receipt'));
+  document.getElementById('btnReceiptSaveWA').addEventListener('click', () => saveVoucher('receipt'));
+  document.getElementById('btnPaymentSave').addEventListener('click',   () => saveVoucher('payment'));
+  document.getElementById('btnPaymentSaveWA').addEventListener('click', () => saveVoucher('payment'));
 
   // ===== إضافة حساب =====
   ['addNewAccountBtn','addNewAccountBtnBottom'].forEach(id => {
