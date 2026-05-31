@@ -138,39 +138,84 @@ function _toDB_trf(d) {
   return r;
 }
 
-// مزامنة في الخلفية — لا تُوقف التطبيق أبداً
+// مزامنة في الخلفية — دمج بدل استبدال
 let _supaOk = false;
-(async () => {
+
+// upsert مع retry تلقائي
+const _pendingQueue = {};
+async function _sbUpsertSafe(table, rows) {
+  const data = Array.isArray(rows) ? rows : [rows];
   try {
-    // اختبار سريع: هل Supabase متاح؟
-    const test = await _sbSelect("accounts", "limit=1");
-    if (test === null) { console.log("📱 وضع محلي — Supabase غير متاح"); return; }
-    _supaOk = true;
-    console.log("☁️ Supabase متصل");
-
-    // مزامنة حسابات
-    const remoteAcc = await _sbSelect("accounts", "limit=500");
-    if (remoteAcc && remoteAcc.length > 0) {
-      _lsSet("accounts", remoteAcc.map(_fromDB_acc));
-      _notify("accounts");
-      console.log(`⬇️ ${remoteAcc.length} حساب`);
-    } else {
-      const local = _lsGet("accounts");
-      if (local.length) { await _sbUpsert("accounts", local.map(_toDB_acc)); console.log(`⬆️ ${local.length} حساب`); }
-    }
-
-    // مزامنة حوالات
-    const remoteTrf = await _sbSelect("transfers", "limit=500");
-    if (remoteTrf && remoteTrf.length > 0) {
-      _lsSet("transfers", remoteTrf.map(_fromDB_trf));
-      _notify("transfers");
-      console.log(`⬇️ ${remoteTrf.length} حوالة`);
-    } else {
-      const local = _lsGet("transfers");
-      if (local.length) { await _sbUpsert("transfers", local.map(_toDB_trf)); console.log(`⬆️ ${local.length} حوالة`); }
+    const { base, headers } = _supaHeaders();
+    const r = await _fetchTimeout(base + '/rest/v1/' + table, {
+      method: 'POST',
+      headers: { ...headers, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(data)
+    });
+    if (!r.ok) {
+      const err = await r.text().catch(()=>'');
+      console.warn('⚠️ فشل حفظ ' + table + ' HTTP ' + r.status + ':', err);
+      if (!_pendingQueue[table]) _pendingQueue[table] = [];
+      _pendingQueue[table].push(...data);
     }
   } catch(e) {
-    console.log("📱 وضع محلي:", e.message);
+    console.warn('⚠️ خطأ حفظ ' + table + ':', e.message);
+    if (!_pendingQueue[table]) _pendingQueue[table] = [];
+    _pendingQueue[table].push(...data);
+  }
+}
+
+(async () => {
+  try {
+    const test = await _sbSelect('accounts', 'limit=1');
+    if (test === null) { console.log('📱 وضع محلي — Supabase غير متاح'); return; }
+    _supaOk = true;
+    console.log('☁️ Supabase متصل');
+
+    // === دمج الحسابات (بدل الاستبدال) ===
+    const remoteAcc = await _sbSelect('accounts', 'limit=500');
+    if (remoteAcc) {
+      const local  = _lsGet('accounts');
+      const remIds = new Set(remoteAcc.map(function(r){ return r.id; }));
+      const localOnly = local.filter(function(a){ return !remIds.has(a.id); });
+      if (localOnly.length) {
+        await _sbUpsertSafe('accounts', localOnly.map(_toDB_acc));
+        console.log('⬆️ رُفع ' + localOnly.length + ' حساب محلي');
+      }
+      const remoteConverted = remoteAcc.map(_fromDB_acc);
+      const merged = remoteConverted.concat(localOnly);
+      _lsSet('accounts', merged);
+      _notify('accounts');
+      console.log('🔄 دُمج ' + merged.length + ' حساب');
+    }
+
+    // === دمج الحوالات ===
+    const remoteTrf = await _sbSelect('transfers', 'limit=500');
+    if (remoteTrf) {
+      const local  = _lsGet('transfers');
+      const remIds = new Set(remoteTrf.map(function(r){ return r.id; }));
+      const localOnly = local.filter(function(t){ return !remIds.has(t.id); });
+      if (localOnly.length) {
+        await _sbUpsertSafe('transfers', localOnly.map(_toDB_trf));
+        console.log('⬆️ رُفع ' + localOnly.length + ' حوالة محلية');
+      }
+      const remoteConverted = remoteTrf.map(_fromDB_trf);
+      const merged = remoteConverted.concat(localOnly);
+      _lsSet('transfers', merged);
+      _notify('transfers');
+      console.log('🔄 دُمج ' + merged.length + ' حوالة');
+    }
+
+    // إرسال الطابور المؤجل إن وجد
+    for (const table of Object.keys(_pendingQueue)) {
+      if (_pendingQueue[table] && _pendingQueue[table].length) {
+        await _sbUpsertSafe(table, _pendingQueue[table]);
+        _pendingQueue[table] = [];
+      }
+    }
+
+  } catch(e) {
+    console.log('📱 وضع محلي:', e.message);
   }
 })();
 
@@ -246,7 +291,7 @@ export async function addTransfer(data) {
       ? {...a, balance:Math.max(0,(Number(a.balance)||0)-(Number(data.total)||0))} : a));
     _notify("accounts");
   }
-  _sbUpsert("transfers", [_toDB_trf({...data, transferCode:code, id:entry.id})]);
+  _sbUpsertSafe("transfers", [_toDB_trf({...data, transferCode:code, id:entry.id})]);
   return entry;
 }
 export async function getTransfers(n=500) { return _lsGet("transfers").slice(0,n); }
@@ -274,7 +319,7 @@ export async function addAccount(data) {
   const entry = { id:_uid(), ...data, balance:Number(data.balance)||0, balanceSAR:Number(data.balanceSAR)||0, status:data.status||"active", createdAt:Date.now() };
   const list = _lsGet("accounts"); list.unshift(entry); _lsSet("accounts", list);
   _notify("accounts");
-  _sbUpsert("accounts", [_toDB_acc({...data, id:entry.id})]);
+  _sbUpsertSafe("accounts", [_toDB_acc({...data, id:entry.id})]);
   return entry;
 }
 export async function getAccounts() { return _lsGet("accounts"); }
@@ -308,7 +353,7 @@ export async function addVoucher(data) {
     _notify("accounts");
   }
   // حفظ السند في Supabase
-  _sbUpsert("vouchers", [{ id:entry.id, account_id:entry.accountId||null, type:entry.type||"receipt", amount:Number(entry.amount)||0, currency:entry.currency||"YER", reason:entry.reason||entry.notes||"", created_at:new Date(entry.createdAt).toISOString() }]);
+  _sbUpsertSafe("vouchers", [{ id:entry.id, account_id:entry.accountId||null, type:entry.type||"receipt", amount:Number(entry.amount)||0, currency:entry.currency||"YER", reason:entry.reason||entry.notes||"", created_at:new Date(entry.createdAt).toISOString() }]);
   return entry;
 }
 export async function getVouchers(accountId) {
