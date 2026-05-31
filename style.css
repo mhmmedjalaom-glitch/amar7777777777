@@ -912,3 +912,52 @@ a { text-decoration: none; color: inherit; }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(139,0,0,0.2); border-radius: 2px; }
+
+/* ===== الوضع الليلي ===== */
+body.dark {
+  --bg:           #0f0f0f;
+  --card-bg:      #1c1c1e;
+  --text-primary: #f0f0f0;
+  --text-secondary: #a0a0a0;
+  --border:       #2c2c2e;
+  --shadow:       0 2px 12px rgba(0,0,0,0.5);
+  --shadow-strong:0 4px 20px rgba(0,0,0,0.7);
+}
+body.dark .header {
+  background: linear-gradient(135deg, #5a0000 0%, #3a0000 100%);
+}
+body.dark .nav-bar {
+  background: #1c1c1e;
+  border-top-color: #2c2c2e;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+}
+body.dark .nav-item { color: #888; }
+body.dark .nav-item.active { color: #e05555; }
+body.dark input, body.dark select, body.dark textarea {
+  background: #2c2c2e !important;
+  color: #f0f0f0 !important;
+  border-color: #3c3c3e !important;
+}
+body.dark input::placeholder { color: #666 !important; }
+body.dark .settings-item { background: #1c1c1e; border-color: #2c2c2e; }
+body.dark .settings-item-title { color: #f0f0f0; }
+body.dark .settings-item-desc { color: #888; }
+body.dark .card { background: #1c1c1e; border-color: #2c2c2e; }
+body.dark .card-title { color: #ccc; }
+body.dark .toggle-label { color: #f0f0f0; }
+body.dark .toggle-desc { color: #888; }
+body.dark .stat-card { background: #1c1c1e; border-color: #2c2c2e; }
+body.dark .stat-value { color: #f0f0f0; }
+body.dark .stat-label { color: #888; }
+body.dark .transfer-card, body.dark .account-card {
+  background: #1c1c1e;
+  border-color: #2c2c2e;
+}
+body.dark .section-title { color: #ccc; }
+body.dark .quick-btn { background: #2c2c2e; color: #f0f0f0; }
+body.dark button:not([style*="background"]):not(.toggle-slider) {
+  background: #2c2c2e;
+  color: #f0f0f0;
+}
+body.dark .page-title { color: #f0f0f0; }
+body.dark .settings-card { background: #1c1c1e; }
