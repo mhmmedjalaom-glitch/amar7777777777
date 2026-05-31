@@ -13,6 +13,8 @@
     .btn-receipt { background:#1565c0;color:#fff; }
     .btn-payment { background:#e65100;color:#fff; }
     .btn-statement { background:#37474f;color:#fff; }
+    .btn-edit { background:#f57c00;color:#fff; }
+    .btn-delete { background:#c62828;color:#fff; }
     .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:flex-end;justify-content:center; }
     .modal-overlay.open { display:flex; }
     .modal-box { background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;direction:rtl;font-family:Cairo,sans-serif;max-height:90vh;overflow-y:auto; }
@@ -23,6 +25,9 @@
     .field-input { width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none; }
     .stmt-item { padding:10px 0;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:10px; }
     .stmt-badge { padding:2px 8px;border-radius:7px;font-size:10px;font-weight:700; }
+    .debt-tag { display:inline-block;background:#c62828;color:#fff;font-size:10px;padding:2px 7px;border-radius:6px;font-weight:700;margin-top:2px; }
+    .balances-row { display:flex;gap:6px;margin-top:4px;flex-wrap:wrap; }
+    .balance-chip { padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700; }
   </style>
 </head>
 <body>
@@ -65,10 +70,18 @@
       </div>
     </div>
 
-    <a href="balances.html" style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#8B0000,#5a0000);color:#fff;border-radius:14px;padding:14px 18px;margin-bottom:14px;text-decoration:none;font-family:Cairo">
+    <a href="balances.html" style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#8B0000,#5a0000);color:#fff;border-radius:14px;padding:14px 18px;margin-bottom:8px;text-decoration:none;font-family:Cairo">
       <div>
         <div style="font-size:14px;font-weight:800">💰 أصحاب الرصيد</div>
         <div style="font-size:11px;opacity:0.85;font-family:Tajawal;margin-top:2px">عرض كل الحسابات التي لديها رصيد</div>
+      </div>
+      <div style="font-size:22px">←</div>
+    </a>
+
+    <a href="transfers-report.html" style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;border-radius:14px;padding:14px 18px;margin-bottom:14px;text-decoration:none;font-family:Cairo">
+      <div>
+        <div style="font-size:14px;font-weight:800">📊 تقرير الحوالات (دين / نقد / رصيد)</div>
+        <div style="font-size:11px;opacity:0.85;font-family:Tajawal;margin-top:2px">عرض الحوالات مصنفة حسب طريقة الدفع</div>
       </div>
       <div style="font-size:22px">←</div>
     </a>
@@ -131,6 +144,48 @@
     </div>
   </div>
 
+  <!-- Modal: تعديل حساب -->
+  <div id="editAccountModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <h3 class="modal-title" style="margin:0">✏️ تعديل الحساب</h3>
+        <button class="modal-close" onclick="document.getElementById('editAccountModal').classList.remove('open')">×</button>
+      </div>
+      <form id="editAccountForm" autocomplete="off">
+        <input id="editAccId" type="hidden"/>
+        <div class="field-group">
+          <label class="field-label">اسم العميل *</label>
+          <input id="editAccName" type="text" required class="field-input"/>
+        </div>
+        <div class="field-group">
+          <label class="field-label">رقم الهاتف</label>
+          <input id="editAccPhone" type="tel" class="field-input" style="direction:ltr"/>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <div style="flex:1">
+            <label class="field-label">الرصيد (ر.ي)</label>
+            <input id="editAccBalance" type="number" min="0" class="field-input"/>
+          </div>
+          <div style="flex:1">
+            <label class="field-label">الرصيد (ر.س)</label>
+            <input id="editAccBalanceSAR" type="number" min="0" class="field-input"/>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">نوع الحساب</label>
+          <select id="editAccStatus" class="field-input" style="background:#fff">
+            <option value="active">✅ نشط</option>
+            <option value="vip">👑 VIP</option>
+            <option value="late">⚠️ متأخر</option>
+          </select>
+        </div>
+        <button type="submit" id="saveEditAccBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#f57c00,#e65100);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:Cairo">
+          💾 حفظ التعديلات
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Modal: سند قبض -->
   <div id="receiptModal" class="modal-overlay">
     <div class="modal-box">
@@ -138,14 +193,28 @@
         <h3 class="modal-title" style="margin:0">🧾 سند قبض</h3>
         <button class="modal-close" onclick="document.getElementById('receiptModal').classList.remove('open')">×</button>
       </div>
-      <div style="background:#e3f2fd;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#1565c0;font-family:Tajawal">
-        💡 سيُضاف المبلغ لرصيد العميل تلقائياً
-      </div>
       <div class="field-group">
         <label class="field-label">العميل</label>
         <div id="receiptClientName" style="padding:12px;background:#f5f5f5;border-radius:10px;font-weight:700;color:#333"></div>
         <input id="receiptClientId" type="hidden"/>
         <input id="receiptClientPhone" type="hidden"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label">نوع السند</label>
+        <div style="display:flex;gap:8px;">
+          <button type="button" id="rcptTypeBalance" onclick="setReceiptType('balance')"
+            style="flex:1;padding:9px;border:1.5px solid #1565c0;background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo">
+            💰 إضافة رصيد
+          </button>
+          <button type="button" id="rcptTypeDebt" onclick="setReceiptType('debt')"
+            style="flex:1;padding:9px;border:1.5px solid #ddd;background:#fff;color:#555;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo">
+            📋 تسديد دين
+          </button>
+        </div>
+        <input id="receiptType" type="hidden" value="balance"/>
+        <div id="receiptTypeNote" style="font-size:11px;color:#1565c0;font-family:Tajawal;margin-top:6px;padding:6px 10px;background:#e3f2fd;border-radius:8px">
+          💡 سيُضاف المبلغ لرصيد العميل تلقائياً
+        </div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:12px">
         <div style="flex:2">
@@ -228,67 +297,64 @@
     </div>
   </div>
 
+  <!-- Modal: تعديل حوالة -->
+  <div id="editTransferModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <h3 class="modal-title" style="margin:0">✏️ تعديل حالة الحوالة</h3>
+        <button class="modal-close" onclick="document.getElementById('editTransferModal').classList.remove('open')">×</button>
+      </div>
+      <div id="editTrfInfo" style="background:#f5f5f5;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px"></div>
+      <input id="editTrfId" type="hidden"/>
+      <div class="field-group">
+        <label class="field-label">الحالة الجديدة</label>
+        <select id="editTrfStatus" class="field-input" style="background:#fff">
+          <option value="completed">✅ مستلمة</option>
+          <option value="sent">📤 مرسلة</option>
+          <option value="pending">⏳ قيد التنفيذ</option>
+          <option value="cancelled">❌ ملغاة</option>
+        </select>
+      </div>
+      <button id="btnSaveEditTrf" style="width:100%;padding:13px;background:linear-gradient(135deg,#f57c00,#e65100);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">
+        💾 حفظ التعديل
+      </button>
+    </div>
+  </div>
 
   <script>
-  // ⚡ عرض فوري من localStorage
   (function(){
     function ls(k){try{return JSON.parse(localStorage.getItem("ms_"+k)||"[]")}catch{return[]}}
     function fmt(n){return Number(n||0).toLocaleString('ar-SA')}
     function setEl(id,val){var el=document.getElementById(id);if(el)el.textContent=val}
-    
     var accounts=ls("accounts");
     setEl('statTotal',accounts.length);
     setEl('statActive',accounts.filter(function(a){return a.status!=='late'}).length);
     setEl('statLate',accounts.filter(function(a){return a.status==='late'}).length);
-    
-    var list=document.getElementById('accountsList');
-    if(!list) return;
-    if(!accounts.length){
-      list.innerHTML='<p style="text-align:center;color:#999;padding:32px;font-family:Tajawal,sans-serif">لا توجد حسابات مسجلة بعد</p>';
-      return;
-    }
-    function statusLabel(s){
-      if(s==='vip') return '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">👑 VIP</span>';
-      if(s==='late') return '<span style="background:#c62828;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">⚠️ متأخر</span>';
-      return '<span style="background:#2e7d32;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">✅ نشط</span>';
-    }
-    list.innerHTML=accounts.map(function(a){
-      var ini=(a.name||'ع').substring(0,2);
-      var balYER=fmt(a.balance||0);
-      var balSAR=Number(a.balanceSAR||0);
-      var sp=(a.phone||'').replace(/'/g,'');
-      var sn=(a.name||'').replace(/'/g,'');
-      var sarLine=balSAR>0?'<div style="font-size:10px;color:#1565c0;font-weight:700">'+balSAR.toLocaleString('ar-SA')+' ر.س</div>':'';
-      return '<div class="op-item">'+
-        '<div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:14px;cursor:pointer" onclick="openStatement(''+a.id+'',''+sn+'',''+sp+'',''+a.balance+'',''+a.balanceSAR+'')">'+ini+'</div>'+
-        '<div class="op-info" style="flex:1">'+
-          '<div class="op-name">'+(a.name||'—')+'</div>'+
-          '<div class="op-date">'+(a.phone||'لا يوجد رقم')+' · '+statusLabel(a.status)+'</div>'+
-          '<div class="acc-action-btns">'+
-            '<button class="btn-transfer" onclick="goToTransfer(''+a.id+'',''+sn+'',''+sp+'')">💸 حوالة</button>'+
-            '<button class="btn-receipt" onclick="openReceipt(''+a.id+'',''+sn+'',''+sp+'')">🧾+ قبض</button>'+
-            '<button class="btn-payment" onclick="openPayment(''+a.id+'',''+sn+'',''+sp+'')">🧾- صرف</button>'+
-            '<button class="btn-statement" onclick="openStatement(''+a.id+'',''+sn+'',''+sp+'',''+a.balance+'',''+a.balanceSAR+'')">📋 كشف</button>'+
-            '<button class="btn-wa" onclick="sendWAAccount(''+sp+'',''+sn+'',''+a.balance+'')">💬</button>'+
-          '</div>'+
-        '</div>'+
-        '<div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;gap:2px">'+
-          '<div style="font-size:15px;font-weight:800;color:#8B0000">'+balYER+'</div>'+
-          '<div style="font-size:11px;color:#999">ر.ي</div>'+sarLine+
-        '</div>'+
-      '</div>';
-    }).join('');
   })();
   </script>
   <script src="../script.js"></script>
 
   <script type="module">
-  import { addAccount, listenAccounts, addVoucher, getAccountStatement, notifyClient, buildMsg, openWA, logWA } from "../firebase.js";
+  import { addAccount, listenAccounts, updateAccount, deleteAccount,
+           addVoucher, getAccountStatement,
+           listenTransfers, updateTransferStatus, deleteTransfer,
+           notifyClient, buildMsg, openWA, logWA } from "../firebase.js";
 
   let allAccounts = [];
+  let allTransfers = [];
   let currentFilter = 'all';
   let currentSearch = '';
   let activeStatementAccount = null;
+  let currentReceiptType = 'balance';
+
+  // حساب الدين من الحوالات لحساب معين
+  function calcDebt(account) {
+    return allTransfers
+      .filter(t => (t.beneficiaryId === account.id || t.beneficiaryPhone === account.phone)
+               && t.paymentMethod === 'debt'
+               && t.status === 'completed')
+      .reduce((s,t) => s + (Number(t.total || t.amount) || 0), 0);
+  }
 
   function formatPhoneNumber(phone) {
     if (!phone || typeof phone !== 'string') return null;
@@ -308,8 +374,8 @@
   function statusLabel(status) {
     const labels = {
       'late': '<span style="background:#c62828;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">⚠️ متأخر</span>',
-      'vip': '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">👑 VIP</span>',
-      'active': '<span style="background:#2e7d32;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">✅ نشط</span>'
+      'vip':  '<span style="background:linear-gradient(135deg,#D4AF37,#c9a227);color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">👑 VIP</span>',
+      'active':'<span style="background:#2e7d32;color:#fff;padding:2px 9px;border-radius:8px;font-size:11px">✅ نشط</span>'
     };
     return labels[status] || labels['active'];
   }
@@ -327,12 +393,14 @@
       updateStats(); return;
     }
     list.innerHTML = filtered.map(account => {
-      const initials = (account.name||'ع').substring(0,2);
-      const balYER = Number(account.balance||0).toLocaleString('ar-SA');
-      const balSAR = Number(account.balanceSAR||0);
-      const safePhone = (account.phone||'').replace(/'/g,'');
-      const safeName = (account.name||'').replace(/'/g,'');
-      const sarLine = balSAR > 0 ? `<div style="font-size:10px;color:#1565c0;font-weight:700">${balSAR.toLocaleString('ar-SA')} ر.س</div>` : '';
+      const initials   = (account.name||'ع').substring(0,2);
+      const balYER     = Number(account.balance||0).toLocaleString('ar-SA');
+      const balSAR     = Number(account.balanceSAR||0);
+      const debt       = calcDebt(account);
+      const safePhone  = (account.phone||'').replace(/'/g,'').replace(/"/g,'');
+      const safeName   = (account.name||'').replace(/'/g,'').replace(/"/g,'');
+      const sarLine    = balSAR > 0 ? `<span class="balance-chip" style="background:#e3f2fd;color:#1565c0">${balSAR.toLocaleString('ar-SA')} ر.س</span>` : '';
+      const debtLine   = debt > 0   ? `<span class="balance-chip" style="background:#ffebee;color:#c62828">📋 دين: ${debt.toLocaleString('ar-SA')}</span>` : '';
       return `
         <div class="op-item">
           <div class="op-avatar" style="background:linear-gradient(135deg,#8B0000,#660000);font-size:14px;cursor:pointer"
@@ -342,116 +410,195 @@
           <div class="op-info" style="flex:1">
             <div class="op-name">${account.name||'—'}</div>
             <div class="op-date">${account.phone||'لا يوجد رقم'} · ${statusLabel(account.status)}</div>
-            <div class="acc-action-btns">
-              <button class="btn-transfer" onclick="goToTransfer('${account.id}','${safeName}','${safePhone}')">💸 حوالة</button>
-              <button class="btn-receipt" onclick="openReceipt('${account.id}','${safeName}','${safePhone}')">🧾+ قبض</button>
-              <button class="btn-payment" onclick="openPayment('${account.id}','${safeName}','${safePhone}')">🧾- صرف</button>
-              <button class="btn-statement" onclick="openStatement('${account.id}','${safeName}','${safePhone}','${account.balance||0}','${account.balanceSAR||0}')">📋 كشف</button>
-              <button class="btn-wa" onclick="sendWAAccount('${safePhone}','${safeName}','${account.balance||0}')">💬</button>
+            <div class="balances-row">
+              <span class="balance-chip" style="background:#fff3e0;color:#8B0000">💰 ${balYER} ر.ي</span>
+              ${sarLine}${debtLine}
             </div>
-          </div>
-          <div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
-            <div style="font-size:15px;font-weight:800;color:#8B0000">${balYER}</div>
-            <div style="font-size:11px;color:#999">ر.ي</div>
-            ${sarLine}
+            <div class="acc-action-btns">
+              <button class="btn-transfer"   onclick="goToTransfer('${account.id}','${safeName}','${safePhone}')">💸 حوالة</button>
+              <button class="btn-receipt"    onclick="openReceipt('${account.id}','${safeName}','${safePhone}')">🧾+ قبض</button>
+              <button class="btn-payment"    onclick="openPayment('${account.id}','${safeName}','${safePhone}')">🧾- صرف</button>
+              <button class="btn-statement"  onclick="openStatement('${account.id}','${safeName}','${safePhone}','${account.balance||0}','${account.balanceSAR||0}')">📋 كشف</button>
+              <button class="btn-edit"       onclick="openEditAccount('${account.id}','${safeName}','${safePhone}','${account.balance||0}','${account.balanceSAR||0}','${account.status||'active'}')">✏️ تعديل</button>
+              <button class="btn-delete"     onclick="confirmDeleteAccount('${account.id}','${safeName}')">🗑️ حذف</button>
+              <button class="btn-wa"         onclick="sendWAAccount('${safePhone}','${safeName}','${account.balance||0}')">💬</button>
+            </div>
           </div>
         </div>`;
     }).join('');
     updateStats();
   }
 
+  // ===== التنقل =====
   window.goToTransfer = function(id, name, phone) {
-    const params = new URLSearchParams({ id, name, phone });
-    window.location.href = 'transfer.html?' + params.toString();
+    window.location.href = 'transfer.html?' + new URLSearchParams({ id, name, phone }).toString();
+  };
+
+  // ===== تعديل الحساب =====
+  window.openEditAccount = function(id, name, phone, balance, balanceSAR, status) {
+    document.getElementById('editAccId').value      = id;
+    document.getElementById('editAccName').value    = name;
+    document.getElementById('editAccPhone').value   = phone;
+    document.getElementById('editAccBalance').value = balance;
+    document.getElementById('editAccBalanceSAR').value = balanceSAR;
+    document.getElementById('editAccStatus').value  = status;
+    document.getElementById('editAccountModal').classList.add('open');
+  };
+
+  document.getElementById('editAccountForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveEditAccBtn');
+    const id  = document.getElementById('editAccId').value;
+    const name    = document.getElementById('editAccName').value.trim();
+    const phone   = document.getElementById('editAccPhone').value.trim();
+    const balance = parseFloat(document.getElementById('editAccBalance').value) || 0;
+    const balanceSAR = parseFloat(document.getElementById('editAccBalanceSAR').value) || 0;
+    const status  = document.getElementById('editAccStatus').value;
+    if (!name) { showNotification('يرجى إدخال الاسم', 'error'); return; }
+    btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...';
+    try {
+      await updateAccount(id, { name, phone: formatPhoneNumber(phone)||'', balance, balanceSAR, status });
+      document.getElementById('editAccountModal').classList.remove('open');
+      showNotification(`✅ تم تعديل حساب ${name}`, 'success');
+    } catch(err) {
+      showNotification('❌ خطأ: ' + (err.message||''), 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 حفظ التعديلات';
+    }
+  });
+
+  // ===== حذف الحساب =====
+  window.confirmDeleteAccount = function(id, name) {
+    if (!confirm(`⚠️ هل تريد حذف حساب "${name}" نهائياً؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
+    deleteAccount(id)
+      .then(() => showNotification(`🗑️ تم حذف حساب ${name}`, 'success'))
+      .catch(err => showNotification('❌ خطأ في الحذف: ' + (err.message||''), 'error'));
+  };
+
+  // ===== سند قبض =====
+  window.setReceiptType = function(type) {
+    currentReceiptType = type;
+    document.getElementById('receiptType').value = type;
+    const isDebt = type === 'debt';
+    document.getElementById('rcptTypeBalance').style.background = isDebt ? '#fff' : 'linear-gradient(135deg,#1565c0,#0d47a1)';
+    document.getElementById('rcptTypeBalance').style.color = isDebt ? '#555' : '#fff';
+    document.getElementById('rcptTypeBalance').style.borderColor = isDebt ? '#ddd' : '#1565c0';
+    document.getElementById('rcptTypeDebt').style.background = isDebt ? 'linear-gradient(135deg,#c62828,#8B0000)' : '#fff';
+    document.getElementById('rcptTypeDebt').style.color = isDebt ? '#fff' : '#555';
+    document.getElementById('rcptTypeDebt').style.borderColor = isDebt ? '#c62828' : '#ddd';
+    const note = document.getElementById('receiptTypeNote');
+    note.style.background = isDebt ? '#ffebee' : '#e3f2fd';
+    note.style.color = isDebt ? '#c62828' : '#1565c0';
+    note.textContent = isDebt ? '📋 سيُسجل المبلغ كتسديد للدين المستحق على العميل' : '💡 سيُضاف المبلغ لرصيد العميل تلقائياً';
   };
 
   window.openReceipt = function(id, name, phone) {
-    document.getElementById('receiptClientId').value = id;
-    document.getElementById('receiptClientPhone').value = phone;
+    document.getElementById('receiptClientId').value   = id;
+    document.getElementById('receiptClientPhone').value= phone;
     document.getElementById('receiptClientName').textContent = name;
     document.getElementById('receiptAmount').value = '';
     document.getElementById('receiptReason').value = '';
+    setReceiptType('balance');
     document.getElementById('receiptModal').classList.add('open');
   };
 
   window.openPayment = function(id, name, phone) {
-    document.getElementById('paymentClientId').value = id;
-    document.getElementById('paymentClientPhone').value = phone;
+    document.getElementById('paymentClientId').value   = id;
+    document.getElementById('paymentClientPhone').value= phone;
     document.getElementById('paymentClientName').textContent = name;
     document.getElementById('paymentAmount').value = '';
     document.getElementById('paymentReason').value = '';
     document.getElementById('paymentModal').classList.add('open');
   };
 
+  // ===== كشف الحساب =====
   window.openStatement = async function(id, name, phone, balance, balanceSAR) {
     activeStatementAccount = { id, name, phone, balance, balanceSAR };
     document.getElementById('statementModal').classList.add('open');
     document.getElementById('statementList').innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">جاري التحميل...</p>';
     try {
       const entries = await getAccountStatement(id);
-      // حوالات مكتملة مستلمة فقط
-      const completedTransfers = entries.filter(e => e.entryType === 'transfer' && e.status === 'completed');
-      const vouchers = entries.filter(e => e.entryType === 'voucher');
-      // حساب الإجماليات حسب طريقة الدفع
-      const totalDebt   = completedTransfers.filter(t => t.paymentMethod === 'debt').reduce((s,t) => s + (Number(t.total||t.amount)||0), 0);
-      const totalCash   = completedTransfers.filter(t => t.paymentMethod === 'cash' || !t.paymentMethod).reduce((s,t) => s + (Number(t.amount)||0), 0);
-      const totalBal    = completedTransfers.filter(t => t.paymentMethod === 'balance').reduce((s,t) => s + (Number(t.amount)||0), 0);
+      const completedTrf = entries.filter(e => e.entryType === 'transfer' && e.status === 'completed');
+      const vouchers     = entries.filter(e => e.entryType === 'voucher');
+
+      const totalDebt = completedTrf.filter(t => t.paymentMethod === 'debt')
+        .reduce((s,t) => s + (Number(t.total||t.amount)||0), 0);
+      const totalCash = completedTrf.filter(t => t.paymentMethod === 'cash' || !t.paymentMethod)
+        .reduce((s,t) => s + (Number(t.amount)||0), 0);
+      const totalBal  = completedTrf.filter(t => t.paymentMethod === 'balance')
+        .reduce((s,t) => s + (Number(t.amount)||0), 0);
       const fmt = n => Number(n||0).toLocaleString('ar-SA');
+
       document.getElementById('statementHeader').innerHTML = `
         <div style="font-weight:800;font-size:15px;color:#1a1a1a;margin-bottom:10px">👤 ${name}</div>
         <div style="display:flex;gap:10px;margin-bottom:10px">
-          <div style="flex:1;text-align:center"><span style="color:#666;font-size:11px">الرصيد (ر.ي)</span><br><span style="color:#8B0000;font-weight:800;font-size:15px">${fmt(balance)}</span></div>
-          <div style="flex:1;text-align:center"><span style="color:#666;font-size:11px">الرصيد (ر.س)</span><br><span style="color:#1565c0;font-weight:800;font-size:15px">${fmt(balanceSAR)}</span></div>
+          <div style="flex:1;text-align:center;background:#fff3e0;border-radius:8px;padding:8px">
+            <div style="color:#666;font-size:10px">الرصيد (ر.ي)</div>
+            <div style="color:#8B0000;font-weight:800;font-size:15px">${fmt(balance)}</div>
+          </div>
+          <div style="flex:1;text-align:center;background:#e3f2fd;border-radius:8px;padding:8px">
+            <div style="color:#666;font-size:10px">الرصيد (ر.س)</div>
+            <div style="color:#1565c0;font-weight:800;font-size:15px">${fmt(balanceSAR)}</div>
+          </div>
         </div>
-        <div style="background:#fff8f8;border:1px solid #ffcdd2;border-radius:10px;padding:10px;margin-bottom:6px">
-          <div style="font-size:11px;font-weight:700;color:#555;margin-bottom:6px">📊 إجماليات الحوالات المكتملة</div>
+        <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:10px;padding:10px">
+          <div style="font-size:11px;font-weight:700;color:#555;margin-bottom:8px">📊 إجماليات الحوالات المستلمة</div>
           <div style="display:flex;gap:6px">
-            <div style="flex:1;background:#c62828;border-radius:8px;padding:7px 4px;text-align:center">
+            <div style="flex:1;background:#c62828;border-radius:8px;padding:8px 4px;text-align:center">
               <div style="color:rgba(255,255,255,0.85);font-size:10px">📋 دين</div>
               <div style="color:#fff;font-weight:800;font-size:12px">${fmt(totalDebt)}</div>
             </div>
-            <div style="flex:1;background:#2e7d32;border-radius:8px;padding:7px 4px;text-align:center">
+            <div style="flex:1;background:#2e7d32;border-radius:8px;padding:8px 4px;text-align:center">
               <div style="color:rgba(255,255,255,0.85);font-size:10px">💵 نقد</div>
               <div style="color:#fff;font-weight:800;font-size:12px">${fmt(totalCash)}</div>
             </div>
-            <div style="flex:1;background:#1565c0;border-radius:8px;padding:7px 4px;text-align:center">
+            <div style="flex:1;background:#1565c0;border-radius:8px;padding:8px 4px;text-align:center">
               <div style="color:rgba(255,255,255,0.85);font-size:10px">🏦 رصيد</div>
               <div style="color:#fff;font-weight:800;font-size:12px">${fmt(totalBal)}</div>
             </div>
           </div>
         </div>`;
-      const allFiltered = [...completedTransfers, ...vouchers].sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
+
+      const allFiltered = [...completedTrf, ...vouchers].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
       if (!allFiltered.length) {
-        document.getElementById('statementList').innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد عمليات مكتملة مسجلة</p>';
+        document.getElementById('statementList').innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-family:Tajawal">لا توجد حوالات مستلمة مسجلة</p>';
         return;
       }
-      const statusColors = { completed:'#2e7d32', pending:'#f57c00', cancelled:'#c62828', sent:'#1565c0' };
-      const statusTx = { completed:'مكتملة ✅', pending:'معلقة ⏳', cancelled:'ملغاة ❌', sent:'مرسلة 📤' };
       const pmLabels = { cash:'💵 نقد', balance:'🏦 رصيد', debt:'📋 دين' };
       document.getElementById('statementList').innerHTML = allFiltered.map(e => {
         const d = e.createdAt?.toDate ? e.createdAt.toDate() : new Date(e.createdAt||0);
         const dateStr = d.toLocaleDateString('ar-SA') + ' ' + d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
         if (e.entryType === 'transfer') {
-          const pmTag = e.paymentMethod ? `<span style="background:#f0f0f0;color:#555;padding:1px 7px;border-radius:6px;font-size:10px;margin-right:4px">${pmLabels[e.paymentMethod]||e.paymentMethod}</span>` : '';
+          const pmTag = e.paymentMethod ? `<span style="background:#f0f0f0;color:#555;padding:1px 7px;border-radius:6px;font-size:10px">${pmLabels[e.paymentMethod]||e.paymentMethod}</span> ` : '';
           return `<div class="stmt-item">
-            <div style="width:36px;height:36px;border-radius:50%;background:#e3f2fd;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">💸</div>
+            <div style="width:34px;height:34px;border-radius:50%;background:#e3f2fd;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">💸</div>
             <div style="flex:1">
-              <div style="font-weight:700;font-size:13px">${e.transferCode||'حوالة'}</div>
+              <div style="font-weight:700;font-size:12px">${e.transferCode||'حوالة'}</div>
               <div style="font-size:11px;color:#999">${dateStr}</div>
-              <div style="font-size:11px">${pmTag}<span class="stmt-badge" style="background:${statusColors[e.status]||'#666'};color:#fff">${statusTx[e.status]||e.status}</span></div>
+              <div style="font-size:11px">${pmTag}<span class="stmt-badge" style="background:#2e7d32;color:#fff">مستلمة ✅</span></div>
             </div>
-            <div style="text-align:left"><div style="font-weight:800;color:#8B0000">${Number(e.amount||0).toLocaleString('ar-SA')}</div><div style="font-size:11px;color:#999">${e.currency||'ر.ي'}</div></div>
+            <div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <div style="font-weight:800;color:#8B0000;font-size:13px">${Number(e.amount||0).toLocaleString('ar-SA')}</div>
+              <div style="font-size:10px;color:#999">${e.currency||'ر.ي'}</div>
+              <div style="display:flex;gap:4px">
+                <button onclick="openEditTransfer('${e.id}','${(e.transferCode||'').replace(/'/g,'')}','${e.status||'completed'}')" style="background:#f57c00;color:#fff;border:none;border-radius:6px;padding:3px 7px;font-size:10px;cursor:pointer;font-family:Cairo">✏️</button>
+                <button onclick="confirmDeleteTransfer('${e.id}','${(e.transferCode||'').replace(/'/g,'')}')" style="background:#c62828;color:#fff;border:none;border-radius:6px;padding:3px 7px;font-size:10px;cursor:pointer;font-family:Cairo">🗑️</button>
+              </div>
+            </div>
           </div>`;
         } else {
           const isReceipt = e.type === 'receipt';
           return `<div class="stmt-item">
-            <div style="width:36px;height:36px;border-radius:50%;background:${isReceipt?'#e8f5e9':'#fff3e0'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${isReceipt?'📥':'📤'}</div>
+            <div style="width:34px;height:34px;border-radius:50%;background:${isReceipt?'#e8f5e9':'#fff3e0'};display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${isReceipt?'📥':'📤'}</div>
             <div style="flex:1">
-              <div style="font-weight:700;font-size:13px">${isReceipt?'سند قبض':'سند صرف'}</div>
+              <div style="font-weight:700;font-size:12px">${isReceipt?'سند قبض':'سند صرف'}</div>
               <div style="font-size:11px;color:#999">${dateStr}</div>
               <div style="font-size:11px;color:#666">${e.reason||'—'}</div>
             </div>
-            <div style="text-align:left"><div style="font-weight:800;color:${isReceipt?'#2e7d32':'#c62828'}">${isReceipt?'+':'−'}${Number(e.amount||0).toLocaleString('ar-SA')}</div><div style="font-size:11px;color:#999">${e.currency==='SAR'?'ر.س':'ر.ي'}</div></div>
+            <div style="text-align:left">
+              <div style="font-weight:800;color:${isReceipt?'#2e7d32':'#c62828'};font-size:13px">${isReceipt?'+':'−'}${Number(e.amount||0).toLocaleString('ar-SA')}</div>
+              <div style="font-size:10px;color:#999">${e.currency==='SAR'?'ر.س':'ر.ي'}</div>
+            </div>
           </div>`;
         }
       }).join('');
@@ -460,10 +607,49 @@
     }
   };
 
+  // ===== تعديل / حذف حوالة =====
+  window.openEditTransfer = function(id, code, status) {
+    document.getElementById('editTrfId').value = id;
+    document.getElementById('editTrfStatus').value = status || 'completed';
+    document.getElementById('editTrfInfo').innerHTML = `<strong>${code}</strong>`;
+    document.getElementById('editTransferModal').classList.add('open');
+  };
+
+  document.getElementById('btnSaveEditTrf').addEventListener('click', async () => {
+    const id     = document.getElementById('editTrfId').value;
+    const status = document.getElementById('editTrfStatus').value;
+    try {
+      await updateTransferStatus(id, status);
+      document.getElementById('editTransferModal').classList.remove('open');
+      showNotification('✅ تم تعديل حالة الحوالة', 'success');
+      if (activeStatementAccount) {
+        const a = activeStatementAccount;
+        openStatement(a.id, a.name, a.phone, a.balance, a.balanceSAR);
+      }
+    } catch(err) {
+      showNotification('❌ خطأ: ' + (err.message||''), 'error');
+    }
+  });
+
+  window.confirmDeleteTransfer = function(id, code) {
+    if (!confirm(`⚠️ هل تريد حذف الحوالة "${code}" نهائياً؟`)) return;
+    deleteTransfer(id)
+      .then(() => {
+        showNotification('🗑️ تم حذف الحوالة', 'success');
+        if (activeStatementAccount) {
+          const a = activeStatementAccount;
+          openStatement(a.id, a.name, a.phone, a.balance, a.balanceSAR);
+        }
+      })
+      .catch(err => showNotification('❌ خطأ: ' + (err.message||''), 'error'));
+  };
+
+  // ===== مشاركة كشف الحساب =====
   document.getElementById('btnShareStatement').addEventListener('click', () => {
     if (!activeStatementAccount) return;
-    const {name, phone, balance, balanceSAR} = activeStatementAccount;
-    const msg = buildMsg('account_statement', {name, balance, currency:'ر.ي'}) + (Number(balanceSAR)>0?`\n💵 الرصيد (ر.س): ${Number(balanceSAR).toLocaleString('ar-SA')}`:'');
+    const { name, phone, balance, balanceSAR } = activeStatementAccount;
+    const msg = buildMsg('account_statement', {name, balance, currency:'ر.ي'}) +
+      (Number(balanceSAR)>0 ? `\n💵 الرصيد (ر.س): ${Number(balanceSAR).toLocaleString('ar-SA')}` : '');
     if (phone) { openWA(phone, msg); showNotification('تم فتح واتساب ✓', 'success'); }
     else showNotification('لا يوجد رقم للعميل', 'error');
   });
@@ -476,23 +662,25 @@
     showNotification('تم فتح واتساب ✓', 'success');
   };
 
-  // سند قبض
+  // ===== حفظ السندات =====
   async function saveVoucher(type, sendWA) {
     const isReceipt = type === 'receipt';
     const prefix = isReceipt ? 'receipt' : 'payment';
-    const id = document.getElementById(prefix+'ClientId').value;
-    const name = document.getElementById(prefix+'ClientName').textContent;
-    const phone = document.getElementById(prefix+'ClientPhone').value;
-    const amount = parseFloat(document.getElementById(prefix+'Amount').value) || 0;
+    const id       = document.getElementById(prefix+'ClientId').value;
+    const name     = document.getElementById(prefix+'ClientName').textContent;
+    const phone    = document.getElementById(prefix+'ClientPhone').value;
+    const amount   = parseFloat(document.getElementById(prefix+'Amount').value) || 0;
     const currency = document.getElementById(prefix+'Currency').value;
-    const reason = document.getElementById(prefix+'Reason').value.trim();
+    const reason   = document.getElementById(prefix+'Reason').value.trim();
+    const rType    = isReceipt ? document.getElementById('receiptType').value : 'payment';
     if (!amount) { showNotification('يرجى إدخال المبلغ', 'error'); return; }
     try {
-      await addVoucher({ accountId: id, accountName: name, type, amount, currency, reason, phone });
-      showNotification(`✅ تم حفظ سند ${isReceipt?'القبض':'الصرف'}`, 'success');
+      const voucherReason = rType === 'debt' ? `تسديد دين — ${reason||''}`.trim() : reason;
+      await addVoucher({ accountId:id, accountName:name, type, amount, currency, reason:voucherReason, phone, voucherSubType: rType });
+      showNotification(`✅ تم حفظ سند ${isReceipt?(rType==='debt'?'تسديد الدين':'القبض'):'الصرف'}`, 'success');
       if (sendWA && phone) {
         const msgType = isReceipt ? 'voucher_receipt' : 'voucher_payment';
-        await notifyClient(phone, msgType, { name, amount, currency: currency==='SAR'?'ر.س':'ر.ي', reason });
+        await notifyClient(phone, msgType, { name, amount, currency: currency==='SAR'?'ر.س':'ر.ي', reason:voucherReason });
       }
       document.getElementById(prefix+'Modal').classList.remove('open');
     } catch(err) {
@@ -500,35 +688,28 @@
     }
   }
 
-  document.getElementById('btnReceiptSave').addEventListener('click', () => saveVoucher('receipt', false));
-  document.getElementById('btnReceiptSaveWA').addEventListener('click', () => saveVoucher('receipt', true));
-  document.getElementById('btnPaymentSave').addEventListener('click', () => saveVoucher('payment', false));
-  document.getElementById('btnPaymentSaveWA').addEventListener('click', () => saveVoucher('payment', true));
+  document.getElementById('btnReceiptSave').addEventListener('click',    () => saveVoucher('receipt', false));
+  document.getElementById('btnReceiptSaveWA').addEventListener('click',  () => saveVoucher('receipt', true));
+  document.getElementById('btnPaymentSave').addEventListener('click',    () => saveVoucher('payment', false));
+  document.getElementById('btnPaymentSaveWA').addEventListener('click',  () => saveVoucher('payment', true));
 
-  // فتح modal إضافة حساب
+  // ===== إضافة حساب =====
   ['addNewAccountBtn','addNewAccountBtnBottom'].forEach(id => {
     document.getElementById(id)?.addEventListener('click', () => document.getElementById('addAccountModal').classList.add('open'));
   });
 
-  // إغلاق الـ modals عند الضغط خارجها
-  document.querySelectorAll('.modal-overlay').forEach(m => {
-    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
-  });
-
-  // إضافة حساب
   document.getElementById('addAccountForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const btn = document.getElementById('saveAccBtn');
+    const btn  = document.getElementById('saveAccBtn');
     const name = document.getElementById('accName').value.trim();
-    const phone = document.getElementById('accPhone').value.trim();
-    const balance = parseFloat(document.getElementById('accBalance').value) || 0;
+    const phone= document.getElementById('accPhone').value.trim();
+    const balance    = parseFloat(document.getElementById('accBalance').value) || 0;
     const balanceSAR = parseFloat(document.getElementById('accBalanceSAR').value) || 0;
-    const status = document.getElementById('accStatus').value;
+    const status     = document.getElementById('accStatus').value;
     if (!name) { showNotification('يرجى إدخال اسم العميل', 'error'); return; }
     btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...';
     try {
-      const formattedPhone = phone ? formatPhoneNumber(phone) : null;
-      await addAccount({ name, phone: formattedPhone||'', balance, balanceSAR, status });
+      await addAccount({ name, phone: formatPhoneNumber(phone)||'', balance, balanceSAR, status });
       document.getElementById('addAccountModal').classList.remove('open');
       this.reset();
       showNotification(`✅ تم إنشاء حساب ${name} بنجاح`, 'success');
@@ -539,9 +720,9 @@
     }
   });
 
+  // ===== البحث والتصفية =====
   const searchInput = document.getElementById('searchInput');
   if (searchInput) searchInput.addEventListener('input', function() { currentSearch = this.value; render(); });
-
   document.querySelectorAll('.chip').forEach(chip => {
     chip.addEventListener('click', function() {
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -551,8 +732,14 @@
     });
   });
 
+  // إغلاق الـ modals عند الضغط خارجها
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+
+  // ===== الاستماع للبيانات =====
   listenAccounts(accounts => { allAccounts = accounts || []; render(); });
+  listenTransfers(transfers => { allTransfers = transfers || []; render(); });
   </script>
 </body>
 </html>
-
