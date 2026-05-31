@@ -247,8 +247,8 @@ function showSendChoice(phone, message, onDone) {
     </div>
     ${phoneDisplay}
     <div style="display:flex;flex-direction:column;gap:10px">
-      ${hasPhone ? `<button id="scWA" style="padding:14px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:20px">💬</span> إرسال عبر واتساب</button>` : ''}
-      <button id="scCopy" style="padding:14px;background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:20px">📋</span> نسخ النص فقط</button>
+      <button id="scWA" style="padding:14px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:20px">💬</span> رسالة عبر واتساب</button>
+      <button id="scCopy" style="padding:14px;background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:20px">📱</span> رسالة نصية</button>
       <button id="scNone" style="padding:14px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:Cairo">بدون إرسال</button>
     </div>`;
   overlay.appendChild(box);
@@ -256,19 +256,19 @@ function showSendChoice(phone, message, onDone) {
 
   function close(action) {
     overlay.remove();
-    if (action === 'wa' && hasPhone) {
-      const ph = phone.replace(/[^0-9]/g,'');
+    if (action === 'wa') {
+      const ph = (phone||'').replace(/[^0-9]/g,'');
       const url = 'https://wa.me/' + ph + '?text=' + encodeURIComponent(message);
       window.open(url, '_blank');
-    } else if (action === 'copy') {
+    } else if (action === 'sms') {
       navigator.clipboard.writeText(message).catch(() => {});
-      showNotification('📋 تم نسخ الرسالة', 'success');
+      showNotification('📱 تم نسخ الرسالة النصية', 'success');
     }
     if (typeof onDone === 'function') onDone(action);
   }
 
-  if (hasPhone) box.querySelector('#scWA').addEventListener('click', () => close('wa'));
-  box.querySelector('#scCopy').addEventListener('click', () => close('copy'));
+  box.querySelector('#scWA').addEventListener('click', () => close('wa'));
+  box.querySelector('#scCopy').addEventListener('click', () => close('sms'));
   box.querySelector('#scNone').addEventListener('click', () => close('none'));
   overlay.addEventListener('click', e => { if (e.target === overlay) close('none'); });
 }
