@@ -135,17 +135,85 @@
         </div>
         <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:6px">🌐 رابط البروكسي (Cloudflare Worker)</label>
         <input id="proxyUrlInput" type="url" placeholder="https://my-proxy.username.workers.dev"
-          style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:13px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none;direction:ltr;margin-bottom:8px"/>
-        <div style="font-size:11px;color:#888;font-family:Tajawal;margin-bottom:10px;line-height:1.6">
-          للاتصال بالقاعدة من اليمن بدون VPN: افتح <strong>worker.js</strong> الموجود في المشروع واتبع التعليمات لنشره على Cloudflare مجاناً، ثم الصق الرابط هنا.
-        </div>
+          style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:13px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none;direction:ltr;margin-bottom:10px"/>
+
+        <!-- دليل إنشاء البروكسي -->
+        <details style="background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:12px;padding:14px;margin-bottom:12px;font-family:Tajawal,Cairo,sans-serif">
+          <summary style="cursor:pointer;font-weight:700;color:#2e7d32;font-size:14px;user-select:none">
+            📋 كيف تنشئ البروكسي؟ — مجاني 100٪ (اضغط للتوسيع)
+          </summary>
+          <div style="margin-top:14px;font-size:13px;line-height:2.2;color:#222">
+
+            <div style="background:#fff3e0;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-weight:700;color:#e65100">
+              ⚡ لا تحتاج بطاقة بنكية — مجاني تماماً من Cloudflare
+            </div>
+
+            <p style="margin:4px 0"><strong>① أنشئ حساب مجاني:</strong></p>
+            <a href="https://dash.cloudflare.com/sign-up" target="_blank"
+               style="display:inline-block;padding:8px 18px;background:#f38020;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;margin-bottom:14px;font-size:13px">
+              🔗 اضغط هنا — dash.cloudflare.com
+            </a>
+
+            <p style="margin:4px 0"><strong>② من القائمة الجانبية:</strong></p>
+            <p style="margin:0 0 12px;background:#f5f5f5;padding:8px 12px;border-radius:8px;direction:ltr;text-align:left">
+              Workers &amp; Pages → Create → Create Worker
+            </p>
+
+            <p style="margin:4px 0"><strong>③ احذف الكود الموجود والصق هذا بدله:</strong></p>
+            <div style="position:relative;margin-bottom:14px">
+              <pre id="cfWorkerCode" style="background:#1a1a2e;color:#e2e8f0;padding:14px;border-radius:10px;font-size:11px;overflow-x:auto;direction:ltr;text-align:left;margin:0;line-height:1.6;white-space:pre-wrap;word-break:break-all">const SUPABASE = "https://ezektgzwesrtezeghmrs.supabase.co";
+const ORIGIN   = "https://mhmmedjalaom-glitch.github.io";
+const CORS = {
+  "Access-Control-Allow-Origin": ORIGIN,
+  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+  "Access-Control-Allow-Headers": "apikey,authorization,content-type,prefer,accept",
+  "Access-Control-Max-Age": "86400",
+};
+export default {
+  async fetch(req) {
+    if (req.method === "OPTIONS")
+      return new Response(null, { status: 204, headers: CORS });
+    try {
+      const u = new URL(req.url);
+      const h = new Headers(req.headers);
+      h.delete("host");
+      const body = ["GET","HEAD"].includes(req.method) ? null : req.body;
+      const res = await fetch(SUPABASE + u.pathname + u.search,
+        { method: req.method, headers: h, body });
+      const r = new Response(res.body, res);
+      Object.entries(CORS).forEach(([k,v]) => r.headers.set(k,v));
+      return r;
+    } catch(e) {
+      return new Response(JSON.stringify({error:e.message}),
+        {status:502, headers:{"Content-Type":"application/json",...CORS}});
+    }
+  }
+};</pre>
+              <button onclick="(function(){const t=document.getElementById('cfWorkerCode');navigator.clipboard.writeText(t.textContent).then(function(){const b=event.target;b.textContent='✅ تم النسخ!';setTimeout(function(){b.textContent='📋 نسخ الكود';},2500);});})()"
+                style="position:absolute;top:8px;left:8px;padding:6px 12px;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:Cairo,sans-serif;font-weight:700">
+                📋 نسخ الكود
+              </button>
+            </div>
+
+            <p style="margin:4px 0"><strong>④ اضغط</strong> <span style="background:#e8f5e9;padding:3px 10px;border-radius:6px;color:#2e7d32;font-weight:700">Deploy</span></p>
+
+            <p style="margin:8px 0"><strong>⑤ انسخ رابط Worker</strong> مثل هذا:</p>
+            <code style="background:#fff8e1;padding:6px 12px;border-radius:6px;font-size:12px;direction:ltr;display:block;margin-bottom:12px">
+              https://my-worker.username.workers.dev
+            </code>
+
+            <p style="margin:0;background:#e3f2fd;padding:10px 14px;border-radius:8px;font-weight:700;color:#1565c0">
+              ⑥ الصق الرابط في الحقل أعلاه ← اضغط "حفظ البروكسي" ← أعد تحميل التطبيق ✅
+            </p>
+          </div>
+        </details>
+
         <button id="saveProxyBtn" style="width:100%;padding:12px;background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Cairo">
           💾 حفظ رابط البروكسي
         </button>
         <button id="clearProxyBtn" style="width:100%;padding:10px;background:#f5f5f5;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:Cairo;margin-top:6px">
           🗑️ حذف البروكسي (استخدام مباشر)
         </button>
-      </div>
     </div>
 
 
