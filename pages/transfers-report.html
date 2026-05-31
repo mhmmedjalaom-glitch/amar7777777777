@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>تقرير الحوالات - نظام محمد سالم</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .tab-btns { display:flex;gap:8px;margin-bottom:16px; }
+    .tab-btn { flex:1;padding:10px 6px;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo;transition:all .2s; }
+    .tab-btn.active-debt   { background:linear-gradient(135deg,#c62828,#8B0000);color:#fff; }
+    .tab-btn.active-cash   { background:linear-gradient(135deg,#2e7d32,#1b5e20);color:#fff; }
+    .tab-btn.active-balance{ background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff; }
+    .tab-btn:not([class*="active"]) { background:#f0f0f0;color:#555; }
+    .trf-item { padding:12px 0;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:10px; }
+    .summary-cards { display:flex;gap:8px;margin-bottom:16px; }
+    .sum-card { flex:1;border-radius:12px;padding:12px 8px;text-align:center; }
+    .filter-date { display:flex;gap:8px;margin-bottom:12px;align-items:center; }
+    .filter-date input { flex:1;padding:9px;border:1.5px solid #ddd;border-radius:10px;font-size:13px;font-family:Cairo;box-sizing:border-box;outline:none; }
+    .filter-date label { font-size:12px;color:#666;font-family:Tajawal;white-space:nowrap; }
+  </style>
+</head>
+<body>
+
+  <div class="sub-header">
+    <div class="sub-header-top">
+      <img src="../logo.svg" alt="شعار" style="width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.7);flex-shrink:0;margin-left:4px" />
+      <div class="back-btn">➡️</div>
+      <span class="sub-header-title">📊 تقرير الحوالات</span>
+      <div style="width:38px"></div>
+    </div>
+    <div class="sub-header-subtitle">الحوالات مصنفة حسب طريقة الدفع — مستلمة فقط</div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- بطاقات الملخص -->
+    <div class="summary-cards">
+      <div class="sum-card" style="background:linear-gradient(135deg,#c62828,#8B0000)">
+        <div style="color:rgba(255,255,255,0.85);font-size:11px">📋 إجمالي الدين</div>
+        <div id="sumDebt" style="color:#fff;font-weight:800;font-size:16px">—</div>
+        <div id="cntDebt" style="color:rgba(255,255,255,0.75);font-size:10px">— حوالة</div>
+      </div>
+      <div class="sum-card" style="background:linear-gradient(135deg,#2e7d32,#1b5e20)">
+        <div style="color:rgba(255,255,255,0.85);font-size:11px">💵 إجمالي النقد</div>
+        <div id="sumCash" style="color:#fff;font-weight:800;font-size:16px">—</div>
+        <div id="cntCash" style="color:rgba(255,255,255,0.75);font-size:10px">— حوالة</div>
+      </div>
+      <div class="sum-card" style="background:linear-gradient(135deg,#1565c0,#0d47a1)">
+        <div style="color:rgba(255,255,255,0.85);font-size:11px">🏦 إجمالي الرصيد</div>
+        <div id="sumBal" style="color:#fff;font-weight:800;font-size:16px">—</div>
+        <div id="cntBal" style="color:rgba(255,255,255,0.75);font-size:10px">— حوالة</div>
+      </div>
+    </div>
+
+    <!-- فلتر التاريخ -->
+    <div class="filter-date">
+      <label>من:</label>
+      <input type="date" id="filterFrom"/>
+      <label>إلى:</label>
+      <input type="date" id="filterTo"/>
+      <button onclick="applyFilter()" style="padding:9px 14px;background:#8B0000;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo">بحث</button>
+    </div>
+
+    <!-- أزرار التبويب -->
+    <div class="tab-btns">
+      <button class="tab-btn active-debt"    id="tabDebt"    onclick="showTab('debt')">📋 دين</button>
+      <button class="tab-btn"               id="tabCash"    onclick="showTab('cash')">💵 نقد</button>
+      <button class="tab-btn"               id="tabBalance" onclick="showTab('balance')">🏦 رصيد</button>
+    </div>
+
+    <!-- قائمة الحوالات -->
+    <div id="transfersList">
+      <p style="text-align:center;color:#999;padding:32px;font-family:Tajawal">جاري التحميل...</p>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-href="../index.html"><span class="nav-icon">🏠</span><span>الرئيسية</span></div>
+    <div class="nav-item" data-href="transfer.html"><span class="nav-icon">💸</span><span>تحويل</span></div>
+    <div class="nav-item" data-href="accounts.html"><span class="nav-icon">👥</span><span>الحسابات</span></div>
+    <div class="nav-item" data-href="reports.html"><span class="nav-icon">📊</span><span>تقارير</span></div>
+  </nav>
+
+  <script src="../script.js"></script>
+  <script type="module">
+    import { listenTransfers, deleteTransfer, updateTransferStatus } from "../firebase.js";
+
+    let allTransfers = [];
+    let currentTab   = 'debt';
+    let fromDate     = null;
+    let toDate       = null;
+
+    // تعيين تاريخ اليوم افتراضياً
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('filterTo').value = today;
+    const monthAgo = new Date(Date.now() - 30*86400000).toISOString().slice(0,10);
+    document.getElementById('filterFrom').value = monthAgo;
+    fromDate = new Date(monthAgo);
+    toDate   = new Date(today + 'T23:59:59');
+
+    window.applyFilter = function() {
+      const f = document.getElementById('filterFrom').value;
+      const t = document.getElementById('filterTo').value;
+      fromDate = f ? new Date(f) : null;
+      toDate   = t ? new Date(t + 'T23:59:59') : null;
+      renderList();
+    };
+
+    window.showTab = function(tab) {
+      currentTab = tab;
+      const tabs = { debt:'active-debt', cash:'active-cash', balance:'active-balance' };
+      ['tabDebt','tabCash','tabBalance'].forEach(id => {
+        const btn = document.getElementById(id);
+        btn.className = 'tab-btn' + (id === 'tab'+tab.charAt(0).toUpperCase()+tab.slice(1) ? (' ' + tabs[tab]) : '');
+      });
+      renderList();
+    };
+
+    function filterByDate(t) {
+      if (!t.createdAt) return true;
+      const d = new Date(t.createdAt);
+      if (fromDate && d < fromDate) return false;
+      if (toDate   && d > toDate)   return false;
+      return true;
+    }
+
+    function getTabTransfers(tab) {
+      return allTransfers.filter(t =>
+        t.status === 'completed' &&
+        filterByDate(t) &&
+        (tab === 'debt'    ? t.paymentMethod === 'debt' :
+         tab === 'cash'    ? (t.paymentMethod === 'cash' || !t.paymentMethod) :
+         tab === 'balance' ? t.paymentMethod === 'balance' : false)
+      );
+    }
+
+    function updateSummary() {
+      const fmt = n => Number(n||0).toLocaleString('ar-SA');
+      const base = allTransfers.filter(t => t.status === 'completed' && filterByDate(t));
+      const debt    = base.filter(t => t.paymentMethod === 'debt');
+      const cash    = base.filter(t => t.paymentMethod === 'cash' || !t.paymentMethod);
+      const balance = base.filter(t => t.paymentMethod === 'balance');
+      document.getElementById('sumDebt').textContent = fmt(debt.reduce((s,t)=>s+(Number(t.total||t.amount)||0),0));
+      document.getElementById('cntDebt').textContent = debt.length + ' حوالة';
+      document.getElementById('sumCash').textContent = fmt(cash.reduce((s,t)=>s+(Number(t.amount)||0),0));
+      document.getElementById('cntCash').textContent = cash.length + ' حوالة';
+      document.getElementById('sumBal').textContent  = fmt(balance.reduce((s,t)=>s+(Number(t.amount)||0),0));
+      document.getElementById('cntBal').textContent  = balance.length + ' حوالة';
+    }
+
+    function renderList() {
+      updateSummary();
+      const list = document.getElementById('transfersList');
+      const items = getTabTransfers(currentTab);
+      if (!items.length) {
+        list.innerHTML = `<p style="text-align:center;color:#999;padding:32px;font-family:Tajawal">لا توجد حوالات ${currentTab==='debt'?'دين':currentTab==='cash'?'نقد':'رصيد'} مستلمة في هذه الفترة</p>`;
+        return;
+      }
+      const colors = { debt:'#c62828', cash:'#2e7d32', balance:'#1565c0' };
+      const icons  = { debt:'📋', cash:'💵', balance:'🏦' };
+      const color  = colors[currentTab];
+      const icon   = icons[currentTab];
+      list.innerHTML = items.map(t => {
+        const d = t.createdAt ? new Date(t.createdAt) : null;
+        const dateStr = d ? d.toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'}) : '—';
+        const amt = Number(t.amount||0).toLocaleString('ar-SA');
+        const total = currentTab==='debt' ? Number(t.total||t.amount||0).toLocaleString('ar-SA') : null;
+        return `<div class="trf-item">
+          <div style="width:38px;height:38px;border-radius:50%;background:${color}22;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${icon}</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:13px;color:#1a1a1a">${t.beneficiary||'—'}</div>
+            <div style="font-size:11px;color:#999">${t.transferCode||'—'} · ${dateStr}</div>
+            ${t.beneficiaryPhone ? `<div style="font-size:11px;color:#666">${t.beneficiaryPhone}</div>` : ''}
+          </div>
+          <div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+            <div style="font-weight:800;color:${color};font-size:14px">${amt}</div>
+            ${total && currentTab==='debt' ? `<div style="font-size:10px;color:#c62828">الإجمالي: ${total}</div>` : ''}
+            <div style="font-size:10px;color:#999">${t.currency||'ر.ي'}</div>
+            <div style="display:flex;gap:4px;margin-top:2px">
+              <button onclick="confirmDeleteTrf('${t.id}','${(t.transferCode||'').replace(/'/g,'')}')"
+                style="background:#c62828;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:Cairo">🗑️ حذف</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    window.confirmDeleteTrf = function(id, code) {
+      if (!confirm(`⚠️ هل تريد حذف الحوالة "${code}"؟`)) return;
+      deleteTransfer(id)
+        .then(() => { showNotification('🗑️ تم حذف الحوالة', 'success'); })
+        .catch(err => showNotification('❌ خطأ: ' + (err.message||''), 'error'));
+    };
+
+    listenTransfers(transfers => {
+      allTransfers = transfers || [];
+      renderList();
+    });
+  </script>
+</body>
+</html>
