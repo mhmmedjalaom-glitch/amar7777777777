@@ -1,6 +1,14 @@
 // نظام محمد سالم للحوالات المالية
 // script.js - الملف الرئيسي للجافاسكربت
 
+// ===== الوضع الليلي: يُطبَّق فوراً قبل أي شيء =====
+(function _applyDark() {
+  if (localStorage.getItem('s_dark_mode') === '1') {
+    document.documentElement.classList.add('dark');
+    document.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark'));
+  }
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
 
   // ===== تحديد الصفحة النشطة في شريط التنقل =====
