@@ -230,3 +230,45 @@ function navigate(path) {
   const base = window.location.pathname.includes('pages/') ? '../' : '';
   window.location.href = base + path;
 }
+
+// ===== نافذة اختيار الإرسال بعد الحفظ =====
+function showSendChoice(phone, message, onDone) {
+  const hasPhone = phone && phone.trim().length > 5;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:flex-end;justify-content:center;';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:22px 18px 34px;width:100%;max-width:430px;direction:rtl;font-family:Cairo,sans-serif;';
+  const phoneDisplay = hasPhone ? `<div style="font-size:11px;color:#999;font-family:Tajawal;margin-bottom:16px;text-align:center">📱 ${phone}</div>` : '';
+  box.innerHTML = `
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:22px;margin-bottom:6px">✅</div>
+      <div style="font-size:16px;font-weight:800;color:#1a1a1a">تم الحفظ بنجاح!</div>
+      <div style="font-size:12px;color:#888;font-family:Tajawal;margin-top:4px">كيف تريد إرسال الإشعار؟</div>
+    </div>
+    ${phoneDisplay}
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${hasPhone ? `<button id="scWA" style="padding:14px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:20px">💬</span> إرسال عبر واتساب</button>` : ''}
+      <button id="scCopy" style="padding:14px;background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:Cairo;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:20px">📋</span> نسخ النص فقط</button>
+      <button id="scNone" style="padding:14px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:Cairo">بدون إرسال</button>
+    </div>`;
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  function close(action) {
+    overlay.remove();
+    if (action === 'wa' && hasPhone) {
+      const ph = phone.replace(/[^0-9]/g,'');
+      const url = 'https://wa.me/' + ph + '?text=' + encodeURIComponent(message);
+      window.open(url, '_blank');
+    } else if (action === 'copy') {
+      navigator.clipboard.writeText(message).catch(() => {});
+      showNotification('📋 تم نسخ الرسالة', 'success');
+    }
+    if (typeof onDone === 'function') onDone(action);
+  }
+
+  if (hasPhone) box.querySelector('#scWA').addEventListener('click', () => close('wa'));
+  box.querySelector('#scCopy').addEventListener('click', () => close('copy'));
+  box.querySelector('#scNone').addEventListener('click', () => close('none'));
+  overlay.addEventListener('click', e => { if (e.target === overlay) close('none'); });
+}
