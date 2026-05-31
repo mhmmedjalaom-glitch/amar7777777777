@@ -306,11 +306,9 @@ export async function addVoucher(data) {
       else { const v=data.type==='receipt'?(a.balance||0)+(Number(data.amount)||0):(a.balance||0)-(Number(data.amount)||0); return {...a,balance:Math.max(0,v)}; }
     }));
     _notify("accounts");
-    const updAcc = _lsGet("accounts").find(a=>a.id===data.accountId);
-    if (updAcc) _sbUpdate("accounts", updAcc.id, _toDB_acc(updAcc));
   }
   // حفظ السند في Supabase
-  _sbUpsert("vouchers", [{ id:entry.id, account_id:entry.accountId||null, type:entry.type||'receipt', amount:Number(entry.amount)||0, currency:entry.currency||'YER', reason:entry.reason||entry.notes||'', created_at:new Date(entry.createdAt).toISOString() }]);
+  _sbUpsert("vouchers", [{ id:entry.id, account_id:entry.accountId||null, type:entry.type||"receipt", amount:Number(entry.amount)||0, currency:entry.currency||"YER", reason:entry.reason||entry.notes||"", created_at:new Date(entry.createdAt).toISOString() }]);
   return entry;
 }
 export async function getVouchers(accountId) {
