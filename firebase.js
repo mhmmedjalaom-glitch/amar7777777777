@@ -3,9 +3,18 @@
 // localStorage أولاً دائماً — Supabase بـ fetch() مباشرة بدون CDN
 // ============================================================
 
-const SUPA_URL = "https://ezektgzwesrtezeghmrs.supabase.co";
-const SUPA_KEY = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
-const TIMEOUT  = 15000; // 15 ثانية — وقت كافٍ لليمن
+const SUPA_URL      = "https://ezektgzwesrtezeghmrs.supabase.co";
+const SUPA_KEY      = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
+const DEFAULT_PROXY = "https://73ed240d-f96d-43df-bc6b-0812ed111b88-00-1zc7rfp9z9azr.sisko.replit.dev/api/proxy";
+const TIMEOUT       = 15000; // 15 ثانية — وقت كافٍ لليمن
+
+// ضبط البروكسي الافتراضي عند أول تشغيل
+(function _initProxy() {
+  if (!localStorage.getItem('s_proxy_url') && DEFAULT_PROXY) {
+    localStorage.setItem('s_proxy_url', DEFAULT_PROXY);
+    console.log('🔗 تم ضبط البروكسي تلقائياً:', DEFAULT_PROXY);
+  }
+})();
 
 // ===== LocalStorage =====
 function _lsGet(k)      { try { return JSON.parse(localStorage.getItem("ms_"+k)||"[]"); } catch { return []; } }
