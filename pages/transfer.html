@@ -154,12 +154,10 @@
         </div>
       </div>
 
-      <!-- أزرار الإجراءات -->
-      <div class="action-btns">
-        <button type="button" id="btnSaveOnly" class="btn-save">💾 حفظ فقط</button>
-        <button type="button" id="btnWAOnly" class="btn-wa">💬 إرسال واتساب</button>
-      </div>
-      <button type="button" id="btnSaveAndWA" class="btn-save-wa">✅ حفظ وإرسال واتساب معاً</button>
+      <!-- زر الحفظ الموحد -->
+      <button type="button" id="btnSave" style="width:100%;padding:15px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:Cairo;margin-top:4px">
+        💾 حفظ الحوالة
+      </button>
 
     </form>
   </div>
@@ -353,50 +351,23 @@
       document.getElementById('pmNote').textContent = pmNotes.cash;
     }
 
-    // حفظ فقط
-    document.getElementById('btnSaveOnly').addEventListener('click', async () => {
+    // زر الحفظ الموحد — يعرض نافذة اختيار الإرسال بعد الحفظ
+    document.getElementById('btnSave').addEventListener('click', async () => {
       const d = getFormData();
       if (!d.beneficiary) { showNotification('يرجى اختيار المستقبل', 'error'); return; }
-      if (!d.amount) { showNotification('يرجى إدخال المبلغ', 'error'); return; }
-      const btn = document.getElementById('btnSaveOnly');
+      if (!d.amount)       { showNotification('يرجى إدخال المبلغ', 'error'); return; }
+      const btn = document.getElementById('btnSave');
       btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...';
       try {
         await addTransfer(d);
-        showNotification(`✅ تم حفظ الحوالة — الكود: ${d.transferCode}`, 'success');
-        setTimeout(resetForm, 800);
+        // بناء رسالة الإشعار
+        const pmLabels = { cash:'نقدي', balance:'من الرصيد', debt:'دين' };
+        const statusLabel = d.status === 'completed' ? 'مستلمة ✅' : d.status === 'sent' ? 'مرسلة 📤' : 'قيد التنفيذ ⏳';
+        const msg = `*نظام محمد سالم للحوالات*\n\n🔖 كود الحوالة: ${d.transferCode}\n👤 المستقبل: ${d.beneficiary}\n💰 المبلغ: ${Number(d.amount).toLocaleString('ar-SA')} ${d.currency}\n💳 طريقة الدفع: ${pmLabels[d.paymentMethod]||d.paymentMethod}\n📊 الحالة: ${statusLabel}\n\nشكراً لتعاملكم معنا 🌟`;
+        showSendChoice(d.beneficiaryPhone, msg, (action) => { setTimeout(resetForm, 200); });
       } catch(err) {
         showNotification('❌ خطأ في الحفظ: ' + (err.message||''), 'error');
-      } finally {
-        btn.disabled = false; btn.textContent = '💾 حفظ فقط';
-      }
-    });
-
-    // إرسال واتساب فقط
-    document.getElementById('btnWAOnly').addEventListener('click', async () => {
-      const d = getFormData();
-      if (!d.beneficiary) { showNotification('يرجى اختيار المستقبل أولاً', 'error'); return; }
-      const msgType = d.status === 'completed' ? 'transfer_completed' : 'transfer_new';
-      await notifyClient(d.beneficiaryPhone, msgType, { name: d.beneficiary, amount: d.amount, currency: d.currency, commission: d.commission, transferType: d.transferType, transferCode: d.transferCode, paymentMethod: d.paymentMethod });
-      showNotification('✅ تم فتح واتساب', 'success');
-    });
-
-    // حفظ وإرسال معاً
-    document.getElementById('btnSaveAndWA').addEventListener('click', async () => {
-      const d = getFormData();
-      if (!d.beneficiary) { showNotification('يرجى اختيار المستقبل', 'error'); return; }
-      if (!d.amount) { showNotification('يرجى إدخال المبلغ', 'error'); return; }
-      const btn = document.getElementById('btnSaveAndWA');
-      btn.disabled = true; btn.textContent = '⏳ جاري الحفظ والإرسال...';
-      try {
-        await addTransfer(d);
-        const msgType = d.status === 'completed' ? 'transfer_completed' : 'transfer_new';
-        await notifyClient(d.beneficiaryPhone, msgType, { name: d.beneficiary, amount: d.amount, currency: d.currency, commission: d.commission, transferType: d.transferType, transferCode: d.transferCode, paymentMethod: d.paymentMethod });
-        showNotification(`✅ تم الحفظ والإرسال — الكود: ${d.transferCode}`, 'success');
-        setTimeout(resetForm, 800);
-      } catch(err) {
-        showNotification('❌ خطأ: ' + (err.message||''), 'error');
-      } finally {
-        btn.disabled = false; btn.textContent = '✅ حفظ وإرسال واتساب معاً';
+        btn.disabled = false; btn.textContent = '💾 حفظ الحوالة';
       }
     });
   </script>
