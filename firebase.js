@@ -138,13 +138,67 @@ function _toDB_trf(d) {
   return r;
 }
 
-// مزامنة في الخلفية — دمج بدل استبدال
+// مزامنة في الخلفية — localStorage أولاً + Supabase ثانياً
 let _supaOk = false;
 
-// upsert مع retry تلقائي
-const _pendingQueue = {};
+// === طابور الانتظار في localStorage (يبقى بعد الإغلاق) ===
+function _getPending(table) { try { return JSON.parse(localStorage.getItem('ms_pending_'+table)||'[]'); } catch { return []; } }
+function _setPending(table, rows) { localStorage.setItem('ms_pending_'+table, JSON.stringify(rows)); }
+function _addPending(table, rows) {
+  const arr = _getPending(table);
+  const data = Array.isArray(rows) ? rows : [rows];
+  data.forEach(r => { if (!arr.find(x => x.id === r.id)) arr.push(r); });
+  _setPending(table, arr);
+  _updateSyncBadge();
+}
+function _removePending(table, ids) {
+  const set = new Set(ids);
+  _setPending(table, _getPending(table).filter(r => !set.has(r.id)));
+  _updateSyncBadge();
+}
+function _pendingCount() {
+  return ['accounts','transfers','vouchers'].reduce((n, t) => n + _getPending(t).length, 0);
+}
+
+// === مؤشر المزامنة ===
+function _updateSyncBadge() {
+  const n = _pendingCount();
+  const badge = document.getElementById('_syncBadge');
+  if (!badge) return;
+  if (n > 0) {
+    badge.textContent = '⏳ ' + n + ' سجل لم يُحفظ';
+    badge.style.display = 'inline-block';
+    badge.style.background = '#f59e0b';
+  } else if (_supaOk) {
+    badge.textContent = '☁️ محفوظ';
+    badge.style.display = 'inline-block';
+    badge.style.background = '#10b981';
+    setTimeout(() => { if(badge) badge.style.display='none'; }, 3000);
+  } else {
+    badge.textContent = '📱 محلي';
+    badge.style.display = 'inline-block';
+    badge.style.background = '#6b7280';
+  }
+}
+// حقن شارة المزامنة في الصفحة تلقائياً
+(function _injectBadge() {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _injectBadge);
+    return;
+  }
+  if (document.getElementById('_syncBadge')) return;
+  const badge = document.createElement('div');
+  badge.id = '_syncBadge';
+  badge.style.cssText = 'position:fixed;top:8px;left:8px;z-index:9999;padding:4px 10px;border-radius:20px;font-size:12px;color:#fff;font-family:sans-serif;display:none;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+  badge.onclick = () => _forceSync();
+  document.body.appendChild(badge);
+  _updateSyncBadge();
+})();
+
+// === upsert مع حفظ في طابور الانتظار عند الفشل ===
 async function _sbUpsertSafe(table, rows) {
   const data = Array.isArray(rows) ? rows : [rows];
+  if (!data.length) return;
   try {
     const { base, headers } = _supaHeaders();
     const r = await _fetchTimeout(base + '/rest/v1/' + table, {
@@ -154,15 +208,35 @@ async function _sbUpsertSafe(table, rows) {
     });
     if (!r.ok) {
       const err = await r.text().catch(()=>'');
-      console.warn('⚠️ فشل حفظ ' + table + ' HTTP ' + r.status + ':', err);
-      if (!_pendingQueue[table]) _pendingQueue[table] = [];
-      _pendingQueue[table].push(...data);
+      console.warn('⚠️ فشل حفظ ' + table + ' HTTP ' + r.status + ':', err.slice(0,200));
+      _addPending(table, data);
+    } else {
+      _removePending(table, data.map(r => r.id).filter(Boolean));
+      _updateSyncBadge();
     }
   } catch(e) {
-    console.warn('⚠️ خطأ حفظ ' + table + ':', e.message);
-    if (!_pendingQueue[table]) _pendingQueue[table] = [];
-    _pendingQueue[table].push(...data);
+    console.warn('⚠️ خطأ شبكة ' + table + ':', e.message);
+    _addPending(table, data);
   }
+}
+
+// === مزامنة إجبارية يدوية أو تلقائية ===
+export async function _forceSync() {
+  if (!_supaOk) {
+    const test = await _sbSelect('accounts', 'limit=1');
+    if (test === null) { alert('لا يوجد اتصال بـ Supabase'); return; }
+    _supaOk = true;
+  }
+  let total = 0;
+  for (const table of ['accounts','transfers','vouchers']) {
+    const pending = _getPending(table);
+    if (!pending.length) continue;
+    await _sbUpsertSafe(table, pending);
+    total += pending.length;
+  }
+  if (total) console.log('🔄 تم مزامنة ' + total + ' سجل');
+  else console.log('✅ كل شيء محفوظ');
+  _updateSyncBadge();
 }
 
 (async () => {
@@ -206,13 +280,15 @@ async function _sbUpsertSafe(table, rows) {
       console.log('🔄 دُمج ' + merged.length + ' حوالة');
     }
 
-    // إرسال الطابور المؤجل إن وجد
-    for (const table of Object.keys(_pendingQueue)) {
-      if (_pendingQueue[table] && _pendingQueue[table].length) {
-        await _sbUpsertSafe(table, _pendingQueue[table]);
-        _pendingQueue[table] = [];
+    // إرسال طابور الانتظار من localStorage
+    for (const table of ['accounts','transfers','vouchers']) {
+      const pending = _getPending(table);
+      if (pending.length) {
+        console.log('🔄 طابور: رفع ' + pending.length + ' سجل من ' + table);
+        await _sbUpsertSafe(table, pending);
       }
     }
+    _updateSyncBadge();
 
   } catch(e) {
     console.log('📱 وضع محلي:', e.message);
@@ -415,3 +491,13 @@ export async function getStats() {
 }
 export async function getAllTransfers() { return _lsGet("transfers"); }
 export async function getAllAccounts()  { return _lsGet("accounts");  }
+
+// إعادة محاولة تلقائية كل 30 ثانية
+if (typeof window !== 'undefined') {
+  setInterval(async () => {
+    if (_pendingCount() > 0 && _supaOk) {
+      console.log('⏱️ retry تلقائي...');
+      await _forceSync();
+    }
+  }, 30000);
+}
