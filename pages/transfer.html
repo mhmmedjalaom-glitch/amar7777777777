@@ -51,10 +51,24 @@
       <!-- اختيار المستقبل -->
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:#333;display:block;margin-bottom:8px">👤 اختر المستقبل *</label>
-        <div style="position:relative">
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button type="button" id="modeAccount" onclick="setTransferMode('account')"
+            style="flex:1;padding:9px 6px;border:1.5px solid #8B0000;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo">👥 من الحسابات</button>
+          <button type="button" id="modeManual" onclick="setTransferMode('manual')"
+            style="flex:1;padding:9px 6px;border:1.5px solid #ddd;background:#fff;color:#555;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:Cairo">✏️ بدون حساب</button>
+        </div>
+        <!-- وضع البحث من الحسابات -->
+        <div id="modeAccountDiv" style="position:relative">
           <input id="beneficiarySearch" type="text" placeholder="ابحث عن العميل أو الرقم..."
             style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none"/>
           <div id="accountDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #ddd;border-top:none;border-radius:0 0 12px 12px;max-height:200px;overflow-y:auto;z-index:100"></div>
+        </div>
+        <!-- وضع الإدخال اليدوي -->
+        <div id="modeManualDiv" style="display:none">
+          <input id="manualName" type="text" placeholder="اسم المستقبل *" required
+            style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none;margin-bottom:8px"/>
+          <input id="manualPhone" type="tel" placeholder="رقم الهاتف (اختياري)" dir="ltr"
+            style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-family:Cairo,sans-serif;box-sizing:border-box;outline:none"/>
         </div>
       </div>
 
@@ -164,6 +178,25 @@
 
     let accounts = [];
     let currentCode = generateTransferCode();
+    let transferMode = 'account'; // 'account' or 'manual'
+
+    window.setTransferMode = function(mode) {
+      transferMode = mode;
+      document.getElementById('modeAccountDiv').style.display = mode === 'account' ? 'block' : 'none';
+      document.getElementById('modeManualDiv').style.display = mode === 'manual' ? 'block' : 'none';
+      document.getElementById('selectedAccount').style.display = 'none';
+      // تحديث أزرار الوضع
+      document.getElementById('modeAccount').style.background = mode === 'account' ? 'linear-gradient(135deg,#8B0000,#660000)' : '#fff';
+      document.getElementById('modeAccount').style.color = mode === 'account' ? '#fff' : '#555';
+      document.getElementById('modeAccount').style.borderColor = mode === 'account' ? '#8B0000' : '#ddd';
+      document.getElementById('modeManual').style.background = mode === 'manual' ? 'linear-gradient(135deg,#8B0000,#660000)' : '#fff';
+      document.getElementById('modeManual').style.color = mode === 'manual' ? '#fff' : '#555';
+      document.getElementById('modeManual').style.borderColor = mode === 'manual' ? '#8B0000' : '#ddd';
+      if (mode === 'account') {
+        ['beneficiary','beneficiaryPhone','beneficiaryId'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('beneficiaryBalance').value = 0;
+      }
+    };
 
     // عرض الكود
     document.getElementById('displayCode').textContent = currentCode;
@@ -282,9 +315,16 @@
     });
 
     function getFormData() {
-      const beneficiary = document.getElementById('beneficiary').value.trim();
-      const beneficiaryPhone = document.getElementById('beneficiaryPhone').value.trim();
-      const beneficiaryId = document.getElementById('beneficiaryId').value.trim();
+      let beneficiary, beneficiaryPhone, beneficiaryId;
+      if (transferMode === 'manual') {
+        beneficiary = (document.getElementById('manualName').value || '').trim();
+        beneficiaryPhone = (document.getElementById('manualPhone').value || '').trim();
+        beneficiaryId = '';
+      } else {
+        beneficiary = document.getElementById('beneficiary').value.trim();
+        beneficiaryPhone = document.getElementById('beneficiaryPhone').value.trim();
+        beneficiaryId = document.getElementById('beneficiaryId').value.trim();
+      }
       const amount = parseFloat(document.getElementById('transferAmount').value) || 0;
       const currency = document.getElementById('currency').value;
       const transferType = document.getElementById('transferType').value;
@@ -362,3 +402,4 @@
   </script>
 </body>
 </html>
+
