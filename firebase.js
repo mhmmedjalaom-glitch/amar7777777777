@@ -5,18 +5,14 @@
 
 const SUPA_URL      = "https://ezektgzwesrtezeghmrs.supabase.co";
 const SUPA_KEY      = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
-const DEFAULT_PROXY = ""; // تم الإصلاح — Supabase مباشر بدون بروكسي
+const DEFAULT_PROXY = "https://constsupabaseurlhttpsezektgzwesrtezeghmrssupabaseco.bdkylh0.workers.dev"; // Cloudflare Worker — مجاني للأبد
 const TIMEOUT       = 15000; // 15 ثانية — وقت كافٍ لليمن
 
 // ══════════════════════════════════════════════
-// إصلاح تلقائي: مسح البروكسي القديم المعطل من الذاكرة
-// هذا يضمن الاتصال المباشر بـ Supabase
-(function _clearOldProxy() {
-  const old = localStorage.getItem('s_proxy_url') || '';
-  if (old && old.includes('replit.dev')) {
-    localStorage.removeItem('s_proxy_url');
-    console.log('🔧 تم مسح البروكسي القديم — الاتصال مباشر بـ Supabase الآن');
-  }
+// ضبط البروكسي الجديد تلقائياً (Cloudflare Worker)
+(function _setProxy() {
+  localStorage.setItem('s_proxy_url', DEFAULT_PROXY);
+  console.log('✅ البروكسي جاهز:', DEFAULT_PROXY);
 })();
 // ══════════════════════════════════════════════
 
