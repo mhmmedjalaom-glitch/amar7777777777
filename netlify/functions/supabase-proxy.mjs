@@ -14,16 +14,17 @@ const SUPA_URL = "https://ezektgzwesrtezeghmrs.supabase.co";
     }
     try {
       const url = new URL(request.url);
-      const supaPath = url.pathname.replace(/^\/?api\/supabase-proxy/, "");
+      // Handle both direct function URL and redirected URL
+      const supaPath = url.pathname.replace(/^.*\/supabase-proxy/, "") || "/";
       const targetUrl = `${SUPA_URL}${supaPath}${url.search}`;
-      const headers = {
+      const reqHeaders = {
         apikey: SUPA_KEY,
         Authorization: `Bearer ${SUPA_KEY}`,
         "Content-Type": "application/json",
       };
       const prefer = request.headers.get("prefer");
-      if (prefer) headers["Prefer"] = prefer;
-      const fetchOptions = { method: request.method, headers };
+      if (prefer) reqHeaders["Prefer"] = prefer;
+      const fetchOptions = { method: request.method, headers: reqHeaders };
       if (request.method !== "GET" && request.method !== "DELETE") {
         const body = await request.text();
         if (body) fetchOptions.body = body;
@@ -34,13 +35,11 @@ const SUPA_URL = "https://ezektgzwesrtezeghmrs.supabase.co";
         status: response.status,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
-    } catch {
-      return new Response(JSON.stringify({ error: "proxy_error" }), {
+    } catch (err) {
+      return new Response(JSON.stringify({ error: String(err) }), {
         status: 502,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
   };
-
-  export const config = { path: "/api/supabase-proxy/*" };
   
