@@ -4,17 +4,27 @@
 // =================================================================
 
 const SUPABASE_URL = "https://ezektgzwesrtezeghmrs.supabase.co";
-const ALLOWED_ORIGIN = "https://mhmmedjalaom-glitch.github.io";
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-  "Access-Control-Allow-Headers": "apikey,authorization,content-type,prefer,accept,x-client-info",
-  "Access-Control-Max-Age": "86400",
-};
+const ALLOWED_ORIGINS = [
+  "https://mhmmedjalaom-glitch.github.io",
+  "https://amar777777777g.netlify.app",
+];
+
+function getCorsHeaders(origin) {
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[1];
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "apikey,authorization,content-type,prefer,accept,x-client-info",
+    "Access-Control-Max-Age": "86400",
+  };
+}
 
 export default {
   async fetch(request) {
+    const origin = request.headers.get("Origin") || "";
+    const CORS_HEADERS = getCorsHeaders(origin);
+
     // Preflight CORS
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
