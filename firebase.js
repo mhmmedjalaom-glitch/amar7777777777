@@ -123,8 +123,10 @@ function _fromDB_trf(r) {
   const np = (r.notes||"").split("|");
   const code = np[0]?.trim() || generateTransferCode();
   const commission = parseInt((np[1]||"").replace(/[^0-9]/g,""))||0;
+  const beneficiaryId = (np[2]||"").trim() || "";
   return { id:r.id, transferCode:code, beneficiary:r.receiver_name||"",
-    beneficiaryPhone:r.receiver_phone||"", senderName:r.sender_name||"",
+    beneficiaryPhone:r.receiver_phone||"", beneficiaryId,
+    senderName:r.sender_name||"",
     amount:Number(r.amount)||0, currency:r.currency||"ر.ي",
     commission, total:(Number(r.amount)||0)+commission,
     status:r.status||"pending", notes:"", transferType:"تحويل عادي",
@@ -143,7 +145,7 @@ function _toDB_trf(d) {
     receiver_name:d.beneficiary||"", sender_phone:d.senderPhone||"967733231636",
     receiver_phone:d.beneficiaryPhone||"", amount:Number(d.amount)||0,
     currency:d.currency||"ر.ي", status:d.status||"pending",
-    notes:`${d.transferCode||""} | عمولة: ${d.commission||0}` };
+    notes:`${d.transferCode||""} | عمولة: ${d.commission||0} | ${d.beneficiaryId||""}` };
   if (d.id) r.id = d.id;
   return r;
 }
@@ -534,14 +536,19 @@ export async function getAccountStatement(accountId) {
   let transfers = [];
 
   if (_supaOk) {
-    // جلب مباشر من Supabase للحصول على أحدث البيانات
+    // جلب مباشر من Supabase مع تصفية في الخادم
+    const phone = acc?.phone || "";
+    const trfQuery = phone
+      ? `receiver_phone=eq.${encodeURIComponent(phone)}&order=created_at.desc&limit=500`
+      : `order=created_at.desc&limit=200`;
+
     const [sbVouch, sbTrf] = await Promise.all([
       _sbSelect("vouchers", `account_id=eq.${encodeURIComponent(accountId)}&order=created_at.desc&limit=500`),
-      _sbSelect("transfers", `order=created_at.desc&limit=500`)
+      _sbSelect("transfers", trfQuery)
     ]);
 
     if (sbVouch) {
-      // دمج مع localStorage (السندات المحلية غير المرفوعة)
+      // دمج مع السندات المحلية غير المرفوعة بعد
       const remIds = new Set(sbVouch.map(r=>r.id));
       const localOnly = _lsGet("vouchers").filter(v=>v.accountId===accountId && !remIds.has(v.id));
       vouchers = [ ...sbVouch.map(_fromDB_vouch), ...localOnly ];
@@ -550,16 +557,13 @@ export async function getAccountStatement(accountId) {
     }
 
     if (sbTrf) {
-      // تصفية الحوالات الخاصة بهذا الحساب
+      // دمج مع الحوالات المحلية غير المرفوعة بعد
       const remIds = new Set(sbTrf.map(r=>r.id));
       const localOnly = _lsGet("transfers").filter(t=>{
         const match = t.beneficiaryId===accountId||(acc&&t.beneficiaryPhone===acc.phone);
         return match && !remIds.has(t.id);
       });
-      const fromSupa = sbTrf.map(_fromDB_trf).filter(t=>
-        t.beneficiaryId===accountId||(acc && t.beneficiaryPhone && acc.phone && t.beneficiaryPhone===acc.phone)
-      );
-      transfers = [...fromSupa, ...localOnly];
+      transfers = [...sbTrf.map(_fromDB_trf), ...localOnly];
     } else {
       transfers = _lsGet("transfers").filter(t=>t.beneficiaryId===accountId||(acc&&t.beneficiaryPhone===acc.phone));
     }
