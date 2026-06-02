@@ -147,6 +147,23 @@ function _toDB_trf(d) {
   if (d.id) r.id = d.id;
   return r;
 }
+// تحويل Supabase → JS للسندات
+function _fromDB_vouch(r) {
+  if (!r) return null;
+  return { id:r.id, accountId:r.account_id||"", accountName:r.account_name||"",
+    type:r.type||"receipt", amount:Number(r.amount)||0,
+    currency:r.currency||"YER", reason:r.reason||"",
+    phone:r.phone||"", entryType:"voucher",
+    createdAt:r.created_at?new Date(r.created_at).getTime():Date.now() };
+}
+// تحويل JS → Supabase للسندات
+function _toDB_vouch(d) {
+  const r = { account_id:d.accountId||null, account_name:d.accountName||"",
+    type:d.type||"receipt", amount:Number(d.amount)||0,
+    currency:d.currency||"YER", reason:d.reason||"", phone:d.phone||"" };
+  if (d.id) r.id = d.id;
+  return r;
+}
 
 // مزامنة في الخلفية — localStorage أولاً + Supabase ثانياً
 let _supaOk = false;
@@ -322,6 +339,23 @@ export async function _forceSync() {
       console.log('🔄 دُمج ' + merged.length + ' حوالة');
     }
 
+    // === دمج السندات ===
+    const remoteVouch = await _sbSelect('vouchers', 'limit=1000&order=created_at.desc');
+    if (remoteVouch) {
+      const local  = _lsGet('vouchers');
+      const remIds = new Set(remoteVouch.map(function(r){ return r.id; }));
+      const localOnly = local.filter(function(v){ return !remIds.has(v.id); });
+      if (localOnly.length) {
+        await _sbUpsertSafe('vouchers', localOnly.map(_toDB_vouch));
+        console.log('⬆️ رُفع ' + localOnly.length + ' سند محلي');
+      }
+      const remoteConverted = remoteVouch.map(_fromDB_vouch);
+      const merged = remoteConverted.concat(localOnly);
+      _lsSet('vouchers', merged);
+      _notify('vouchers');
+      console.log('🔄 دُمج ' + merged.length + ' سند');
+    }
+
     // إرسال طابور الانتظار من localStorage
     for (const table of ['accounts','transfers','vouchers']) {
       const pending = _getPending(table);
@@ -471,7 +505,7 @@ export async function addVoucher(data) {
     _notify("accounts");
   }
   // حفظ السند في Supabase
-  _sbUpsertSafe("vouchers", [{ id:entry.id, account_id:entry.accountId||null, type:entry.type||"receipt", amount:Number(entry.amount)||0, currency:entry.currency||"YER", reason:entry.reason||entry.notes||"", created_at:new Date(entry.createdAt).toISOString() }]);
+  _sbUpsertSafe("vouchers", [_toDB_vouch(entry)]);
   return entry;
 }
 export async function getVouchers(accountId) {
@@ -495,9 +529,51 @@ export async function deleteVoucher(id) {
 // ===== كشف الحساب =====
 export async function getAccountStatement(accountId) {
   const acc = _lsGet("accounts").find(a=>a.id===accountId);
-  const vouchers = _lsGet("vouchers").filter(v=>v.accountId===accountId);
-  const transfers = _lsGet("transfers").filter(t=>t.beneficiaryId===accountId||(acc&&t.beneficiaryPhone===acc.phone));
-  const all = [ ...vouchers.map(v=>({...v,entryType:'voucher'})), ...transfers.map(t=>({...t,entryType:'transfer'})) ];
+
+  let vouchers = [];
+  let transfers = [];
+
+  if (_supaOk) {
+    // جلب مباشر من Supabase للحصول على أحدث البيانات
+    const [sbVouch, sbTrf] = await Promise.all([
+      _sbSelect("vouchers", `account_id=eq.${encodeURIComponent(accountId)}&order=created_at.desc&limit=500`),
+      _sbSelect("transfers", `order=created_at.desc&limit=500`)
+    ]);
+
+    if (sbVouch) {
+      // دمج مع localStorage (السندات المحلية غير المرفوعة)
+      const remIds = new Set(sbVouch.map(r=>r.id));
+      const localOnly = _lsGet("vouchers").filter(v=>v.accountId===accountId && !remIds.has(v.id));
+      vouchers = [ ...sbVouch.map(_fromDB_vouch), ...localOnly ];
+    } else {
+      vouchers = _lsGet("vouchers").filter(v=>v.accountId===accountId);
+    }
+
+    if (sbTrf) {
+      // تصفية الحوالات الخاصة بهذا الحساب
+      const remIds = new Set(sbTrf.map(r=>r.id));
+      const localOnly = _lsGet("transfers").filter(t=>{
+        const match = t.beneficiaryId===accountId||(acc&&t.beneficiaryPhone===acc.phone);
+        return match && !remIds.has(t.id);
+      });
+      const fromSupa = sbTrf.map(_fromDB_trf).filter(t=>
+        t.beneficiaryId===accountId||(acc && t.beneficiaryPhone && acc.phone && t.beneficiaryPhone===acc.phone)
+      );
+      transfers = [...fromSupa, ...localOnly];
+    } else {
+      transfers = _lsGet("transfers").filter(t=>t.beneficiaryId===accountId||(acc&&t.beneficiaryPhone===acc.phone));
+    }
+  } else {
+    // وضع محلي
+    vouchers  = _lsGet("vouchers").filter(v=>v.accountId===accountId);
+    transfers = _lsGet("transfers").filter(t=>t.beneficiaryId===accountId||(acc&&t.beneficiaryPhone===acc.phone));
+  }
+
+  // إضافة entryType للتمييز بين النوعين
+  const all = [
+    ...vouchers.map(v=>({...v, entryType:'voucher'})),
+    ...transfers.map(t=>({...t, entryType:'transfer'}))
+  ];
   all.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   return all;
 }
