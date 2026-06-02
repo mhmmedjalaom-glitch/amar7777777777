@@ -5,7 +5,7 @@
 
 const SUPA_URL      = "https://ezektgzwesrtezeghmrs.supabase.co";
 const SUPA_KEY      = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
-const DEFAULT_PROXY = "https://constsupabaseurlhttpsezektgzwesrtezeghmrssupabaseco.bdkylh0.workers.dev"; // بروكسي Cloudflare — يعمل بدون VPN
+const DEFAULT_PROXY = "/api/supabase-proxy"; // بروكسي مجاني بدون VPN
 const TIMEOUT       = 15000; // 15 ثانية — وقت كافٍ لليمن
 
 // ══════════════════════════════════════════
