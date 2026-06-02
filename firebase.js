@@ -158,9 +158,9 @@ function _fromDB_vouch(r) {
 }
 // تحويل JS → Supabase للسندات
 function _toDB_vouch(d) {
-  const r = { account_id:d.accountId||null, account_name:d.accountName||"",
+  const r = { account_id:d.accountId||null,
     type:d.type||"receipt", amount:Number(d.amount)||0,
-    currency:d.currency||"YER", reason:d.reason||"", phone:d.phone||"" };
+    currency:d.currency||"YER", reason:d.reason||d.notes||"" };
   if (d.id) r.id = d.id;
   return r;
 }
