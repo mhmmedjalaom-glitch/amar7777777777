@@ -3,460 +3,469 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>مدير قاعدة البيانات</title>
+  <title>قاعدة البيانات - نظام محمد سالم</title>
   <link rel="stylesheet" href="../style.css"/>
   <style>
-    body { background:#0d1117; color:#e6edf3; font-family:Cairo,sans-serif; }
-    .db-header { background:linear-gradient(135deg,#161b22,#21262d); border-bottom:1px solid #30363d; padding:14px 16px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:100; }
-    .db-title { font-size:16px; font-weight:800; color:#58a6ff; flex:1; }
-    .lock-screen { position:fixed; inset:0; background:#0d1117; z-index:9999; display:flex; align-items:center; justify-content:center; }
-    .lock-box { background:#161b22; border:1px solid #30363d; border-radius:16px; padding:32px 24px; width:300px; text-align:center; }
-    .lock-icon { font-size:48px; margin-bottom:16px; }
-    .lock-title { font-size:18px; font-weight:800; color:#58a6ff; margin-bottom:8px; }
-    .lock-sub { font-size:12px; color:#8b949e; font-family:Tajawal; margin-bottom:20px; }
-    .pin-input { width:100%; padding:14px; background:#21262d; border:1.5px solid #30363d; border-radius:10px; font-size:20px; color:#e6edf3; text-align:center; letter-spacing:6px; font-family:monospace; box-sizing:border-box; outline:none; }
-    .pin-input:focus { border-color:#58a6ff; }
-    .pin-btn { width:100%; margin-top:12px; padding:13px; background:linear-gradient(135deg,#1f6feb,#0d47a1); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:Cairo; }
-    .pin-error { color:#f85149; font-size:12px; margin-top:8px; display:none; }
+    .acc-card {
+      background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;
+      box-shadow:0 2px 8px rgba(0,0,0,.07);border:1.5px solid #f0f0f0;
+      cursor:pointer;transition:transform .15s,box-shadow .15s;
+    }
+    .acc-card:active { transform:scale(.98); }
+    .acc-card:hover  { box-shadow:0 4px 16px rgba(0,0,0,.12);border-color:#D4AF37; }
+    .acc-avatar {
+      width:46px;height:46px;border-radius:13px;
+      background:linear-gradient(135deg,#8B0000,#c62828);
+      display:flex;align-items:center;justify-content:center;
+      font-size:16px;font-weight:800;color:#fff;flex-shrink:0;
+    }
+    .acc-avatar.vip { background:linear-gradient(135deg,#D4AF37,#c9a227); }
+    .acc-avatar.late { background:linear-gradient(135deg,#e65100,#bf360c); }
+    .acc-name { font-size:15px;font-weight:800;color:#1a1a1a; }
+    .acc-phone { font-size:12px;color:#888;font-family:Tajawal;margin-top:1px; }
+    .acc-bal-row { display:flex;gap:8px;margin-top:10px; }
+    .acc-bal { flex:1;background:#f9f9f9;border-radius:10px;padding:8px 10px; }
+    .acc-bal-label { font-size:10px;color:#999;font-family:Tajawal; }
+    .acc-bal-val { font-size:15px;font-weight:800;margin-top:2px; }
+    .status-badge {
+      display:inline-block;padding:2px 9px;border-radius:7px;
+      font-size:10px;font-weight:700;
+    }
+    .s-active   { background:#e8f5e9;color:#2e7d32; }
+    .s-vip      { background:#fff8e1;color:#f9a825; }
+    .s-late     { background:#ffebee;color:#c62828; }
 
-    .tables-tabs { display:flex; gap:0; background:#161b22; border-bottom:1px solid #30363d; overflow-x:auto; padding:0 16px; }
-    .t-tab { padding:10px 14px; font-size:12px; font-weight:700; cursor:pointer; color:#8b949e; border-bottom:2px solid transparent; white-space:nowrap; transition:all .2s; }
-    .t-tab.active { color:#58a6ff; border-bottom-color:#58a6ff; }
-    .t-tab:hover { color:#e6edf3; }
+    /* نافذة العمليات */
+    .ops-overlay {
+      display:none;position:fixed;inset:0;
+      background:rgba(0,0,0,.55);z-index:9999;
+      align-items:flex-end;justify-content:center;
+    }
+    .ops-overlay.open { display:flex; }
+    .ops-sheet {
+      background:#f5f5f5;border-radius:22px 22px 0 0;
+      width:100%;max-width:480px;max-height:90vh;
+      display:flex;flex-direction:column;overflow:hidden;
+    }
+    .ops-header {
+      background:#fff;padding:16px 18px 12px;
+      border-bottom:1px solid #eee;flex-shrink:0;
+    }
+    .ops-title { font-size:16px;font-weight:800;color:#1a1a1a; }
+    .ops-sub   { font-size:12px;color:#888;font-family:Tajawal;margin-top:2px; }
+    .ops-bal-row { display:flex;gap:8px;margin-top:12px; }
+    .ops-bal { flex:1;border-radius:10px;padding:10px;text-align:center; }
+    .ops-bal-label { font-size:10px;color:#666;font-family:Tajawal; }
+    .ops-bal-num { font-size:18px;font-weight:800;margin-top:2px; }
 
-    .db-toolbar { display:flex; gap:8px; padding:12px 14px; background:#161b22; border-bottom:1px solid #21262d; align-items:center; flex-wrap:wrap; }
-    .db-search { flex:1; min-width:160px; padding:8px 12px; background:#21262d; border:1px solid #30363d; border-radius:8px; color:#e6edf3; font-size:13px; font-family:Cairo; outline:none; }
-    .db-search:focus { border-color:#58a6ff; }
-    .db-btn { padding:7px 12px; border:1px solid #30363d; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; font-family:Cairo; background:#21262d; color:#e6edf3; white-space:nowrap; }
-    .db-btn:hover { background:#30363d; }
-    .db-btn-danger { border-color:#f85149; color:#f85149; }
-    .db-btn-green { border-color:#3fb950; color:#3fb950; }
-    .db-btn-blue { border-color:#58a6ff; color:#58a6ff; }
+    .ops-filter {
+      display:flex;gap:6px;padding:10px 14px;
+      background:#fff;border-bottom:1px solid #eee;
+      overflow-x:auto;flex-shrink:0;
+    }
+    .ops-filter .chip {
+      padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;
+      background:#f0f0f0;color:#555;cursor:pointer;white-space:nowrap;
+      border:none;font-family:Cairo;
+    }
+    .ops-filter .chip.active { background:#8B0000;color:#fff; }
 
-    .stats-bar { display:flex; gap:10px; padding:10px 14px; background:#0d1117; flex-wrap:wrap; }
-    .stat-chip { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:6px 12px; font-size:11px; }
-    .stat-chip span { color:#58a6ff; font-weight:800; }
+    .ops-body { overflow-y:auto;flex:1;padding:10px 14px; }
+    .op-row {
+      background:#fff;border-radius:12px;padding:12px 14px;
+      margin-bottom:8px;display:flex;align-items:center;gap:12px;
+      box-shadow:0 1px 4px rgba(0,0,0,.06);
+    }
+    .op-icon {
+      width:38px;height:38px;border-radius:11px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:16px;flex-shrink:0;
+    }
+    .op-info { flex:1;min-width:0; }
+    .op-code { font-size:12px;font-weight:700;color:#333; }
+    .op-date { font-size:10px;color:#999;font-family:Tajawal;margin-top:2px; }
+    .op-status { font-size:10px;padding:2px 8px;border-radius:6px;font-weight:700;margin-top:3px;display:inline-block; }
+    .op-amount { text-align:left;flex-shrink:0; }
+    .op-amount-val { font-size:14px;font-weight:800; }
+    .op-amount-cur { font-size:10px;color:#999;margin-top:1px; }
 
-    .table-wrap { overflow-x:auto; padding:0 0 80px; }
-    table { width:100%; border-collapse:collapse; font-size:12px; min-width:600px; }
-    thead { position:sticky; top:0; z-index:10; }
-    th { background:#161b22; color:#8b949e; padding:10px 12px; text-align:right; font-weight:700; border-bottom:1px solid #21262d; white-space:nowrap; cursor:pointer; user-select:none; }
-    th:hover { color:#58a6ff; }
-    td { padding:9px 12px; border-bottom:1px solid #161b22; color:#e6edf3; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle; }
-    tr:hover td { background:#161b22; }
-    tr.selected td { background:#1f2937; }
-    .td-id { color:#8b949e; font-size:10px; font-family:monospace; }
-    .td-status { display:inline-block; padding:2px 8px; border-radius:6px; font-size:10px; font-weight:700; }
-    .s-completed { background:#1a3a2a; color:#3fb950; }
-    .s-pending   { background:#2d2106; color:#d29922; }
-    .s-sent      { background:#0d2044; color:#58a6ff; }
-    .s-cancelled { background:#3a0d0d; color:#f85149; }
-    .btn-row-del { background:#f85149; color:#fff; border:none; border-radius:5px; padding:3px 8px; font-size:10px; cursor:pointer; font-family:Cairo; }
-    .btn-row-view { background:#1f6feb; color:#fff; border:none; border-radius:5px; padding:3px 8px; font-size:10px; cursor:pointer; font-family:Cairo; }
+    .empty-ops { text-align:center;padding:40px 20px;color:#999;font-family:Tajawal; }
+    .loading-ops { text-align:center;padding:30px;color:#8B0000;font-family:Tajawal; }
 
-    .record-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9998; align-items:flex-end; justify-content:center; }
-    .record-modal.open { display:flex; }
-    .record-box { background:#161b22; border-radius:20px 20px 0 0; padding:20px 16px 36px; width:100%; max-width:500px; max-height:80vh; overflow-y:auto; border:1px solid #30363d; }
-    .rec-field { display:flex; gap:8px; padding:8px 0; border-bottom:1px solid #21262d; align-items:flex-start; }
-    .rec-key { color:#8b949e; font-size:11px; min-width:110px; padding-top:2px; }
-    .rec-val { color:#e6edf3; font-size:12px; word-break:break-all; flex:1; font-family:monospace; }
-
-    .empty-state { text-align:center; padding:60px 20px; color:#8b949e; font-family:Tajawal; }
-    .loading-state { text-align:center; padding:40px; color:#58a6ff; }
-    .toast-db { position:fixed; top:16px; left:50%; transform:translateX(-50%); background:#3fb950; color:#0d1117; padding:10px 20px; border-radius:10px; font-size:13px; font-weight:700; z-index:99999; font-family:Cairo; display:none; }
-
-    .sql-panel { padding:12px 14px; background:#0d1117; border-top:1px solid #21262d; }
-    .sql-label { font-size:11px; color:#8b949e; margin-bottom:6px; font-family:Tajawal; }
-    .sql-input { width:100%; padding:10px; background:#161b22; border:1px solid #30363d; border-radius:8px; color:#e6edf3; font-size:12px; font-family:monospace; resize:vertical; min-height:70px; box-sizing:border-box; outline:none; }
-    .sql-input:focus { border-color:#58a6ff; }
-    .sql-run { margin-top:8px; padding:8px 16px; background:#1f6feb; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:Cairo; }
-    .sql-result { margin-top:10px; background:#161b22; border:1px solid #30363d; border-radius:8px; padding:10px; font-size:11px; font-family:monospace; color:#3fb950; max-height:150px; overflow-y:auto; white-space:pre-wrap; display:none; }
-
-    @media (prefers-color-scheme: light) { body { background:#f6f8fa; color:#1a1a1a; } }
+    .ops-stats {
+      display:flex;gap:8px;padding:8px 14px;
+      background:#fff;border-bottom:1px solid #eee;flex-shrink:0;
+    }
+    .ops-stat { flex:1;text-align:center; }
+    .ops-stat-val { font-size:17px;font-weight:800; }
+    .ops-stat-label { font-size:10px;color:#999;font-family:Tajawal; }
   </style>
 </head>
 <body>
 
-<!-- شاشة قفل -->
-<div class="lock-screen" id="lockScreen">
-  <div class="lock-box">
-    <div class="lock-icon">🔐</div>
-    <div class="lock-title">مدير قاعدة البيانات</div>
-    <div class="lock-sub">أدخل الرمز للدخول</div>
-    <input type="password" class="pin-input" id="pinInput" placeholder="••••" maxlength="6" inputmode="numeric"/>
-    <div class="pin-error" id="pinError">❌ رمز خاطئ</div>
-    <button class="pin-btn" onclick="checkPin()">🔓 دخول</button>
-  </div>
-</div>
-
-<!-- التوست -->
-<div class="toast-db" id="dbToast"></div>
-
-<!-- الهيدر -->
-<div class="db-header">
-  <span style="font-size:20px">🗄️</span>
-  <div class="db-title">Supabase — مدير قاعدة البيانات</div>
-  <button class="db-btn db-btn-green" onclick="refreshTable()">🔄 تحديث</button>
-  <button class="db-btn" onclick="history.back()">← رجوع</button>
-</div>
-
-<!-- تبويبات الجداول -->
-<div class="tables-tabs" id="tablesTabs">
-  <div class="t-tab active" data-table="transfers">💸 الحوالات</div>
-  <div class="t-tab" data-table="accounts">👥 الحسابات</div>
-  <div class="t-tab" data-table="vouchers">🧾 السندات</div>
-  <div class="t-tab" data-table="wa_logs">💬 سجل واتساب</div>
-  <div class="t-tab" data-table="settings">⚙️ الإعدادات</div>
-</div>
-
-<!-- شريط الأدوات -->
-<div class="db-toolbar">
-  <input class="db-search" id="dbSearch" placeholder="🔍 بحث في السجلات..." oninput="filterRows()"/>
-  <button class="db-btn db-btn-blue" onclick="exportJSON()">⬇️ JSON</button>
-  <button class="db-btn db-btn-blue" onclick="exportCSV()">⬇️ CSV</button>
-  <button class="db-btn db-btn-danger" onclick="deleteSelected()">🗑️ حذف المحدد</button>
-</div>
-
-<!-- شريط الإحصاء -->
-<div class="stats-bar" id="statsBar">
-  <div class="stat-chip">السجلات: <span id="statCount">—</span></div>
-  <div class="stat-chip">المحدد: <span id="statSelected">0</span></div>
-  <div class="stat-chip">الجدول: <span id="statTable">—</span></div>
-</div>
-
-<!-- جدول البيانات -->
-<div class="table-wrap" id="tableWrap">
-  <div class="loading-state">⏳ اختر جدولاً للعرض...</div>
-</div>
-
-<!-- لوحة SQL -->
-<div class="sql-panel">
-  <div class="sql-label">🛠️ استعلام SQL مباشر (للقراءة فقط عبر Supabase REST)</div>
-  <select id="quickSQL" class="db-search" style="margin-bottom:6px;direction:rtl" onchange="setQuickSQL()">
-    <option value="">— اختر استعلاماً سريعاً —</option>
-    <option value="transfers_today">حوالات اليوم</option>
-    <option value="transfers_completed">حوالات مستلمة</option>
-    <option value="transfers_debt">حوالات دين</option>
-    <option value="accounts_late">حسابات متأخرة</option>
-    <option value="top_accounts">أعلى أرصدة</option>
-  </select>
-  <textarea class="sql-input" id="sqlInput" placeholder="مثال: select * from transfers where status='completed' limit 20"></textarea>
-  <button class="sql-run" onclick="runQuery()">▶ تنفيذ الاستعلام</button>
-  <div class="sql-result" id="sqlResult"></div>
-</div>
-
-<!-- نافذة تفاصيل السجل -->
-<div class="record-modal" id="recordModal">
-  <div class="record-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-size:15px;font-weight:800;color:#58a6ff">📄 تفاصيل السجل</div>
-      <button onclick="document.getElementById('recordModal').classList.remove('open')"
-        style="background:none;border:none;color:#8b949e;font-size:24px;cursor:pointer">×</button>
+  <div class="sub-header">
+    <div class="sub-header-top">
+      <img src="../logo.svg" alt="شعار" style="width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.7);flex-shrink:0;margin-left:4px"/>
+      <div class="back-btn" onclick="history.back()">➡️</div>
+      <span class="sub-header-title">📋 الحسابات — قاعدة البيانات</span>
+      <div class="header-icon-btn" id="refreshBtn" title="تحديث">🔄</div>
     </div>
-    <div id="recordFields"></div>
-    <button id="btnDeleteRecord" style="width:100%;margin-top:14px;padding:12px;background:#f85149;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Cairo">
-      🗑️ حذف هذا السجل
-    </button>
+    <div class="sub-header-subtitle" id="pageStatus">جاري تحميل الحسابات...</div>
   </div>
-</div>
+
+  <div class="page-content">
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="بحث بالاسم أو الهاتف..."/>
+    </div>
+
+    <div class="filter-chips">
+      <div class="chip active" data-f="all">الكل</div>
+      <div class="chip" data-f="active">نشط ✅</div>
+      <div class="chip" data-f="vip">VIP 👑</div>
+      <div class="chip" data-f="late">متأخر ⚠️</div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <div class="stat-card" style="flex:1;padding:10px">
+        <div class="stat-value" id="stTotal" style="font-size:18px">—</div>
+        <div class="stat-label">إجمالي</div>
+      </div>
+      <div class="stat-card" style="flex:1;padding:10px">
+        <div class="stat-value" id="stActive" style="font-size:18px;color:#2e7d32">—</div>
+        <div class="stat-label">نشط</div>
+      </div>
+      <div class="stat-card" style="flex:1;padding:10px">
+        <div class="stat-value" id="stVip" style="font-size:18px;color:#f9a825">—</div>
+        <div class="stat-label">VIP</div>
+      </div>
+      <div class="stat-card" style="flex:1;padding:10px">
+        <div class="stat-value" id="stLate" style="font-size:18px;color:#c62828">—</div>
+        <div class="stat-label">متأخر</div>
+      </div>
+    </div>
+
+    <div id="accountsList">
+      <p style="text-align:center;padding:40px;color:#999;font-family:Tajawal">جاري التحميل...</p>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-href="../index.html"><span class="nav-icon">🏠</span><span>الرئيسية</span></div>
+    <div class="nav-item" data-href="transfer.html"><span class="nav-icon">💸</span><span>تحويل</span></div>
+    <div class="nav-item" data-href="accounts.html"><span class="nav-icon">👥</span><span>الحسابات</span></div>
+    <div class="nav-item" data-href="reports.html"><span class="nav-icon">📊</span><span>تقارير</span></div>
+  </nav>
+
+  <!-- نافذة عمليات الحساب -->
+  <div class="ops-overlay" id="opsOverlay">
+    <div class="ops-sheet">
+
+      <div class="ops-header">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="ops-title" id="opsName">—</div>
+            <div class="ops-sub" id="opsPhone">—</div>
+          </div>
+          <button onclick="closeOps()" style="background:none;border:none;font-size:24px;color:#999;cursor:pointer;line-height:1;padding:0">×</button>
+        </div>
+        <div class="ops-bal-row">
+          <div class="ops-bal" style="background:#fff3e0">
+            <div class="ops-bal-label">الرصيد (ر.ي)</div>
+            <div class="ops-bal-num" style="color:#8B0000" id="opsBalYER">—</div>
+          </div>
+          <div class="ops-bal" style="background:#e3f2fd">
+            <div class="ops-bal-label">الرصيد (ر.س)</div>
+            <div class="ops-bal-num" style="color:#1565c0" id="opsBalSAR">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ops-stats">
+        <div class="ops-stat">
+          <div class="ops-stat-val" id="opsTotalOps" style="color:#1565c0">—</div>
+          <div class="ops-stat-label">إجمالي العمليات</div>
+        </div>
+        <div class="ops-stat">
+          <div class="ops-stat-val" id="opsTransfers" style="color:#8B0000">—</div>
+          <div class="ops-stat-label">حوالات</div>
+        </div>
+        <div class="ops-stat">
+          <div class="ops-stat-val" id="opsVouchers" style="color:#2e7d32">—</div>
+          <div class="ops-stat-label">سندات</div>
+        </div>
+      </div>
+
+      <div class="ops-filter">
+        <button class="chip active" data-op="all">الكل</button>
+        <button class="chip" data-op="transfer">💸 حوالات</button>
+        <button class="chip" data-op="voucher">🧾 سندات</button>
+        <button class="chip" data-op="completed">مكتملة ✅</button>
+        <button class="chip" data-op="pending">معلقة ⏳</button>
+      </div>
+
+      <div class="ops-body" id="opsList">
+        <div class="loading-ops">⏳ جاري تحميل العمليات...</div>
+      </div>
+
+    </div>
+  </div>
 
 <script>
-const SUPA_URL = "https://ezektgzwesrtezeghmrs.supabase.co";
-const SUPA_KEY = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
-const DB_PIN   = "1234"; // الرمز الافتراضي — غيّره من هنا
+const PROXY = "https://constsupabaseurlhttpsezektgzwesrtezeghmrssupabaseco.bdkylh0.workers.dev";
+const KEY   = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
 
-let currentTable  = 'transfers';
-let allRows       = [];
-let filteredRows  = [];
-let selectedIds   = new Set();
-let sortCol       = null;
-let sortAsc       = true;
-let currentRecord = null;
+let allAccounts = [];
+let currentFilter = 'all';
+let currentSearch  = '';
+let opsAllEntries  = [];
+let opsFilter      = 'all';
 
-// ===== قفل الصفحة =====
-function checkPin() {
-  const val = document.getElementById('pinInput').value;
-  if (val === DB_PIN) {
-    document.getElementById('lockScreen').style.display = 'none';
-    loadTable('transfers');
-  } else {
-    document.getElementById('pinError').style.display = 'block';
-    document.getElementById('pinInput').value = '';
-    document.getElementById('pinInput').focus();
-  }
+// ============ جلب البيانات من Supabase ============
+async function sbGet(table, query = '') {
+  const url = `${PROXY}/rest/v1/${table}?${query}`;
+  const res = await fetch(url, {
+    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
 }
-document.getElementById('pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
 
-// ===== تحميل الجدول =====
-async function loadTable(table) {
-  currentTable = table;
-  selectedIds.clear();
-  document.getElementById('statTable').textContent = table;
-  document.getElementById('statSelected').textContent = '0';
-  document.getElementById('tableWrap').innerHTML = '<div class="loading-state">⏳ جاري تحميل ' + table + '...</div>';
-  document.getElementById('dbSearch').value = '';
+// ============ تحميل الحسابات ============
+async function loadAccounts() {
+  document.getElementById('pageStatus').textContent = 'جاري التحميل من قاعدة البيانات...';
   try {
-    const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*&order=created_at.desc&limit=500`, {
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
-    });
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error('HTTP ' + res.status + ': ' + err.slice(0,120));
-    }
-    allRows = await res.json();
-    filteredRows = [...allRows];
-    document.getElementById('statCount').textContent = allRows.length;
-    renderTable(filteredRows);
+    const rows = await sbGet('accounts', 'order=created_at.desc&limit=500');
+    allAccounts = rows;
+    renderAccounts();
+    document.getElementById('pageStatus').textContent = `✅ ${rows.length} حساب محمّل من Supabase`;
   } catch(e) {
-    document.getElementById('tableWrap').innerHTML = `<div class="empty-state">❌ خطأ في التحميل<br><small style="font-size:11px;color:#f85149">${e.message}</small></div>`;
+    document.getElementById('pageStatus').textContent = '❌ خطأ في الاتصال بقاعدة البيانات';
+    document.getElementById('accountsList').innerHTML =
+      `<div style="text-align:center;padding:40px;color:#c62828;font-family:Tajawal">
+        ❌ تعذّر الاتصال بقاعدة البيانات<br>
+        <small style="color:#999">${e.message}</small>
+      </div>`;
   }
 }
 
-function refreshTable() { loadTable(currentTable); }
+// ============ عرض الحسابات ============
+function renderAccounts() {
+  let list = allAccounts;
 
-// ===== عرض الجدول =====
-function renderTable(rows) {
-  if (!rows.length) {
-    document.getElementById('tableWrap').innerHTML = '<div class="empty-state">📭 لا توجد سجلات</div>';
+  // تصفية بالحالة
+  if (currentFilter !== 'all') list = list.filter(a => a.status === currentFilter);
+
+  // بحث
+  if (currentSearch) {
+    const q = currentSearch.toLowerCase();
+    list = list.filter(a =>
+      (a.name||'').toLowerCase().includes(q) ||
+      (a.phone||'').includes(q)
+    );
+  }
+
+  // إحصاءات
+  document.getElementById('stTotal').textContent  = allAccounts.length;
+  document.getElementById('stActive').textContent = allAccounts.filter(a=>a.status==='active').length;
+  document.getElementById('stVip').textContent    = allAccounts.filter(a=>a.status==='vip').length;
+  document.getElementById('stLate').textContent   = allAccounts.filter(a=>a.status==='late').length;
+
+  if (!list.length) {
+    document.getElementById('accountsList').innerHTML =
+      '<p style="text-align:center;padding:40px;color:#999;font-family:Tajawal">لا توجد حسابات</p>';
     return;
   }
-  const cols = Object.keys(rows[0]);
-  const priorityCols = ['id','name','sender_name','beneficiary','amount','currency','status','payment_method','paymentMethod','phone','created_at','createdAt'];
-  const sorted = [...cols].sort((a,b) => {
-    const ai = priorityCols.indexOf(a), bi = priorityCols.indexOf(b);
-    if (ai >= 0 && bi >= 0) return ai - bi;
-    if (ai >= 0) return -1;
-    if (bi >= 0) return 1;
-    return 0;
-  });
-  const displayCols = sorted.slice(0, 12); // أقصى 12 عمود
 
-  let html = `<table><thead><tr>
-    <th><input type="checkbox" id="chkAll" onchange="toggleAll(this.checked)" style="accent-color:#58a6ff"/></th>
-    ${displayCols.map(c => `<th onclick="sortBy('${c}')">${c} ${sortCol===c?(sortAsc?'↑':'↓'):''}</th>`).join('')}
-    <th>إجراءات</th>
-  </tr></thead><tbody>`;
+  const statusLabel = { active:'نشط ✅', vip:'VIP 👑', late:'متأخر ⚠️' };
+  const statusClass = { active:'s-active', vip:'s-vip', late:'s-late' };
+  const fmt = n => Number(n||0).toLocaleString('ar-SA');
+  const initials = name => {
+    const parts = (name||'?').trim().split(' ');
+    return parts.length >= 2 ? parts[0][0] + parts[1][0] : parts[0].slice(0,2);
+  };
 
-  rows.forEach(row => {
-    const isSelected = selectedIds.has(row.id);
-    html += `<tr class="${isSelected?'selected':''}" data-id="${row.id||''}">
-      <td><input type="checkbox" ${isSelected?'checked':''} onchange="toggleRow('${row.id}',this.checked)" style="accent-color:#58a6ff"/></td>
-      ${displayCols.map(c => {
-        let v = row[c];
-        if (v === null || v === undefined) return '<td style="color:#484f58">null</td>';
-        if (c === 'id') return `<td class="td-id">${String(v).slice(0,8)}…</td>`;
-        if (c === 'status') {
-          const cls = {completed:'s-completed',pending:'s-pending',sent:'s-sent',cancelled:'s-cancelled'}[v]||'';
-          return `<td><span class="td-status ${cls}">${v}</span></td>`;
-        }
-        if (typeof v === 'object') v = JSON.stringify(v).slice(0,40);
-        v = String(v);
-        if (v.length > 35) v = v.slice(0,35) + '…';
-        return `<td title="${String(row[c]).replace(/"/g,'&quot;')}">${v}</td>`;
-      }).join('')}
-      <td style="white-space:nowrap">
-        <button class="btn-row-view" onclick="viewRecord('${row.id}')">👁️</button>
-        <button class="btn-row-del" onclick="deleteRow('${row.id}')">🗑️</button>
-      </td>
-    </tr>`;
-  });
-  html += '</tbody></table>';
-  document.getElementById('tableWrap').innerHTML = html;
+  document.getElementById('accountsList').innerHTML = list.map(acc => `
+    <div class="acc-card" onclick="openOps('${acc.id}','${(acc.name||'').replace(/'/g,'')}','${acc.phone||''}',${Number(acc.balance)||0},${Number(acc.balance_sar)||0},'${acc.status||'active'}')">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="acc-avatar ${acc.status==='vip'?'vip':acc.status==='late'?'late':''}">${initials(acc.name)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="acc-name">${acc.name||'—'}</div>
+          <div class="acc-phone">${acc.phone||'لا يوجد رقم'}</div>
+          <span class="status-badge ${statusClass[acc.status]||'s-active'}">${statusLabel[acc.status]||'نشط'}</span>
+        </div>
+        <div style="color:#ccc;font-size:18px">←</div>
+      </div>
+      <div class="acc-bal-row">
+        <div class="acc-bal">
+          <div class="acc-bal-label">الرصيد (ر.ي)</div>
+          <div class="acc-bal-val" style="color:#8B0000">${fmt(acc.balance)}</div>
+        </div>
+        <div class="acc-bal">
+          <div class="acc-bal-label">الرصيد (ر.س)</div>
+          <div class="acc-bal-val" style="color:#1565c0">${fmt(acc.balance_sar)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
 }
 
-// ===== تصفية =====
-function filterRows() {
-  const q = document.getElementById('dbSearch').value.trim().toLowerCase();
-  filteredRows = q ? allRows.filter(r => JSON.stringify(r).toLowerCase().includes(q)) : [...allRows];
-  document.getElementById('statCount').textContent = filteredRows.length + (q ? ' (مُصفّى)' : '');
-  renderTable(filteredRows);
-}
+// ============ فتح عمليات الحساب ============
+async function openOps(id, name, phone, balYER, balSAR, status) {
+  opsAllEntries = [];
+  opsFilter = 'all';
 
-// ===== ترتيب =====
-function sortBy(col) {
-  if (sortCol === col) sortAsc = !sortAsc;
-  else { sortCol = col; sortAsc = true; }
-  filteredRows.sort((a,b) => {
-    const av = a[col], bv = b[col];
-    if (av == null) return 1; if (bv == null) return -1;
-    if (typeof av === 'number') return sortAsc ? av-bv : bv-av;
-    return sortAsc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-  });
-  renderTable(filteredRows);
-}
+  // تعيين بيانات الهيدر
+  document.getElementById('opsName').textContent   = name;
+  document.getElementById('opsPhone').textContent  = phone || 'لا يوجد رقم';
+  document.getElementById('opsBalYER').textContent = Number(balYER||0).toLocaleString('ar-SA');
+  document.getElementById('opsBalSAR').textContent = Number(balSAR||0).toLocaleString('ar-SA');
+  document.getElementById('opsTotalOps').textContent = '—';
+  document.getElementById('opsTransfers').textContent = '—';
+  document.getElementById('opsVouchers').textContent  = '—';
+  document.getElementById('opsList').innerHTML = '<div class="loading-ops">⏳ جاري تحميل العمليات...</div>';
 
-// ===== تحديد =====
-function toggleAll(checked) {
-  filteredRows.forEach(r => { if (r.id) checked ? selectedIds.add(r.id) : selectedIds.delete(r.id); });
-  document.getElementById('statSelected').textContent = selectedIds.size;
-  renderTable(filteredRows);
-}
-function toggleRow(id, checked) {
-  checked ? selectedIds.add(id) : selectedIds.delete(id);
-  document.getElementById('statSelected').textContent = selectedIds.size;
-}
+  // إعادة تعيين فلتر الأزرار
+  document.querySelectorAll('.ops-filter .chip').forEach(c => c.classList.toggle('active', c.dataset.op === 'all'));
 
-// ===== عرض تفاصيل السجل =====
-function viewRecord(id) {
-  const row = allRows.find(r => String(r.id) === String(id));
-  if (!row) return;
-  currentRecord = row;
-  const html = Object.entries(row).map(([k,v]) => {
-    const vStr = v === null ? '<span style="color:#484f58">null</span>' : (typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v));
-    return `<div class="rec-field"><div class="rec-key">${k}</div><div class="rec-val">${vStr}</div></div>`;
-  }).join('');
-  document.getElementById('recordFields').innerHTML = html;
-  document.getElementById('recordModal').classList.add('open');
-}
+  // فتح النافذة
+  document.getElementById('opsOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
 
-document.getElementById('btnDeleteRecord').addEventListener('click', () => {
-  if (!currentRecord) return;
-  if (!confirm('⚠️ حذف هذا السجل نهائياً؟')) return;
-  deleteRow(currentRecord.id).then(() => document.getElementById('recordModal').classList.remove('open'));
-});
-
-// ===== حذف سجل =====
-async function deleteRow(id) {
-  if (!id) { showDbToast('⚠️ لا يوجد ID', 'error'); return; }
   try {
-    const res = await fetch(`${SUPA_URL}/rest/v1/${currentTable}?id=eq.${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Prefer': 'return=minimal' }
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    allRows = allRows.filter(r => String(r.id) !== String(id));
-    filteredRows = filteredRows.filter(r => String(r.id) !== String(id));
-    selectedIds.delete(id);
-    document.getElementById('statCount').textContent = allRows.length;
-    document.getElementById('statSelected').textContent = selectedIds.size;
-    renderTable(filteredRows);
-    showDbToast('🗑️ تم حذف السجل', 'success');
+    // جلب الحوالات والسندات معاً من Supabase
+    const trfQuery = phone
+      ? `receiver_phone=eq.${encodeURIComponent(phone)}&order=created_at.desc&limit=500`
+      : `order=created_at.desc&limit=1`;
+
+    const [vouchers, transfers] = await Promise.all([
+      sbGet('vouchers', `account_id=eq.${encodeURIComponent(id)}&order=created_at.desc&limit=500`),
+      phone ? sbGet('transfers', trfQuery) : Promise.resolve([])
+    ]);
+
+    const vEntries = (vouchers||[]).map(v => ({
+      ...v,
+      entryType: 'voucher',
+      _ts: new Date(v.created_at).getTime()
+    }));
+    const tEntries = (transfers||[]).map(t => ({
+      ...t,
+      entryType: 'transfer',
+      _ts: new Date(t.created_at).getTime()
+    }));
+
+    opsAllEntries = [...vEntries, ...tEntries].sort((a,b) => b._ts - a._ts);
+
+    // إحصاءات
+    document.getElementById('opsTotalOps').textContent  = opsAllEntries.length;
+    document.getElementById('opsTransfers').textContent = tEntries.length;
+    document.getElementById('opsVouchers').textContent  = vEntries.length;
+
+    renderOps();
   } catch(e) {
-    showDbToast('❌ خطأ في الحذف: ' + e.message, 'error');
+    document.getElementById('opsList').innerHTML =
+      `<div class="empty-ops">❌ خطأ في جلب العمليات<br><small>${e.message}</small></div>`;
   }
 }
 
-// ===== حذف المحدد =====
-async function deleteSelected() {
-  if (!selectedIds.size) { showDbToast('⚠️ لا توجد سجلات محددة', 'warning'); return; }
-  if (!confirm(`⚠️ حذف ${selectedIds.size} سجل نهائياً؟`)) return;
-  const ids = [...selectedIds];
-  let done = 0;
-  for (const id of ids) {
-    try {
-      await fetch(`${SUPA_URL}/rest/v1/${currentTable}?id=eq.${encodeURIComponent(id)}`, {
-        method:'DELETE', headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'}
-      });
-      done++;
-    } catch {}
+// ============ عرض العمليات ============
+function renderOps() {
+  let list = opsAllEntries;
+
+  if      (opsFilter === 'transfer')  list = list.filter(e => e.entryType === 'transfer');
+  else if (opsFilter === 'voucher')   list = list.filter(e => e.entryType === 'voucher');
+  else if (opsFilter === 'completed') list = list.filter(e => e.entryType==='transfer' && e.status==='completed');
+  else if (opsFilter === 'pending')   list = list.filter(e => e.entryType==='transfer' && e.status==='pending');
+
+  if (!list.length) {
+    document.getElementById('opsList').innerHTML =
+      '<div class="empty-ops">📭 لا توجد عمليات في هذه الفئة</div>';
+    return;
   }
-  showDbToast(`🗑️ تم حذف ${done} سجل`, 'success');
-  loadTable(currentTable);
-}
 
-// ===== تصدير =====
-function exportJSON() {
-  if (!filteredRows.length) { showDbToast('لا توجد بيانات', 'warning'); return; }
-  const blob = new Blob([JSON.stringify(filteredRows, null, 2)], {type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = currentTable + '_' + new Date().toISOString().slice(0,10) + '.json'; a.click();
-  showDbToast('⬇️ تم تصدير JSON', 'success');
-}
-function exportCSV() {
-  if (!filteredRows.length) { showDbToast('لا توجد بيانات', 'warning'); return; }
-  const cols = Object.keys(filteredRows[0]);
-  const rows = filteredRows.map(r => cols.map(c => { const v=r[c]; return '"'+(v==null?'':String(v).replace(/"/g,'""'))+'"'; }).join(','));
-  const csv = '\uFEFF' + cols.join(',') + '\n' + rows.join('\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = currentTable + '_' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
-  showDbToast('⬇️ تم تصدير CSV', 'success');
-}
+  const statusColors = { completed:'#2e7d32', pending:'#f57c00', cancelled:'#c62828', sent:'#1565c0' };
+  const statusTx     = { completed:'مكتملة ✅', pending:'معلقة ⏳', cancelled:'ملغاة ❌', sent:'مرسلة 📤' };
 
-// ===== استعلامات سريعة =====
-const quickQueries = {
-  transfers_today: `status,beneficiary,amount,currency,payment_method,created_at&order=created_at.desc&created_at=gte.${new Date().toISOString().slice(0,10)}`,
-  transfers_completed: 'status=eq.completed&order=created_at.desc&limit=100',
-  transfers_debt: 'payment_method=eq.debt&order=created_at.desc&limit=100',
-  accounts_late: 'status=eq.late&order=created_at.desc',
-  top_accounts: 'order=balance.desc&limit=20'
-};
-const quickTables = {
-  transfers_today:'transfers', transfers_completed:'transfers', transfers_debt:'transfers',
-  accounts_late:'accounts', top_accounts:'accounts'
-};
-function setQuickSQL() {
-  const v = document.getElementById('quickSQL').value;
-  if (!v) return;
-  const tbl = quickTables[v]||currentTable;
-  document.getElementById('sqlInput').value = `GET /rest/v1/${tbl}?${quickQueries[v]}`;
-}
-async function runQuery() {
-  const q = document.getElementById('sqlInput').value.trim();
-  if (!q) return;
-  const res = document.getElementById('sqlResult');
-  res.style.display = 'block'; res.textContent = '⏳ جاري التنفيذ...'; res.style.color = '#58a6ff';
-  try {
-    // تحليل استعلام GET البسيط
-    let url;
-    if (q.startsWith('GET ')) {
-      url = SUPA_URL + q.slice(4).trim();
-    } else if (q.startsWith('http')) {
-      url = q;
+  document.getElementById('opsList').innerHTML = list.map(e => {
+    const d = new Date(e.created_at || e._ts || 0);
+    const dateStr = d.toLocaleDateString('ar-SA') + ' ' + d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+
+    if (e.entryType === 'transfer') {
+      const np = (e.notes||'').split('|');
+      const code = np[0]?.trim() || '—';
+      const sc = statusColors[e.status] || '#666';
+      return `<div class="op-row">
+        <div class="op-icon" style="background:${sc}20">💸</div>
+        <div class="op-info">
+          <div class="op-code">${code}</div>
+          <div class="op-date">${dateStr}</div>
+          <span class="op-status" style="background:${sc}20;color:${sc}">${statusTx[e.status]||e.status}</span>
+        </div>
+        <div class="op-amount">
+          <div class="op-amount-val" style="color:#8B0000">${Number(e.amount||0).toLocaleString('ar-SA')}</div>
+          <div class="op-amount-cur">${e.currency||'ر.ي'}</div>
+        </div>
+      </div>`;
     } else {
-      // محاولة تحويله لـ REST
-      const tbl = q.match(/from\s+(\w+)/i)?.[1] || currentTable;
-      const limit = q.match(/limit\s+(\d+)/i)?.[1] || '50';
-      const where = q.match(/where\s+(.+?)(?:\s+limit|\s+order|$)/i)?.[1];
-      let params = `select=*&limit=${limit}&order=created_at.desc`;
-      if (where) {
-        const m = where.match(/(\w+)\s*=\s*'([^']+)'/);
-        if (m) params += `&${m[1]}=eq.${encodeURIComponent(m[2])}`;
-      }
-      url = `${SUPA_URL}/rest/v1/${tbl}?${params}`;
+      const isR = e.type === 'receipt';
+      return `<div class="op-row">
+        <div class="op-icon" style="background:${isR?'#e8f5e9':'#fff3e0'}">${isR?'📥':'📤'}</div>
+        <div class="op-info">
+          <div class="op-code">${isR?'سند قبض':'سند صرف'}</div>
+          <div class="op-date">${dateStr}</div>
+          <div style="font-size:11px;color:#666;margin-top:2px">${e.reason||'—'}</div>
+        </div>
+        <div class="op-amount">
+          <div class="op-amount-val" style="color:${isR?'#2e7d32':'#c62828'}">${isR?'+':'−'}${Number(e.amount||0).toLocaleString('ar-SA')}</div>
+          <div class="op-amount-cur">${e.currency==='SAR'?'ر.س':'ر.ي'}</div>
+        </div>
+      </div>`;
     }
-    const r = await fetch(url, { headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY} });
-    const data = await r.json();
-    res.style.color = '#3fb950';
-    res.textContent = `// ${Array.isArray(data)?data.length+' سجل':'خطأ'}\n` + JSON.stringify(data, null, 2).slice(0, 3000);
-    if (Array.isArray(data)) {
-      allRows = data; filteredRows = [...data];
-      document.getElementById('statCount').textContent = data.length + ' (استعلام)';
-      renderTable(data);
-    }
-  } catch(e) {
-    res.style.color = '#f85149';
-    res.textContent = '❌ خطأ: ' + e.message;
-  }
+  }).join('');
 }
 
-// ===== تبويبات الجداول =====
-document.querySelectorAll('.t-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.t-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    loadTable(tab.dataset.table);
+function closeOps() {
+  document.getElementById('opsOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ============ أحداث ============
+document.getElementById('searchInput').addEventListener('input', function() {
+  currentSearch = this.value;
+  renderAccounts();
+});
+
+document.querySelectorAll('.filter-chips .chip').forEach(chip => {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('.filter-chips .chip').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    currentFilter = this.dataset.f;
+    renderAccounts();
   });
 });
 
-// ===== توست =====
-function showDbToast(msg, type) {
-  const t = document.getElementById('dbToast');
-  t.textContent = msg;
-  t.style.background = type==='error'?'#f85149':type==='warning'?'#d29922':'#3fb950';
-  t.style.color = type==='warning'?'#0d1117':'#0d1117';
-  t.style.display = 'block';
-  setTimeout(() => { t.style.display = 'none'; }, 2500);
-}
-
-// إغلاق modal
-document.getElementById('recordModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('recordModal'))
-    document.getElementById('recordModal').classList.remove('open');
+document.querySelectorAll('.ops-filter .chip').forEach(chip => {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('.ops-filter .chip').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    opsFilter = this.dataset.op;
+    renderOps();
+  });
 });
 
-// Enter في رمز PIN
-document.getElementById('pinInput').focus();
+document.getElementById('refreshBtn').addEventListener('click', loadAccounts);
+document.getElementById('opsOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('opsOverlay')) closeOps();
+});
+
+// nav
+document.querySelectorAll('.nav-item[data-href]').forEach(el => {
+  el.addEventListener('click', () => { window.location.href = el.dataset.href; });
+});
+document.querySelector('.back-btn')?.addEventListener('click', () => history.back());
+
+// تحميل عند الفتح
+loadAccounts();
 </script>
 </body>
 </html>
