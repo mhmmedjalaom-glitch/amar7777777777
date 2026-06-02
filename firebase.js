@@ -5,17 +5,17 @@
 
 const SUPA_URL      = "https://ezektgzwesrtezeghmrs.supabase.co";
 const SUPA_KEY      = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
-const DEFAULT_PROXY = ""; // Supabase مباشر — بدون وسيط
+const DEFAULT_PROXY = "https://constsupabaseurlhttpsezektgzwesrtezeghmrssupabaseco.bdkylh0.workers.dev"; // بروكسي Cloudflare — يعمل بدون VPN
 const TIMEOUT       = 15000; // 15 ثانية — وقت كافٍ لليمن
 
 // ══════════════════════════════════════════
-// مسح أي بروكسي قديم — اتصال مباشر بـ Supabase
-(function _resetProxy() {
-  localStorage.removeItem('s_proxy_url');
+// تفعيل البروكسي تلقائياً إذا لم يكن مضبوطاً
+(function _initProxy() {
+  if (!localStorage.getItem('s_proxy_url')) {
+    localStorage.setItem('s_proxy_url', DEFAULT_PROXY);
+  }
 })();
 // ══════════════════════════════════════════
-
-// البروكسي محذوف — الاتصال مباشر بـ Supabase
 
 // ===== LocalStorage =====
 function _lsGet(k)      { try { return JSON.parse(localStorage.getItem("ms_"+k)||"[]"); } catch { return []; } }
