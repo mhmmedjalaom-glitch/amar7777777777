@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>التقارير المالية - نظام محمد سالم</title>
   <link rel="stylesheet" href="../style.css" />
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -81,6 +82,9 @@
     <div style="height:10px"></div>
     <button class="btn btn-outline" onclick="exportReport()">
       📥 تصدير التقرير
+    </button>
+    <button class="btn btn-outline" onclick="exportExcel()" style="margin-top:8px;background:#1a7431;color:#fff;border:none">
+      📊 تصدير Excel كامل
     </button>
 
   </div>
@@ -293,6 +297,53 @@
       update();
     });
   });
+
+  window.exportExcel = function() {
+    const accounts  = (typeof getAccounts  === 'function' ? getAccounts()  : null) || JSON.parse(localStorage.getItem('ms_accounts')  || '[]');
+    const transfers = (typeof getTransfers === 'function' ? getTransfers() : null) || JSON.parse(localStorage.getItem('ms_transfers') || '[]');
+    const vouchers  = (typeof getVouchers  === 'function' ? getVouchers()  : null) || JSON.parse(localStorage.getItem('ms_vouchers')  || '[]');
+
+    const wb = XLSX.utils.book_new();
+
+    // ورقة الحسابات
+    const accRows = accounts.map(a => ({
+      'الاسم': a.name || '',
+      'الهاتف': a.phone || '',
+      'الرصيد (ر.ي)': Number(a.balance) || 0,
+      'الرصيد (ر.س)': Number(a.balanceSAR) || 0,
+      'النوع': a.type || '',
+      'الحالة': a.status || '',
+      'تاريخ الإنشاء': a.createdAt ? new Date(a.createdAt).toLocaleDateString('ar-SA') : '',
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(accRows.length ? accRows : [{}]), 'الحسابات');
+
+    // ورقة الحوالات
+    const trRows = transfers.map(t => ({
+      'المرسل': t.senderName || t.sender || '',
+      'المستقبل': t.receiverName || t.receiver || '',
+      'المبلغ': Number(t.amount) || 0,
+      'العملة': t.currency || 'YER',
+      'العمولة': Number(t.commission) || 0,
+      'الحالة': t.status || '',
+      'كود الحوالة': t.transferCode || '',
+      'التاريخ': t.createdAt ? new Date(t.createdAt).toLocaleDateString('ar-SA') : '',
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(trRows.length ? trRows : [{}]), 'الحوالات');
+
+    // ورقة السندات
+    const voRows = vouchers.map(v => ({
+      'الاسم': v.name || v.clientName || '',
+      'المبلغ': Number(v.amount) || 0,
+      'النوع': v.entryType || v.type || '',
+      'ملاحظات': v.notes || '',
+      'التاريخ': v.createdAt ? new Date(v.createdAt).toLocaleDateString('ar-SA') : '',
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(voRows.length ? voRows : [{}]), 'السندات');
+
+    const date = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `نظام-محمد-سالم-${date}.xlsx`);
+    if (typeof showNotification === 'function') showNotification('تم تصدير Excel ✓', 'success');
+  };
 
   window.exportReport = function() {
     const filtered = filterByDays(allTransfers, currentDays);
