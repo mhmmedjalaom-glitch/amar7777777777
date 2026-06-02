@@ -174,22 +174,54 @@ function _pendingCount() {
 function _updateSyncBadge() {
   const n = _pendingCount();
   const badge = document.getElementById('_syncBadge');
-  if (!badge) return;
+
+  // --- بطاقة الحالة الرئيسية ---
+  const dot   = document.getElementById('connDotMain');
+  const title = document.getElementById('connStatusTitle');
+  const desc  = document.getElementById('connStatusDesc');
+  const card  = document.getElementById('connStatusCard');
+  const retry = document.getElementById('connRetryBtn');
+
   if (n > 0) {
-    badge.textContent = '⏳ ' + n + ' سجل لم يُحفظ';
-    badge.style.display = 'inline-block';
-    badge.style.background = '#f59e0b';
+    // يوجد بيانات لم تُحفظ بعد
+    if (badge) { badge.textContent = '⏳ ' + n + ' سجل لم يُحفظ'; badge.style.display = 'inline-block'; badge.style.background = '#f59e0b'; }
+    if (dot)   { dot.style.background = '#f59e0b'; }
+    if (card)  { card.style.borderColor = '#f59e0b'; }
+    if (title) { title.textContent = '⏳ ' + n + ' سجل في انتظار الحفظ'; title.style.color = '#92400e'; }
+    if (desc)  { desc.textContent = 'متصل — جاري رفع البيانات إلى السحابة...'; }
+    if (retry) { retry.style.display = 'none'; }
   } else if (_supaOk) {
-    badge.textContent = '☁️ محفوظ';
-    badge.style.display = 'inline-block';
-    badge.style.background = '#10b981';
-    setTimeout(() => { if(badge) badge.style.display='none'; }, 3000);
+    // متصل بالسحابة بنجاح
+    if (badge) { badge.textContent = '☁️ محفوظ'; badge.style.display = 'inline-block'; badge.style.background = '#10b981'; setTimeout(() => { if(badge) badge.style.display='none'; }, 3000); }
+    if (dot)   { dot.style.background = '#10b981'; }
+    if (card)  { card.style.borderColor = '#10b981'; }
+    if (title) { title.textContent = '☁️ متصل بالسحابة'; title.style.color = '#065f46'; }
+    if (desc)  { desc.textContent = 'البيانات محفوظة ومزامنة بنجاح — بدون VPN ✓'; }
+    if (retry) { retry.style.display = 'none'; }
   } else {
-    badge.textContent = '📱 محلي';
-    badge.style.display = 'inline-block';
-    badge.style.background = '#6b7280';
+    // وضع محلي — غير متصل
+    if (badge) { badge.textContent = '📱 محلي'; badge.style.display = 'inline-block'; badge.style.background = '#6b7280'; }
+    if (dot)   { dot.style.background = '#ef4444'; }
+    if (card)  { card.style.borderColor = '#ef4444'; }
+    if (title) { title.textContent = '🔴 غير متصل بالسحابة'; title.style.color = '#991b1b'; }
+    if (desc)  { desc.textContent = 'البيانات محفوظة محلياً فقط — ستتم المزامنة عند الاتصال'; }
+    if (retry) { retry.style.display = 'inline-block'; }
   }
 }
+
+// زر إعادة المحاولة
+window.__retryConn = async function() {
+  const title = document.getElementById('connStatusTitle');
+  const desc  = document.getElementById('connStatusDesc');
+  const retry = document.getElementById('connRetryBtn');
+  if (title) { title.textContent = 'جاري إعادة الاتصال...'; title.style.color = '#333'; }
+  if (desc)  { desc.textContent = 'يتم التحقق من الاتصال بالسحابة...'; }
+  if (retry) { retry.style.display = 'none'; }
+  const test = await _sbSelect('accounts', 'limit=1');
+  if (test !== null) { _supaOk = true; }
+  _updateSyncBadge();
+};
+
 // حقن شارة المزامنة في الصفحة تلقائياً
 (function _injectBadge() {
   if (document.readyState === 'loading') {
