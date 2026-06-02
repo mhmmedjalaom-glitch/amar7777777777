@@ -4,156 +4,238 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title>قاعدة البيانات — الحسابات</title>
-  <link rel="stylesheet" href="../style.css"/>
   <style>
-    /* ===== جدول الحسابات ===== */
-    .tbl-wrap { overflow-x:auto; }
-    table { width:100%; border-collapse:collapse; font-size:13px; }
-    thead th {
-      background:#1a1a2e; color:#D4AF37; padding:10px 12px;
-      text-align:right; font-weight:700; border-bottom:2px solid #D4AF37;
-      white-space:nowrap; position:sticky; top:0; z-index:5;
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:#0d1117; color:#e6edf3; font-family:Cairo,sans-serif; direction:rtl; }
+
+    /* ===== هيدر ===== */
+    .db-header {
+      background:linear-gradient(135deg,#161b22,#21262d);
+      border-bottom:1px solid #30363d;
+      padding:14px 16px;
+      display:flex; align-items:center; gap:10px;
+      position:sticky; top:0; z-index:100;
     }
-    tbody tr { cursor:pointer; transition:background .15s; border-bottom:1px solid #f0f0f0; }
-    tbody tr:hover td { background:#fff8f0; }
-    tbody tr:active td { background:#ffeedd; }
-    td { padding:11px 12px; vertical-align:middle; }
-    .td-name { font-weight:700; color:#1a1a1a; }
-    .td-phone { color:#666; font-size:12px; direction:ltr; }
-    .td-bal { font-weight:800; }
-    .td-bal-yer { color:#8B0000; }
-    .td-bal-sar { color:#1565c0; }
-    .s-badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; }
-    .s-active { background:#e8f5e9; color:#2e7d32; }
-    .s-vip    { background:#fff8e1; color:#b8860b; }
-    .s-late   { background:#ffebee; color:#c62828; }
-    .row-arrow { color:#ccc; font-size:14px; }
+    .db-title { font-size:16px; font-weight:800; color:#58a6ff; flex:1; }
+    .db-btn {
+      padding:7px 12px; border:1px solid #30363d; border-radius:8px;
+      font-size:11px; font-weight:700; cursor:pointer; font-family:Cairo;
+      background:#21262d; color:#e6edf3; white-space:nowrap;
+    }
+    .db-btn:hover { background:#30363d; }
+    .db-btn-green { border-color:#3fb950; color:#3fb950; }
+
+    /* ===== شريط أدوات ===== */
+    .db-toolbar {
+      display:flex; gap:8px; padding:10px 14px;
+      background:#161b22; border-bottom:1px solid #21262d;
+      align-items:center; flex-wrap:wrap;
+    }
+    .db-search {
+      flex:1; min-width:160px; padding:8px 12px;
+      background:#21262d; border:1px solid #30363d; border-radius:8px;
+      color:#e6edf3; font-size:13px; font-family:Cairo; outline:none;
+    }
+    .db-search:focus { border-color:#58a6ff; }
+    .db-filter {
+      display:flex; gap:0; background:#21262d;
+      border:1px solid #30363d; border-radius:8px; overflow:hidden;
+    }
+    .db-filter button {
+      padding:7px 12px; background:none; border:none;
+      color:#8b949e; font-size:11px; font-weight:700;
+      cursor:pointer; font-family:Cairo; white-space:nowrap;
+    }
+    .db-filter button.active { background:#30363d; color:#58a6ff; }
+
+    /* ===== إحصاءات ===== */
+    .stats-bar {
+      display:flex; gap:10px; padding:10px 14px;
+      background:#0d1117; flex-wrap:wrap;
+    }
+    .stat-chip {
+      background:#161b22; border:1px solid #30363d;
+      border-radius:8px; padding:6px 12px; font-size:11px; color:#8b949e;
+    }
+    .stat-chip span { color:#58a6ff; font-weight:800; }
+
+    /* ===== الجدول ===== */
+    .table-wrap { overflow-x:auto; padding-bottom:80px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:500px; }
+    thead { position:sticky; top:0; z-index:10; }
+    th {
+      background:#161b22; color:#8b949e; padding:10px 14px;
+      text-align:right; font-weight:700;
+      border-bottom:1px solid #21262d; white-space:nowrap;
+    }
+    tbody tr {
+      cursor:pointer; border-bottom:1px solid #161b22;
+      transition:background .1s;
+    }
+    tbody tr:hover td { background:#1c2128; }
+    tbody tr:active td { background:#21262d; }
+    td { padding:11px 14px; vertical-align:middle; }
+    .td-num  { color:#8b949e; font-size:11px; }
+    .td-name { font-weight:700; color:#e6edf3; }
+    .td-phone{ color:#8b949e; font-size:12px; direction:ltr; }
+    .td-yer  { font-weight:800; color:#f85149; }
+    .td-sar  { font-weight:800; color:#58a6ff; }
+    .td-status { display:inline-block; padding:2px 9px; border-radius:6px; font-size:11px; font-weight:700; }
+    .s-active   { background:#1a3a2a; color:#3fb950; }
+    .s-vip      { background:#2d2700; color:#d4af37; }
+    .s-late     { background:#3a0d0d; color:#f85149; }
+    .td-arrow   { color:#30363d; font-size:14px; }
+
+    .empty-state  { text-align:center; padding:60px 20px; color:#8b949e; font-family:Tajawal; }
+    .loading-state{ text-align:center; padding:40px; color:#58a6ff; font-size:14px; }
+
+    /* ===== toast ===== */
+    .toast {
+      position:fixed; top:16px; left:50%; transform:translateX(-50%);
+      background:#3fb950; color:#0d1117; padding:10px 20px;
+      border-radius:10px; font-size:13px; font-weight:700;
+      z-index:99999; font-family:Cairo; display:none;
+    }
 
     /* ===== نافذة العمليات ===== */
     .ops-overlay {
       display:none; position:fixed; inset:0;
-      background:rgba(0,0,0,.6); z-index:9999;
+      background:rgba(0,0,0,.75); z-index:9999;
       align-items:flex-end; justify-content:center;
     }
     .ops-overlay.open { display:flex; }
     .ops-sheet {
-      background:#f7f7f7; border-radius:22px 22px 0 0;
+      background:#161b22; border-radius:20px 20px 0 0;
+      border:1px solid #30363d; border-bottom:none;
       width:100%; max-width:480px; max-height:88vh;
       display:flex; flex-direction:column; overflow:hidden;
     }
-    .ops-head {
-      background:#1a1a2e; color:#fff; padding:16px 18px 14px;
-      flex-shrink:0;
-    }
-    .ops-head-name { font-size:16px; font-weight:800; }
-    .ops-head-phone { font-size:12px; opacity:.7; font-family:Tajawal; margin-top:2px; }
-    .ops-head-bal { display:flex; gap:10px; margin-top:12px; }
-    .ops-bal-box { flex:1; background:rgba(255,255,255,.1); border-radius:10px; padding:8px 10px; }
-    .ops-bal-lbl { font-size:10px; opacity:.8; font-family:Tajawal; }
-    .ops-bal-num { font-size:17px; font-weight:800; margin-top:2px; color:#D4AF37; }
 
+    /* هيدر النافذة */
+    .ops-head {
+      padding:16px 18px 14px; border-bottom:1px solid #30363d; flex-shrink:0;
+    }
+    .ops-head-top { display:flex; justify-content:space-between; align-items:flex-start; }
+    .ops-head-name { font-size:16px; font-weight:800; color:#e6edf3; }
+    .ops-head-phone{ font-size:12px; color:#8b949e; font-family:Tajawal; margin-top:2px; }
+    .ops-close {
+      background:none; border:none; color:#8b949e;
+      font-size:26px; cursor:pointer; padding:0; line-height:1;
+    }
+    .ops-bal-row { display:flex; gap:8px; margin-top:12px; }
+    .ops-bal {
+      flex:1; background:#21262d; border:1px solid #30363d;
+      border-radius:10px; padding:10px; text-align:center;
+    }
+    .ops-bal-lbl { font-size:10px; color:#8b949e; font-family:Tajawal; }
+    .ops-bal-num { font-size:18px; font-weight:800; color:#d4af37; margin-top:3px; }
+
+    /* إحصاءات النافذة */
+    .ops-stats {
+      display:flex; gap:0; background:#0d1117;
+      border-bottom:1px solid #21262d; flex-shrink:0;
+    }
+    .ops-stat {
+      flex:1; text-align:center; padding:10px 8px;
+      border-left:1px solid #21262d;
+    }
+    .ops-stat:last-child { border-left:none; }
+    .ops-stat-num { font-size:18px; font-weight:800; }
+    .ops-stat-lbl { font-size:10px; color:#8b949e; font-family:Tajawal; margin-top:1px; }
+
+    /* تبويبات */
     .ops-tabs {
-      display:flex; background:#fff; border-bottom:1px solid #eee;
-      overflow-x:auto; flex-shrink:0;
+      display:flex; background:#161b22;
+      border-bottom:1px solid #30363d; overflow-x:auto; flex-shrink:0;
     }
     .ops-tab {
-      padding:9px 14px; font-size:12px; font-weight:700; cursor:pointer;
-      color:#888; border-bottom:2px solid transparent; white-space:nowrap;
-      font-family:Cairo; background:none; border-top:none; border-left:none; border-right:none;
+      padding:9px 14px; font-size:12px; font-weight:700;
+      color:#8b949e; border-bottom:2px solid transparent;
+      cursor:pointer; white-space:nowrap; font-family:Cairo;
+      background:none; border-top:none; border-left:none; border-right:none;
       transition:all .2s;
     }
-    .ops-tab.active { color:#8B0000; border-bottom-color:#8B0000; }
+    .ops-tab.active { color:#58a6ff; border-bottom-color:#58a6ff; }
+    .ops-tab:hover  { color:#e6edf3; }
 
-    .ops-stats { display:flex; background:#fff; padding:8px 14px; gap:12px; border-bottom:1px solid #eee; flex-shrink:0; }
-    .ops-stat { text-align:center; flex:1; }
-    .ops-stat-num { font-size:18px; font-weight:800; }
-    .ops-stat-lbl { font-size:10px; color:#999; font-family:Tajawal; }
-
-    .ops-list { overflow-y:auto; flex:1; padding:10px 12px; }
-    .op-item {
-      background:#fff; border-radius:12px; padding:11px 13px;
-      margin-bottom:8px; display:flex; align-items:center; gap:11px;
-      box-shadow:0 1px 4px rgba(0,0,0,.07);
+    /* قائمة العمليات */
+    .ops-body { overflow-y:auto; flex:1; padding:10px 12px; background:#0d1117; }
+    .op-row {
+      background:#161b22; border:1px solid #21262d; border-radius:12px;
+      padding:11px 13px; margin-bottom:8px;
+      display:flex; align-items:center; gap:11px;
     }
-    .op-icon { width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
-    .op-body { flex:1; min-width:0; }
-    .op-title { font-size:12px; font-weight:700; color:#222; }
-    .op-date  { font-size:10px; color:#aaa; font-family:Tajawal; margin-top:2px; }
-    .op-tag   { display:inline-block; font-size:10px; padding:1px 8px; border-radius:5px; font-weight:700; margin-top:3px; }
-    .op-right { text-align:left; flex-shrink:0; }
+    .op-icon {
+      width:38px; height:38px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:16px; flex-shrink:0;
+    }
+    .op-body   { flex:1; min-width:0; }
+    .op-title  { font-size:12px; font-weight:700; color:#e6edf3; }
+    .op-date   { font-size:10px; color:#8b949e; font-family:Tajawal; margin-top:2px; }
+    .op-tag    { display:inline-block; font-size:10px; padding:1px 8px; border-radius:5px; font-weight:700; margin-top:3px; }
+    .op-right  { text-align:left; flex-shrink:0; }
     .op-amount { font-size:14px; font-weight:800; }
-    .op-cur    { font-size:10px; color:#aaa; margin-top:2px; }
+    .op-cur    { font-size:10px; color:#8b949e; margin-top:2px; }
 
-    .ops-empty { text-align:center; padding:40px; color:#aaa; font-family:Tajawal; }
-    .ops-loading { text-align:center; padding:30px; color:#8B0000; }
-
-    .db-search-row {
-      display:flex; gap:8px; align-items:center;
-      padding:10px 0 2px;
-    }
-    .db-count { font-size:12px; color:#888; font-family:Tajawal; padding:0 4px; }
+    .ops-empty   { text-align:center; padding:40px; color:#8b949e; font-family:Tajawal; }
+    .ops-loading { text-align:center; padding:30px; color:#58a6ff; }
   </style>
 </head>
 <body>
 
-<div class="sub-header">
-  <div class="sub-header-top">
-    <img src="../logo.svg" alt="" style="width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.7);flex-shrink:0;margin-left:4px"/>
-    <div class="back-btn" onclick="history.back()">➡️</div>
-    <span class="sub-header-title">🗄️ قاعدة البيانات — الحسابات</span>
-    <div class="header-icon-btn" id="refreshBtn">🔄</div>
-  </div>
-  <div class="sub-header-subtitle" id="pageStatus">جاري التحميل...</div>
+<div class="toast" id="toast"></div>
+
+<!-- ===== هيدر ===== -->
+<div class="db-header">
+  <span style="font-size:20px">🗄️</span>
+  <div class="db-title">Supabase — جدول الحسابات</div>
+  <button class="db-btn db-btn-green" onclick="loadAccounts()">🔄 تحديث</button>
+  <button class="db-btn" onclick="history.back()">← رجوع</button>
 </div>
 
-<div class="page-content">
-
-  <div class="db-search-row">
-    <div class="search-bar" style="flex:1;margin-bottom:0">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="بحث بالاسم أو الهاتف أو الرصيد..."/>
-    </div>
-    <div class="db-count" id="rowCount"></div>
+<!-- ===== شريط بحث وفلترة ===== -->
+<div class="db-toolbar">
+  <input class="db-search" id="searchInput" placeholder="🔍 بحث بالاسم أو الهاتف..."/>
+  <div class="db-filter">
+    <button class="active" data-f="all"  onclick="setFilter(this,'all')">الكل</button>
+    <button data-f="active" onclick="setFilter(this,'active')">نشط</button>
+    <button data-f="vip"    onclick="setFilter(this,'vip')">VIP</button>
+    <button data-f="late"   onclick="setFilter(this,'late')">متأخر</button>
   </div>
-
-  <div class="filter-chips" style="margin-top:10px">
-    <div class="chip active" data-f="all">الكل</div>
-    <div class="chip" data-f="active">نشط ✅</div>
-    <div class="chip" data-f="vip">VIP 👑</div>
-    <div class="chip" data-f="late">متأخر ⚠️</div>
-  </div>
-
-  <div class="tbl-wrap" id="tblWrap">
-    <p style="text-align:center;padding:40px;color:#999;font-family:Tajawal">جاري تحميل البيانات من Supabase...</p>
-  </div>
-
 </div>
 
-<nav class="bottom-nav">
-  <div class="nav-item" data-href="../index.html"><span class="nav-icon">🏠</span><span>الرئيسية</span></div>
-  <div class="nav-item" data-href="transfer.html"><span class="nav-icon">💸</span><span>تحويل</span></div>
-  <div class="nav-item" data-href="accounts.html"><span class="nav-icon">👥</span><span>الحسابات</span></div>
-  <div class="nav-item" data-href="reports.html"><span class="nav-icon">📊</span><span>تقارير</span></div>
-</nav>
+<!-- ===== إحصاءات ===== -->
+<div class="stats-bar" id="statsBar">
+  <div class="stat-chip">إجمالي: <span id="stTotal">—</span></div>
+  <div class="stat-chip">نشط: <span id="stActive" style="color:#3fb950">—</span></div>
+  <div class="stat-chip">VIP: <span id="stVip" style="color:#d4af37">—</span></div>
+  <div class="stat-chip">متأخر: <span id="stLate" style="color:#f85149">—</span></div>
+</div>
 
-<!-- ===== نافذة عمليات الحساب ===== -->
+<!-- ===== جدول الحسابات ===== -->
+<div class="table-wrap" id="tableWrap">
+  <div class="loading-state">⏳ جاري تحميل الحسابات من قاعدة البيانات...</div>
+</div>
+
+<!-- ===== نافذة العمليات ===== -->
 <div class="ops-overlay" id="opsOverlay">
   <div class="ops-sheet">
 
     <div class="ops-head">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div class="ops-head-top">
         <div>
           <div class="ops-head-name" id="opsName">—</div>
           <div class="ops-head-phone" id="opsPhone">—</div>
         </div>
-        <button onclick="closeOps()" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:28px;cursor:pointer;padding:0;line-height:1">×</button>
+        <button class="ops-close" onclick="closeOps()">×</button>
       </div>
-      <div class="ops-head-bal">
-        <div class="ops-bal-box">
+      <div class="ops-bal-row">
+        <div class="ops-bal">
           <div class="ops-bal-lbl">الرصيد (ر.ي)</div>
           <div class="ops-bal-num" id="opsBalYER">—</div>
         </div>
-        <div class="ops-bal-box">
+        <div class="ops-bal">
           <div class="ops-bal-lbl">الرصيد (ر.س)</div>
           <div class="ops-bal-num" id="opsBalSAR">—</div>
         </div>
@@ -162,15 +244,15 @@
 
     <div class="ops-stats">
       <div class="ops-stat">
-        <div class="ops-stat-num" id="stAll" style="color:#1565c0">—</div>
-        <div class="ops-stat-lbl">إجمالي العمليات</div>
+        <div class="ops-stat-num" id="stOpsAll" style="color:#58a6ff">—</div>
+        <div class="ops-stat-lbl">إجمالي</div>
       </div>
       <div class="ops-stat">
-        <div class="ops-stat-num" id="stTrf" style="color:#8B0000">—</div>
+        <div class="ops-stat-num" id="stOpsTrf" style="color:#f85149">—</div>
         <div class="ops-stat-lbl">حوالات</div>
       </div>
       <div class="ops-stat">
-        <div class="ops-stat-num" id="stVch" style="color:#2e7d32">—</div>
+        <div class="ops-stat-num" id="stOpsVch" style="color:#3fb950">—</div>
         <div class="ops-stat-lbl">سندات</div>
       </div>
     </div>
@@ -183,7 +265,7 @@
       <button class="ops-tab" data-t="pending">معلقة ⏳</button>
     </div>
 
-    <div class="ops-list" id="opsList">
+    <div class="ops-body" id="opsList">
       <div class="ops-loading">⏳ جاري التحميل...</div>
     </div>
 
@@ -198,8 +280,8 @@ let allRows   = [];
 let shownRows = [];
 let curFilter = 'all';
 let curSearch = '';
-let opsEntries = [];
-let opsTab = 'all';
+let opsEntries= [];
+let opsTab    = 'all';
 
 async function sbGet(table, q='') {
   const r = await fetch(`${PROXY}/rest/v1/${table}?${q}`, {
@@ -211,87 +293,95 @@ async function sbGet(table, q='') {
 
 // ===== تحميل الحسابات =====
 async function loadAccounts() {
-  document.getElementById('pageStatus').textContent = 'جاري التحميل من Supabase...';
-  document.getElementById('tblWrap').innerHTML =
-    '<p style="text-align:center;padding:40px;color:#999;font-family:Tajawal">⏳ جاري التحميل...</p>';
+  document.getElementById('tableWrap').innerHTML =
+    '<div class="loading-state">⏳ جاري تحميل الحسابات من Supabase...</div>';
   try {
     allRows = await sbGet('accounts','order=created_at.desc&limit=500');
-    document.getElementById('pageStatus').textContent =
-      `✅ ${allRows.length} حساب — آخر تحديث: ${new Date().toLocaleTimeString('ar-SA')}`;
+    updateStats();
     applyFilter();
+    showToast('✅ تم تحميل ' + allRows.length + ' حساب');
   } catch(e) {
-    document.getElementById('pageStatus').textContent = '❌ خطأ في الاتصال';
-    document.getElementById('tblWrap').innerHTML =
-      `<p style="text-align:center;padding:40px;color:#c62828;font-family:Tajawal">❌ ${e.message}</p>`;
+    document.getElementById('tableWrap').innerHTML =
+      `<div class="empty-state">❌ خطأ في الاتصال بقاعدة البيانات<br><small style="color:#f85149;font-size:11px">${e.message}</small></div>`;
   }
 }
 
-// ===== تصفية وعرض الجدول =====
+function updateStats() {
+  document.getElementById('stTotal').textContent  = allRows.length;
+  document.getElementById('stActive').textContent = allRows.filter(r=>r.status==='active').length;
+  document.getElementById('stVip').textContent    = allRows.filter(r=>r.status==='vip').length;
+  document.getElementById('stLate').textContent   = allRows.filter(r=>r.status==='late').length;
+}
+
+// ===== فلترة =====
+function setFilter(btn, f) {
+  curFilter = f;
+  document.querySelectorAll('.db-filter button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilter();
+}
 function applyFilter() {
   shownRows = allRows;
-  if (curFilter !== 'all') shownRows = shownRows.filter(r => r.status === curFilter);
+  if (curFilter !== 'all') shownRows = shownRows.filter(r=>r.status===curFilter);
   if (curSearch) {
     const q = curSearch.toLowerCase();
-    shownRows = shownRows.filter(r =>
-      (r.name||'').toLowerCase().includes(q) ||
-      (r.phone||'').includes(q) ||
-      String(r.balance||'').includes(q)
+    shownRows = shownRows.filter(r=>
+      (r.name||'').toLowerCase().includes(q)||(r.phone||'').includes(q)
     );
   }
-  document.getElementById('rowCount').textContent = shownRows.length + ' / ' + allRows.length;
   renderTable();
 }
 
+// ===== رسم الجدول =====
 function renderTable() {
   if (!shownRows.length) {
-    document.getElementById('tblWrap').innerHTML =
-      '<p style="text-align:center;padding:32px;color:#999;font-family:Tajawal">لا توجد نتائج</p>';
+    document.getElementById('tableWrap').innerHTML =
+      '<div class="empty-state">📭 لا توجد حسابات</div>';
     return;
   }
   const fmt = n => Number(n||0).toLocaleString('ar-SA');
-  const sLabel = {active:'نشط ✅',vip:'VIP 👑',late:'متأخر ⚠️'};
-  const sCls   = {active:'s-active',vip:'s-vip',late:'s-late'};
+  const sl  = {active:'نشط ✅',vip:'VIP 👑',late:'متأخر ⚠️'};
+  const sc  = {active:'s-active',vip:'s-vip',late:'s-late'};
 
   let html = `<table>
     <thead><tr>
       <th>#</th>
       <th>اسم العميل</th>
       <th>الهاتف</th>
-      <th>الرصيد (ر.ي)</th>
-      <th>الرصيد (ر.س)</th>
+      <th>رصيد (ر.ي)</th>
+      <th>رصيد (ر.س)</th>
       <th>الحالة</th>
       <th></th>
     </tr></thead><tbody>`;
 
-  shownRows.forEach((r, i) => {
-    const safe = encodeURIComponent(JSON.stringify({id:r.id,name:r.name,phone:r.phone,balance:r.balance,balance_sar:r.balance_sar}));
-    html += `<tr onclick="openOps('${r.id}','${(r.name||'').replace(/'/g,'&apos;')}','${r.phone||''}',${Number(r.balance)||0},${Number(r.balance_sar)||0})">
-      <td style="color:#aaa;font-size:11px">${i+1}</td>
+  shownRows.forEach((r,i) => {
+    const n = (r.name||'—').replace(/'/g,'&apos;');
+    const p = r.phone||'';
+    html += `<tr onclick="openOps('${r.id}','${n}','${p}',${Number(r.balance)||0},${Number(r.balance_sar)||0})">
+      <td class="td-num">${i+1}</td>
       <td class="td-name">${r.name||'—'}</td>
       <td class="td-phone">${r.phone||'—'}</td>
-      <td class="td-bal td-bal-yer">${fmt(r.balance)}</td>
-      <td class="td-bal td-bal-sar">${fmt(r.balance_sar)}</td>
-      <td><span class="s-badge ${sCls[r.status]||'s-active'}">${sLabel[r.status]||r.status||'—'}</span></td>
-      <td class="row-arrow">←</td>
+      <td class="td-yer">${fmt(r.balance)}</td>
+      <td class="td-sar">${fmt(r.balance_sar)}</td>
+      <td><span class="td-status ${sc[r.status]||'s-active'}">${sl[r.status]||r.status||'—'}</span></td>
+      <td class="td-arrow">←</td>
     </tr>`;
   });
   html += '</tbody></table>';
-  document.getElementById('tblWrap').innerHTML = html;
+  document.getElementById('tableWrap').innerHTML = html;
 }
 
-// ===== فتح نافذة العمليات =====
+// ===== فتح عمليات الحساب =====
 async function openOps(id, name, phone, balYER, balSAR) {
-  opsEntries = [];
-  opsTab = 'all';
-
+  opsEntries = []; opsTab = 'all';
   document.getElementById('opsName').textContent   = name;
-  document.getElementById('opsPhone').textContent  = phone || 'لا يوجد رقم';
+  document.getElementById('opsPhone').textContent  = phone||'لا يوجد رقم';
   document.getElementById('opsBalYER').textContent = Number(balYER||0).toLocaleString('ar-SA');
   document.getElementById('opsBalSAR').textContent = Number(balSAR||0).toLocaleString('ar-SA');
-  document.getElementById('stAll').textContent = '—';
-  document.getElementById('stTrf').textContent = '—';
-  document.getElementById('stVch').textContent = '—';
-  document.getElementById('opsList').innerHTML = '<div class="ops-loading">⏳ جاري جلب العمليات من Supabase...</div>';
+  document.getElementById('stOpsAll').textContent  = '—';
+  document.getElementById('stOpsTrf').textContent  = '—';
+  document.getElementById('stOpsVch').textContent  = '—';
+  document.getElementById('opsList').innerHTML     = '<div class="ops-loading">⏳ جاري جلب العمليات من Supabase...</div>';
   document.querySelectorAll('.ops-tab').forEach(t => t.classList.toggle('active', t.dataset.t==='all'));
   document.getElementById('opsOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -304,13 +394,13 @@ async function openOps(id, name, phone, balYER, balSAR) {
         : Promise.resolve([])
     ]);
 
-    const vRows = (vouchers||[]).map(v => ({...v, _type:'voucher',  _ts: new Date(v.created_at).getTime()}));
-    const tRows = (transfers||[]).map(t => ({...t, _type:'transfer', _ts: new Date(t.created_at).getTime()}));
-    opsEntries = [...vRows, ...tRows].sort((a,b) => b._ts - a._ts);
+    const vRows = (vouchers||[]).map(v=>({...v,_type:'voucher', _ts:new Date(v.created_at).getTime()}));
+    const tRows = (transfers||[]).map(t=>({...t,_type:'transfer',_ts:new Date(t.created_at).getTime()}));
+    opsEntries = [...vRows,...tRows].sort((a,b)=>b._ts-a._ts);
 
-    document.getElementById('stAll').textContent = opsEntries.length;
-    document.getElementById('stTrf').textContent = tRows.length;
-    document.getElementById('stVch').textContent = vRows.length;
+    document.getElementById('stOpsAll').textContent = opsEntries.length;
+    document.getElementById('stOpsTrf').textContent = tRows.length;
+    document.getElementById('stOpsVch').textContent = vRows.length;
     renderOps();
   } catch(e) {
     document.getElementById('opsList').innerHTML =
@@ -318,52 +408,53 @@ async function openOps(id, name, phone, balYER, balSAR) {
   }
 }
 
+// ===== رسم العمليات =====
 function renderOps() {
   let list = opsEntries;
-  if      (opsTab === 'transfer')  list = list.filter(e => e._type === 'transfer');
-  else if (opsTab === 'voucher')   list = list.filter(e => e._type === 'voucher');
-  else if (opsTab === 'completed') list = list.filter(e => e._type==='transfer' && e.status==='completed');
-  else if (opsTab === 'pending')   list = list.filter(e => e._type==='transfer' && e.status==='pending');
+  if      (opsTab==='transfer')  list = list.filter(e=>e._type==='transfer');
+  else if (opsTab==='voucher')   list = list.filter(e=>e._type==='voucher');
+  else if (opsTab==='completed') list = list.filter(e=>e._type==='transfer'&&e.status==='completed');
+  else if (opsTab==='pending')   list = list.filter(e=>e._type==='transfer'&&e.status==='pending');
 
   if (!list.length) {
     document.getElementById('opsList').innerHTML = '<div class="ops-empty">📭 لا توجد عمليات</div>';
     return;
   }
 
-  const sc = {completed:'#2e7d32',pending:'#f57c00',cancelled:'#c62828',sent:'#1565c0'};
-  const sl = {completed:'مكتملة ✅',pending:'معلقة ⏳',cancelled:'ملغاة ❌',sent:'مرسلة 📤'};
+  const sc={completed:'#3fb950',pending:'#d29922',cancelled:'#f85149',sent:'#58a6ff'};
+  const sl={completed:'مكتملة ✅',pending:'معلقة ⏳',cancelled:'ملغاة ❌',sent:'مرسلة 📤'};
   const fmt = n => Number(n||0).toLocaleString('ar-SA');
 
-  document.getElementById('opsList').innerHTML = list.map(e => {
-    const d = new Date(e.created_at || e._ts || 0);
-    const ds = d.toLocaleDateString('ar-SA') + ' ' + d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('opsList').innerHTML = list.map(e=>{
+    const d   = new Date(e.created_at||e._ts||0);
+    const ds  = d.toLocaleDateString('ar-SA')+' '+d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
 
-    if (e._type === 'transfer') {
-      const code = (e.notes||'').split('|')[0]?.trim() || '—';
-      const c = sc[e.status]||'#666';
-      return `<div class="op-item">
-        <div class="op-icon" style="background:${c}15">💸</div>
+    if (e._type==='transfer') {
+      const code = (e.notes||'').split('|')[0]?.trim()||'—';
+      const c    = sc[e.status]||'#8b949e';
+      return `<div class="op-row">
+        <div class="op-icon" style="background:${c}20">💸</div>
         <div class="op-body">
           <div class="op-title">${code}</div>
           <div class="op-date">${ds}</div>
-          <span class="op-tag" style="background:${c}20;color:${c}">${sl[e.status]||e.status}</span>
+          <span class="op-tag" style="background:${c}25;color:${c}">${sl[e.status]||e.status}</span>
         </div>
         <div class="op-right">
-          <div class="op-amount" style="color:#8B0000">${fmt(e.amount)}</div>
+          <div class="op-amount" style="color:#f85149">${fmt(e.amount)}</div>
           <div class="op-cur">${e.currency||'ر.ي'}</div>
         </div>
       </div>`;
     } else {
-      const isR = e.type === 'receipt';
-      return `<div class="op-item">
-        <div class="op-icon" style="background:${isR?'#e8f5e9':'#fff3e0'}">${isR?'📥':'📤'}</div>
+      const isR = e.type==='receipt';
+      return `<div class="op-row">
+        <div class="op-icon" style="background:${isR?'#1a3a2a':'#2d1800'}">${isR?'📥':'📤'}</div>
         <div class="op-body">
-          <div class="op-title">${isR ? 'سند قبض' : 'سند صرف'}</div>
+          <div class="op-title">${isR?'سند قبض':'سند صرف'}</div>
           <div class="op-date">${ds}</div>
-          <div style="font-size:11px;color:#888;margin-top:2px">${e.reason||'—'}</div>
+          <div style="font-size:11px;color:#8b949e;margin-top:2px">${e.reason||'—'}</div>
         </div>
         <div class="op-right">
-          <div class="op-amount" style="color:${isR?'#2e7d32':'#c62828'}">${isR?'+':'−'}${fmt(e.amount)}</div>
+          <div class="op-amount" style="color:${isR?'#3fb950':'#f85149'}">${isR?'+':'−'}${fmt(e.amount)}</div>
           <div class="op-cur">${e.currency==='SAR'?'ر.س':'ر.ي'}</div>
         </div>
       </div>`;
@@ -373,35 +464,29 @@ function renderOps() {
 
 function closeOps() {
   document.getElementById('opsOverlay').classList.remove('open');
-  document.body.style.overflow = '';
+  document.body.style.overflow='';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display='block';
+  setTimeout(()=>t.style.display='none', 2500);
 }
 
 // ===== أحداث =====
-document.getElementById('searchInput').addEventListener('input', function() {
+document.getElementById('searchInput').addEventListener('input', function(){
   curSearch = this.value; applyFilter();
 });
-document.querySelectorAll('.filter-chips .chip').forEach(c => {
-  c.addEventListener('click', function() {
-    document.querySelectorAll('.filter-chips .chip').forEach(x => x.classList.remove('active'));
-    this.classList.add('active');
-    curFilter = this.dataset.f;
-    applyFilter();
-  });
-});
-document.querySelectorAll('.ops-tab').forEach(t => {
-  t.addEventListener('click', function() {
-    document.querySelectorAll('.ops-tab').forEach(x => x.classList.remove('active'));
+document.querySelectorAll('.ops-tab').forEach(tab=>{
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('.ops-tab').forEach(t=>t.classList.remove('active'));
     this.classList.add('active');
     opsTab = this.dataset.t;
     renderOps();
   });
 });
-document.getElementById('refreshBtn').addEventListener('click', loadAccounts);
-document.getElementById('opsOverlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('opsOverlay')) closeOps();
-});
-document.querySelectorAll('.nav-item[data-href]').forEach(el => {
-  el.addEventListener('click', () => window.location.href = el.dataset.href);
+document.getElementById('opsOverlay').addEventListener('click', e=>{
+  if (e.target===document.getElementById('opsOverlay')) closeOps();
 });
 
 loadAccounts();
