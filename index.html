@@ -43,6 +43,16 @@
 
   <div class="page-content">
 
+    <!-- مؤشر حالة الاتصال -->
+    <div id="connStatusCard" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:13px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);border-right:4px solid #ccc;transition:border-color .4s">
+      <div id="connDotMain" style="width:13px;height:13px;border-radius:50%;background:#ccc;flex-shrink:0;transition:background .4s"></div>
+      <div style="flex:1">
+        <div id="connStatusTitle" style="font-size:13px;font-weight:700;color:#333;font-family:Cairo,sans-serif">جاري الفحص...</div>
+        <div id="connStatusDesc" style="font-size:11px;color:#888;font-family:Tajawal,sans-serif;margin-top:2px">يتم التحقق من الاتصال بالسحابة</div>
+      </div>
+      <button id="connRetryBtn" onclick="window.__retryConn && window.__retryConn()" style="display:none;padding:5px 12px;background:linear-gradient(135deg,#8B0000,#660000);color:#fff;border:none;border-radius:10px;font-size:11px;cursor:pointer;font-family:Cairo,sans-serif">إعادة المحاولة</button>
+    </div>
+
     <div class="alert-card">
       <div class="alert-icon">⚠️</div>
       <div>
