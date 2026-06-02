@@ -5,15 +5,13 @@
 
 const SUPA_URL      = "https://ezektgzwesrtezeghmrs.supabase.co";
 const SUPA_KEY      = "sb_publishable_yxYW7KsjVtq_0kMYuaODng_4yvhyRum";
-const DEFAULT_PROXY = "/api/supabase-proxy"; // بروكسي مجاني بدون VPN
+const DEFAULT_PROXY = "/api/supabase-proxy"; // بروكسي Replit — يعمل بدون VPN مجاناً للأبد
 const TIMEOUT       = 15000; // 15 ثانية — وقت كافٍ لليمن
 
 // ══════════════════════════════════════════
-// تفعيل البروكسي تلقائياً إذا لم يكن مضبوطاً
+// البروكسي يُفرض دائماً — بدون VPN
 (function _initProxy() {
-  if (!localStorage.getItem('s_proxy_url')) {
-    localStorage.setItem('s_proxy_url', DEFAULT_PROXY);
-  }
+  localStorage.setItem('s_proxy_url', DEFAULT_PROXY);
 })();
 // ══════════════════════════════════════════
 
@@ -306,6 +304,7 @@ export async function _forceSync() {
     if (test === null) { console.log('📱 وضع محلي — Supabase غير متاح'); return; }
     _supaOk = true;
     console.log('☁️ Supabase متصل');
+    _updateSyncBadge(); // أظهر "متصل" فوراً بدون انتظار المزامنة
 
     // === دمج الحسابات (بدل الاستبدال) ===
     const remoteAcc = await _sbSelect('accounts', 'limit=500');
